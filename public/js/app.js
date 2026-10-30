@@ -198,8 +198,18 @@ function renderMaintenanceScreen(){
     <h2>الموقع في حالة صيانة</h2>
     <p>${esc(cache.siteStatus?.message||'نعمل على تحديث الموقع. يرجى المحاولة مرة أخرى لاحقًا.')}</p>
     <button class="secondary" type="button" onclick="location.reload()"><i class="fas fa-rotate"></i> إعادة المحاولة</button>
+    <p class="muted" style="margin-top:14px;margin-bottom:8px">للعودة إلى حساب الإدارة، سجّل الخروج من الحساب الحالي ثم أدخل بيانات المدير.</p>
+    <button class="secondary" type="button" onclick="exitMaintenanceToLogin()"><i class="fas fa-right-from-bracket"></i> تسجيل الخروج والعودة للدخول</button>
   </section>`;
 }
+
+window.exitMaintenanceToLogin = async function(){
+  try {
+    await signOut(auth);
+  } catch(err) {
+    showToast(authError(err),'error');
+  }
+};
 
 window.forgotPassword = async function(){
   const email = prompt('أدخل بريدك الإلكتروني:');
