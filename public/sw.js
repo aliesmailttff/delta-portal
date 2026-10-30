@@ -1,5 +1,5 @@
 // sw.js — v2: الصفحات network-first (التحديثات توصل فوراً) والأصول الثابتة cache-first
-const CACHE = 'delta-portal-v3';
+const CACHE = 'delta-portal-v4';
 const CORE = ['./', './index.html', './manifest.json', './css/app.css', './js/app.js', './icon-192.png', './icon-512.png'];
 const API_HOSTS = ['firestore.googleapis.com','identitytoolkit.googleapis.com','securetoken.googleapis.com',
   'firebasestorage.googleapis.com','www.googleapis.com','firebaseinstallations.googleapis.com'];

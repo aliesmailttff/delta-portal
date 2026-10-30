@@ -7,6 +7,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc,
          updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
          onSnapshot, runTransaction, deleteField }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js';
 import { firebaseConfig, isFirebaseConfigured } from '../firebase-config.js';
 
 /* ---------- Helpers ---------- */
@@ -14,15 +15,16 @@ const $ = s => document.querySelector(s);
 window.$ = $;
 const appRoot = $('#app');
 
-let auth, db, user=null, profile=null, role=null;
+let auth, db, functions, user=null, profile=null, role=null;
 let activeTab = localStorage.getItem('activeTab') || 'dashboard';
 let cache = { students:[], news:[], exams:[], results:[], payments:[], settings:{},
-              logs:[], staff:[], library:[], attendance:[] };
+              siteStatus:{}, activeAttendance:null, logs:[], staff:[], library:[], attendance:[] };
 let pendingPaymentData = null;
 let paymentFilterStatus = 'all';
 let selectedChatStudentUid = null;
 let editCtx = null;
 let unsubChat = null;
+let unsubSiteStatus = null;
 
 const esc = v => String(v??'').replace(/[&<>"']/g, c => (
   {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
@@ -60,10 +62,23 @@ if(!isFirebaseConfigured()){
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    functions = getFunctions(app, 'us-central1');
+
+    unsubSiteStatus = onSnapshot(doc(db,'settings','site_status'), snap => {
+      const previous = !!cache.siteStatus?.maintenanceMode;
+      cache.siteStatus = snap.exists() ? snap.data() : {maintenanceMode:false};
+      const enabled = !!cache.siteStatus.maintenanceMode;
+      if(!user && previous !== enabled) renderLogin();
+      if(role==='student' && previous !== enabled){
+        if(enabled) renderMaintenanceScreen();
+        else if($('#maintenanceScreen')) loadData().then(renderApp).catch(()=>renderApp());
+      }
+    }, err => console.warn('تعذر متابعة حالة الموقع', err));
 
     onAuthStateChanged(auth, async u => {
       user = u;
       if(!u){
+        stopAttendanceQrRefresh();
         profile = null; role = null;
         renderLogin();
         return;
@@ -77,9 +92,16 @@ if(!isFirebaseConfigured()){
         }
         profile = snap.data();
         role = profile.role;
+        const siteStatusSnap = await getDoc(doc(db,'settings','site_status'));
+        cache.siteStatus = siteStatusSnap.exists() ? siteStatusSnap.data() : {maintenanceMode:false};
+        if(role==='student' && cache.siteStatus.maintenanceMode){
+          renderMaintenanceScreen();
+          return;
+        }
         await loadData();
         if(['admin','academic'].includes(role)) cache.students.filter(x=>'password' in x).forEach(x=>updateDoc(doc(db,'students',x.uid),{password:deleteField()}).catch(()=>{}));
         if(profile.mustChangePassword){ showForcePasswordChange(); return; }
+        await handleAttendanceQr();
         const validTabs = getValidTabsForRole(role);
         if(!validTabs.includes(activeTab)) activeTab = validTabs[0];
         renderApp();
@@ -137,6 +159,7 @@ function getValidTabsForRole(r){
 function renderLogin(){
   $('#headerActions').innerHTML = '';
   appRoot.innerHTML = `<section class="card loginbox">
+    ${cache.siteStatus?.maintenanceMode ? `<div class="maintenance-banner"><i class="fas fa-screwdriver-wrench"></i><div><strong>الموقع في حالة صيانة</strong><p>${esc(cache.siteStatus.message||'الخدمات الطلابية متوقفة مؤقتًا. حاول مرة أخرى لاحقًا.')}</p></div></div>` : ''}
     <h2>تسجيل الدخول</h2>
     <p class="muted">استخدم البريد الإلكتروني وكلمة المرور.</p>
     <form id="loginForm">
@@ -167,6 +190,17 @@ function renderLogin(){
   };
 }
 
+function renderMaintenanceScreen(){
+  $('#headerActions').innerHTML = '';
+  appRoot.innerHTML = `<section id="maintenanceScreen" class="card maintenance-screen" role="status">
+    <div class="maintenance-icon"><i class="fas fa-screwdriver-wrench"></i></div>
+    <span class="section-kicker">بوابة الطالب</span>
+    <h2>الموقع في حالة صيانة</h2>
+    <p>${esc(cache.siteStatus?.message||'نعمل على تحديث الموقع. يرجى المحاولة مرة أخرى لاحقًا.')}</p>
+    <button class="secondary" type="button" onclick="location.reload()"><i class="fas fa-rotate"></i> إعادة المحاولة</button>
+  </section>`;
+}
+
 window.forgotPassword = async function(){
   const email = prompt('أدخل بريدك الإلكتروني:');
   if(!email) return;
@@ -184,7 +218,12 @@ function authError(e){
     'auth/invalid-email':'صيغة البريد غير صحيحة.',
     'auth/email-already-in-use':'البريد مستخدم مسبقًا.',
     'auth/weak-password':'كلمة المرور ضعيفة (6 أحرف على الأقل).',
-    'permission-denied':'لا تملك صلاحية هذه العملية.'
+    'permission-denied':'لا تملك صلاحية هذه العملية.',
+    'functions/unauthenticated':'سجّل الدخول ثم أعد المحاولة.',
+    'functions/permission-denied':'لا تملك صلاحية هذه العملية.',
+    'functions/not-found':'حساب الطالب غير موجود.',
+    'functions/failed-precondition':'انتهت جلسة الحضور أو لم تعد نشطة.',
+    'functions/unavailable':'الخدمة غير متاحة أثناء الصيانة. حاول لاحقًا.'
   })[e.code] || e.message || 'حدث خطأ.';
 }
 
@@ -202,6 +241,9 @@ async function loadData(){
       ? setSnap.data()
       : { vodafone:'', instapay:'', fawryCode:'', bankAccount:'', maintenanceMode:false };
   } catch { cache.settings = {}; }
+
+  const activeAttendance = await safe(getDoc(doc(db,'settings','attendance_public')), none);
+  cache.activeAttendance = activeAttendance.exists() ? activeAttendance.data() : null;
 
   const isStaffUser = ['admin','finance','academic'].includes(role);
 
@@ -302,6 +344,7 @@ function renderApp(){
   $('#headerActions').innerHTML = `<button class="secondary" id="logout" style="padding:7px 12px;font-size:.82rem;"><i class="fas fa-sign-out-alt"></i> خروج</button>`;
   $('#logout').onclick = async () => {
     if(unsubChat) { unsubChat(); unsubChat=null; }
+    stopAttendanceQrRefresh();
     localStorage.removeItem('activeTab');
     await signOut(auth);
   };
@@ -363,7 +406,8 @@ function renderView(){
       <div class="dashboard-content-grid">
         <section class="card dashboard-chart-card"><div class="section-heading"><div><span class="section-kicker">ملخص مالي</span><h3>توزيع المدفوعات</h3></div><span class="section-icon"><i class="fas fa-chart-pie"></i></span></div><div class="dashboard-chart-wrap"><canvas id="paymentMethodsChart"></canvas></div></section>
         <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${shortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
-      </div>`;
+      </div>
+      ${['admin','academic'].includes(role)?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
   }
   else if(activeTab==='library' && isStaff){
     html = `<section class="card">
@@ -404,6 +448,11 @@ function renderView(){
         <button style="grid-column:1/-1;margin-top:10px;background:var(--green);">فتح جلسة</button>
       </form>
       <div id="attMsg" style="margin-top:10px;"></div>
+      ${cache.activeAttendance && Date.now()<Number(cache.activeAttendance.expiresAt||0) ? `<section id="attendanceQrCard" class="attendance-qr-card" data-session-id="${esc(cache.activeAttendance.sessionId)}" data-expires-at="${Number(cache.activeAttendance.expiresAt)}">
+        <div><span class="section-kicker">حضور المحاضرة</span><h3>${esc(cache.activeAttendance.sessionName||'جلسة حضور')}</h3><p class="muted">يتغير الرمز تلقائيًا. وجّه الطلاب لمسحه بكاميرا الهاتف.</p></div>
+        <div class="attendance-qr-content"><canvas id="attendanceQrCanvas" width="240" height="240" aria-label="رمز تسجيل الحضور"></canvas><div id="attendanceQrMessage" class="muted">جارٍ تجهيز رمز الحضور…</div></div>
+        <button type="button" class="danger" onclick="closeAttendanceSession()"><i class="fas fa-stop"></i> إيقاف الجلسة</button>
+      </section>` : ''}
     </section>
     <section class="card">
       <h3>سجل الحضور</h3>
@@ -457,7 +506,15 @@ function renderView(){
         <button type="submit" style="grid-column:1/-1;margin-top:10px;background:var(--green);">حفظ</button>
       </form>
       <div id="accountsMsg" style="margin-top:10px;"></div>
-    </section>`;
+    </section>${role==='admin'?`<section class="card">
+      <h3><i class="fas fa-screwdriver-wrench" style="color:var(--blue);"></i> صيانة الموقع للطلاب</h3>
+      <p class="muted">عند التفعيل، يرى الطلاب رسالة الصيانة وتتوقف عنهم صفحات وبيانات البوابة. يظل دخول الإدارة والمساعدين متاحًا.</p>
+      <form id="siteMaintenanceForm" class="fields">
+        <label class="maintenance-toggle"><input type="checkbox" name="maintenanceMode" ${cache.siteStatus?.maintenanceMode?'checked':''}> تفعيل وضع الصيانة</label>
+        <div style="grid-column:1/-1"><label>الرسالة التي تظهر للطلاب</label><input name="message" maxlength="240" value="${esc(cache.siteStatus?.message||'نعمل على تحديث الموقع. يرجى المحاولة مرة أخرى لاحقًا.')}"></div>
+        <button type="submit">حفظ حالة الموقع</button>
+      </form><div id="siteMaintenanceMsg"></div>
+    </section>`:''}`;
   }
   else if(activeTab==='logs' && (role==='admin'||role==='finance')){
     html = `<section class="card">
@@ -501,7 +558,8 @@ function renderView(){
         </div>
       </div>
       <div style="background:var(--pale);padding:12px;border-radius:10px;margin-bottom:15px;">
-        <label style="font-weight:bold;color:var(--blue);"><i class="fas fa-file-upload"></i> استيراد من Excel:</label>
+        <label style="font-weight:bold;color:var(--blue);"><i class="fas fa-file-upload"></i> استيراد الطلاب من Excel:</label>
+        <p class="muted" style="margin:6px 0;">يقبل أسماء الأعمدة العربية أو الإنجليزية: الاسم، الرقم الجامعي، البريد، كلمة المرور، الفرقة، القسم، المصروفات، وصورة الطالب (اختياري كرابط مباشر). يمكن ترك البريد فارغًا ليُنشأ من الرقم الجامعي، وكلمة المرور الفارغة تُنشأ تلقائيًا.</p>
         <input type="file" accept=".xlsx,.xls" onchange="importStudentsFromExcel(event)" style="margin-top:5px;background:#fff;padding:6px;">
       </div>
       <div class="fields" style="margin-bottom:15px;">
@@ -839,6 +897,7 @@ function renderView(){
   else if(activeTab==='myattendance' && role==='student'){
     html = `<section class="card">
       <h2><i class="fas fa-user-check" style="color:var(--blue);"></i> تسجيل الحضور</h2>
+      <p class="muted">امسح رمز QR المعروض في المحاضرة بكاميرا الهاتف لتسجيل حضورك تلقائيًا. يمكنك استخدام كود المحاضر عند الحاجة.</p>
       <form id="studentAttForm" class="fields" style="max-width:400px;margin-bottom:20px;">
         <div><label>كود الحضور (PIN):</label><input name="pinCode" placeholder="كود المحاضر" required></div>
         <button style="background:var(--green);">تسجيل</button>
@@ -878,19 +937,15 @@ function renderView(){
   }
   else if(activeTab==='chat'){
     if(isStaff){
-      if(!selectedChatStudentUid && cache.students.length>0) selectedChatStudentUid = cache.students[0].uid;
       const activeStu = cache.students.find(s=>s.uid===selectedChatStudentUid);
       html = `<section class="card">
         <h2><i class="fas fa-comments" style="color:var(--blue);"></i> محادثات الطلاب</h2>
         <div class="fields" style="margin-bottom:15px;">
-          <div><label>الطالب:</label>
-            <select id="adminChatStudentSelect" onchange="changeChatStudent(this.value)">
-              ${cache.students.map(s=>`<option value="${s.uid}" ${s.uid===selectedChatStudentUid?'selected':''}>${esc(s.studentId)} — ${esc(s.name)}</option>`).join('')}
-            </select>
-          </div>
+          <div><label for="adminChatSearch">ابحث عن الطالب بالاسم أو الرقم الجامعي</label><input id="adminChatSearch" type="search" autocomplete="off" placeholder="اكتب اسم الطالب أو رقمه" oninput="filterAdminChatStudents(this.value)"></div>
         </div>
+        <div id="adminChatStudentResults" class="chat-student-results">اكتب اسم الطالب أو رقمه للبحث عن المحادثة.</div>
         <div class="chatbox-container">
-          <div style="background:var(--pale);padding:10px 15px;font-weight:bold;border-bottom:1px solid var(--line);">${esc(activeStu?.name||'')}</div>
+          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
           <div id="chatMessagesArea" class="chat-messages-area"></div>
           <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
             <input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
@@ -919,6 +974,8 @@ function renderView(){
   if(isStaff && activeTab==='dashboard') renderChart();
   if(activeTab==='chat') startChatListener();
   if(activeTab==='gpasimulator') renderSimTable();
+  if(activeTab==='attendance' && isStaff) startAttendanceQrRefresh();
+  else stopAttendanceQrRefresh();
 }
 
 /* ---------- Students Table ---------- */
@@ -929,6 +986,7 @@ function renderStudentsRows(list){
     <td><div class="actions">
       <button class="secondary" onclick="showStudentCard('${s.uid}')" style="background:#e0f2fe; color:#0369a1;"><i class="fas fa-id-card"></i> كارنيه</button>
       <button class="secondary" onclick="openEditStudentModal('${s.uid}')"><i class="fas fa-edit"></i></button>
+      ${role==='admin'?`<button class="secondary" onclick="openStudentPasswordModal('${s.uid}')"><i class="fas fa-key"></i> كلمة المرور</button>`:''}
       <button class="danger" data-delete-student="${s.uid}"><i class="fas fa-trash"></i></button>
     </div></td>
   </tr>`).join(''));
@@ -1020,27 +1078,47 @@ window.exportStudentsToCSV = function(){
   document.body.appendChild(link); link.click(); document.body.removeChild(link);
 };
 
-const genPw=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';return Array.from(crypto.getRandomValues(new Uint32Array(10)),x=>a[x%a.length]).join('')};
+const genPw=()=>{const pools=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghijkmnopqrstuvwxyz','23456789','!@#$%&*'],pool=pools.join(''),pick=s=>s[crypto.getRandomValues(new Uint32Array(1))[0]%s.length],a=[...pools.map(pick),...Array.from({length:12},()=>pick(pool))];for(let i=a.length-1;i>0;i--){const j=crypto.getRandomValues(new Uint32Array(1))[0]%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a.join('')};
 async function createStudentAccount(d,pw){
   const secApp=initializeApp(firebaseConfig,'imp-'+Date.now()+Math.random()),secAuth=getAuth(secApp);
   try{
     const c=await createUserWithEmailAndPassword(secAuth,d.email,pw);
     await setDoc(doc(db,'users',c.user.uid),{role:'student',name:d.name,email:d.email,mustChangePassword:true});
-    await setDoc(doc(db,'students',c.user.uid),{studentId:d.studentId,name:d.name,email:d.email,level:d.level,department:d.department,totalFees:d.totalFees,paidAmount:0,createdAt:serverTimestamp()});
+    await setDoc(doc(db,'students',c.user.uid),{studentId:d.studentId,name:d.name,email:d.email,level:d.level,department:d.department,totalFees:d.totalFees,paidAmount:0,photo:d.photo||'',createdAt:serverTimestamp()});
   }finally{ await signOut(secAuth).catch(()=>{}); deleteApp(secApp); }
 }
 window.importStudentsFromExcel=function(event){
   const file=event.target.files[0]; if(!file) return;
+  const normKey=value=>String(value??'').trim().toLowerCase().normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[\s_\-()]+/g,'');
   const reader=new FileReader();
   reader.onload=async ev=>{
-    let rows; try{ const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'}); rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); }
+    let rows; try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];
+      const grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}),headers=grid[0]||[];
+      const photoColumn=headers.findIndex(h=>['photo','صورةالطالب','صورةالطالبلكرنية','رابطالصورة'].includes(normKey(h)));
+      rows=grid.slice(1).map((cells,index)=>{
+        const row=Object.fromEntries(headers.map((header,col)=>[header,cells[col]??'']));
+        if(photoColumn>=0){
+          const key=headers[photoColumn],cell=ws[XLSX.utils.encode_cell({r:index+1,c:photoColumn})];
+          if(!row[key]&&cell?.l?.Target) row[key]=cell.l.Target;
+        }
+        return row;
+      }).filter(row=>Object.values(row).some(value=>String(value??'').trim()!==''));
+    }
     catch(err){ showToast('خطأ في قراءة الملف','error'); event.target.value=''; return; }
     if(rows.length>200){ showToast('الحد الأقصى 200 طالب في الملف الواحد','error'); event.target.value=''; return; }
     let ok=0,skip=0,fail=0; const creds=[['studentId','email','tempPassword']];
+    const getField=(row,aliases)=>{const wanted=new Set(aliases.map(normKey));const key=Object.keys(row).find(k=>wanted.has(normKey(k)));return key===undefined?'':row[key];};
+    const seenIds=new Set(cache.students.map(s=>String(s.studentId)));
     for(const r of rows){
-      const d={studentId:String(r.studentId||'').trim(),name:String(r.name||'').trim(),email:String(r.email||'').trim(),level:String(r.level||'الفرقة الأولى'),department:String(r.department||'نظم المعلومات'),totalFees:Number(r.totalFees||18000)};
-      if(!d.studentId||!d.name||!/^\S+@\S+\.\S+$/.test(d.email)||cache.students.some(x=>String(x.studentId)===d.studentId)){ skip++; continue; }
-      const pw=genPw();
+      const studentId=String(getField(r,['studentId','student_id','id','الرقم الجامعي','رقم الطالب','رقم ID'])||'').trim();
+      const fees=getField(r,['totalFees','fees','المصروفات','إجمالي المصروفات']);
+      const d={studentId,name:String(getField(r,['name','الاسم','اسم الطالب'])||'').trim(),email:String(getField(r,['email','البريد','البريد الإلكتروني'])||`${studentId}@al.es.net`).trim(),level:String(getField(r,['level','الفرقة','السنة الدراسية'])||'الفرقة الأولى').trim(),department:String(getField(r,['department','القسم','التخصص'])||'نظم المعلومات').trim(),totalFees:fees===''?15000:Number(fees),photo:String(getField(r,['photo','صورة الطالب','صورة الطالب (للكرنية)','رابط الصورة'])||'').trim()};
+      const importedPassword=String(getField(r,['password','tempPassword','كلمة المرور','كلمة السر'])||'').trim();
+      if(!d.studentId||!d.name||!/^\S+@\S+\.\S+$/.test(d.email)||seenIds.has(d.studentId)||!Number.isFinite(d.totalFees)||d.totalFees<0){ skip++; continue; }
+      if(d.photo.length>700000|| (d.photo&&!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(d.photo))){skip++;continue;}
+      seenIds.add(d.studentId);
+      const pw=importedPassword||genPw();
       try{ await createStudentAccount(d,pw); creds.push([d.studentId,d.email,pw]); ok++; showToast(`جاري الإنشاء... ${ok}`); }catch(err){ fail++; }
     }
     if(ok){ const blob=new Blob(["\ufeff"+creds.map(c=>c.join(',')).join('\n')],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='كلمات_المرور_المؤقتة.csv'; document.body.appendChild(a); a.click(); a.remove(); }
@@ -1139,6 +1217,7 @@ function bindForms(){
   }
 
   $('#accountsForm')?.addEventListener('submit', saveAccountsData);
+  $('#siteMaintenanceForm')?.addEventListener('submit', saveSiteMaintenance);
   $('#studentForm')?.addEventListener('submit', createStudent);
   $('#staffForm')?.addEventListener('submit', createStaff);
   $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);
@@ -1364,7 +1443,8 @@ async function saveAttendanceSession(e){
   try{
     await setDoc(doc(db,'settings','active_attendance'),{code:String(d.code).trim(),sessionId,createdAt:serverTimestamp()});
     await setDoc(doc(db,'settings','attendance_public'),{sessionName:d.sessionName.trim(),sessionId,expiresAt});
-    logAction('فتح حضور',d.sessionName); showToast('تم فتح الجلسة'); 
+    logAction('فتح حضور',d.sessionName); showToast('تم فتح الجلسة');
+    await loadData(); renderApp();
   }catch(err){showToast(err.message,'error');}
 }
 
@@ -1619,14 +1699,14 @@ window.calculateMonthlyInstallment = function(remainingAmount) {
 };
 
 window.setPaymentFilter = function(s){ paymentFilterStatus = s; renderApp(); };
-window.changeChatStudent = function(uid){ selectedChatStudentUid = uid; startChatListener(); };
+window.changeChatStudent = function(uid){ selectedChatStudentUid = uid; renderApp(); };
 
 function startChatListener(){
   if(unsubChat) unsubChat();
   const area = $('#chatMessagesArea'); if(!area) return;
   const isStaff = ['admin','finance','academic'].includes(role);
   const targetUid = isStaff ? selectedChatStudentUid : user.uid;
-  if(!targetUid) return;
+  if(!targetUid){ area.innerHTML='<p class="muted" style="text-align:center;margin:auto;">ابحث عن الطالب واختره لعرض المحادثة.</p>'; return; }
 
   const q = query(collection(db,'chats',targetUid,'messages'), orderBy('createdAt','asc'));
   unsubChat = onSnapshot(q, snap => {
@@ -1675,7 +1755,7 @@ function showForcePasswordChange(){
     try{
       await updatePassword(user,a);
       await updateDoc(doc(db,'users',user.uid),{mustChangePassword:false});
-      profile.mustChangePassword=false; showToast('تم تغيير كلمة المرور'); await loadData(); renderApp();
+      profile.mustChangePassword=false; showToast('تم تغيير كلمة المرور'); await loadData(); await handleAttendanceQr(); renderApp();
     }catch(err){
       box.innerHTML=msg(err.code==='auth/requires-recent-login'?'انتهت صلاحية الجلسة، سجّل الدخول من جديد ثم أعد المحاولة':err.code==='auth/weak-password'?'كلمة المرور ضعيفة':err.message,'error');
     }
@@ -1840,8 +1920,6 @@ window.printTranscript=()=>{
 };
 function resultsViews(staff,st){
   if(activeTab==='results'&&staff){
-    const rows=cache.results.slice().sort((a,b)=>String(b.year||'').localeCompare(String(a.year||''))).map(r=>{const s=cache.students.find(x=>x.uid===r.studentUid);
-      return `<tr><td>${esc(s?.name||r.studentName||'—')}</td><td>${esc(r.course)}</td><td>${esc(r.year||'—')} ${esc(r.semester||'')}</td><td>${r.credits??'—'}</td><td>${Number(r.score)}</td><td>${grade(Number(r.score))}</td><td><div class="actions"><button class="secondary" onclick="editResultModal('${r.id}')"><i class="fas fa-edit"></i></button><button class="danger" data-delete="results" data-id="${r.id}"><i class="fas fa-trash"></i></button></div></td></tr>`;}).join('');
     return `<section class="card"><h2>رصد النتائج</h2><form id="resultForm" class="fields">
       <div><label>الطالب</label><select name="studentUid" required>${cache.students.map(s=>`<option value="${s.uid}">${esc(s.studentId)} — ${esc(s.name)}</option>`).join('')}</select></div>
       <div><label>المادة</label><input name="course" required></div>
@@ -1852,7 +1930,10 @@ function resultsViews(staff,st){
       <button ${cache.students.length?'':'disabled'} style="margin-top:10px;">حفظ</button></form></section>
       <section class="card"><h3><i class="fas fa-file-excel"></i> رفع درجات من Excel</h3><p class="muted">الصف الأول عناوين، والأعمدة بالترتيب: الرقم الجامعي | المادة | السنة (2025/2026) | الفصل (الفصل الأول/الفصل الثاني/الفصل الصيفي) | الساعات | الدرجة</p>
       <input type="file" accept=".xlsx,.xls,.csv" onchange="previewGradesExcel(this)"><div id="gradesPreview" style="margin-top:10px;">${gradesView()}</div></section>
-      <section class="card"><h3>النتائج المسجلة</h3>${table(['الطالب','المادة','الفصل','الساعات','الدرجة','التقدير','إجراء'],rows)}</section>`;
+      <section class="card"><h3>البحث عن نتيجة طالب</h3><label for="adminResultsSearch">ابحث باسم الطالب أو الرقم الجامعي</label>
+        <input id="adminResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)">
+        <div id="adminResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div>
+      </section>`;
   }
   if(activeTab==='myresults'&&role==='student'){
     const all=cache.results, tot=calcGpa(all), earned=all.filter(r=>Number(r.score)>=50).reduce((a,r)=>a+(Number(r.credits)||3),0);
@@ -1935,3 +2016,151 @@ window.exportRegCSV=()=>{
   const blob=new Blob(["\ufeff"+rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='تسجيلات_المواد.csv'; document.body.appendChild(a); a.click(); a.remove();
 };
+/* ---------- أدوات الإدارة: البحث، الصيانة، الحسابات، QR ---------- */
+function adminResultRows(records){
+  const rows=records.map(r=>{
+    const s=cache.students.find(x=>x.uid===r.studentUid);
+    return `<tr><td>${esc(s?.name||r.studentName||'—')}<br><small>${esc(s?.studentId||r.studentId||'')}</small></td><td>${esc(r.course)}</td><td>${esc(r.year||'—')} ${esc(r.semester||'')}</td><td>${r.credits??'—'}</td><td>${Number(r.score)}</td><td>${grade(Number(r.score))}</td><td><div class="actions"><button class="secondary" onclick="editResultModal('${r.id}')"><i class="fas fa-edit"></i></button><button class="danger" data-delete="results" data-id="${r.id}"><i class="fas fa-trash"></i></button></div></td></tr>`;
+  }).join('');
+  return table(['الطالب','المادة','الفصل','الساعات','الدرجة','التقدير','إجراء'],rows);
+}
+
+window.searchAdminResults=function(value){
+  const box=$('#adminResultsSearchResults')||$('#dashboardResultsSearchResults'); if(!box) return;
+  const q=String(value||'').trim().toLocaleLowerCase();
+  if(!q){box.innerHTML='اكتب اسم الطالب أو رقمه لعرض نتائجه.';return;}
+  const matches=cache.students.filter(s=>String(s.name||'').toLocaleLowerCase().includes(q)||String(s.studentId||'').toLocaleLowerCase().includes(q));
+  if(!matches.length){box.innerHTML='<p class="muted">لا يوجد طالب بهذا الاسم أو الرقم.</p>';return;}
+  const ids=new Set(matches.map(s=>s.uid));
+  const records=cache.results.filter(r=>ids.has(r.studentUid)||matches.some(s=>String(s.studentId)===String(r.studentId)));
+  box.innerHTML=`<p class="muted">مطابقة ${matches.length} طالب. عدد النتائج: ${records.length}.</p>`+
+    (records.length?adminResultRows(records):'<p class="muted">لا توجد نتائج مسجلة لهذا الطالب.</p>');
+};
+
+window.filterAdminChatStudents=function(value){
+  const box=$('#adminChatStudentResults'); if(!box) return;
+  const q=String(value||'').trim().toLocaleLowerCase();
+  if(!q){box.innerHTML='اكتب اسم الطالب أو رقمه للبحث عن المحادثة.';return;}
+  const matches=cache.students.filter(s=>String(s.name||'').toLocaleLowerCase().includes(q)||String(s.studentId||'').toLocaleLowerCase().includes(q)).slice(0,30);
+  if(!matches.length){box.innerHTML='<p class="muted">لا يوجد طالب مطابق.</p>';return;}
+  box.innerHTML=matches.map(s=>`<button type="button" class="chat-student-result ${s.uid===selectedChatStudentUid?'active':''}" data-chat-student="${esc(s.uid)}"><strong>${esc(s.name)}</strong><span>${esc(s.studentId||'')}</span></button>`).join('');
+  box.querySelectorAll('[data-chat-student]').forEach(button=>button.addEventListener('click',()=>window.changeChatStudent(button.dataset.chatStudent)));
+};
+
+async function saveSiteMaintenance(e){
+  e.preventDefault();
+  if(role!=='admin'){showToast('هذه الإعدادات متاحة للمدير فقط','error');return;}
+  const form=e.currentTarget;
+  const maintenanceMode=form.elements.maintenanceMode.checked;
+  const message=String(form.elements.message.value||'').trim().slice(0,240);
+  try{
+    const value={maintenanceMode,message,updatedAt:serverTimestamp()};
+    await setDoc(doc(db,'settings','site_status'),value);
+    cache.siteStatus={...value,updatedAt:new Date()};
+    logAction('تغيير حالة الموقع',maintenanceMode?'تفعيل الصيانة':'إنهاء الصيانة');
+    showToast(maintenanceMode?'تم تفعيل صيانة الموقع للطلاب':'تم فتح الموقع للطلاب');
+  }catch(err){showToast(authError(err),'error');}
+}
+
+window.openStudentPasswordModal=function(uid){
+  if(role!=='admin') return;
+  const student=cache.students.find(s=>s.uid===uid); if(!student) return;
+  document.querySelector('#studentPasswordModal')?.remove();
+  document.body.insertAdjacentHTML('beforeend',`<div id="studentPasswordModal" class="modal-overlay active" role="dialog" aria-modal="true" aria-labelledby="studentPasswordTitle">
+    <section class="modal-card"><h3 id="studentPasswordTitle"><i class="fas fa-key"></i> تغيير كلمة مرور الطالب</h3>
+      <p><strong>${esc(student.name)}</strong> — ${esc(student.studentId)}</p>
+      <form id="studentPasswordForm">
+        <label>كلمة المرور الجديدة</label><input name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+        <label style="margin-top:10px">تأكيد كلمة المرور</label><input name="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+        <div id="studentPasswordMsg" style="margin:10px 0"></div>
+        <div class="actions"><button type="button" class="secondary" onclick="closeStudentPasswordModal()">إلغاء</button><button type="submit">تغيير كلمة المرور</button></div>
+      </form>
+    </section></div>`);
+  $('#studentPasswordForm').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const form=event.currentTarget,password=form.elements.password.value,confirmPassword=form.elements.confirmPassword.value;
+    const box=$('#studentPasswordMsg'),button=form.querySelector('button[type="submit"]');
+    if(password!==confirmPassword){box.innerHTML=msg('كلمتا المرور غير متطابقتين.','error');return;}
+    button.disabled=true;
+    try{
+      await httpsCallable(functions,'resetStudentPassword')({studentUid:uid,newPassword:password});
+      logAction('إعادة تعيين كلمة مرور طالب',String(student.studentId));
+      closeStudentPasswordModal();
+      showToast('تم تغيير كلمة المرور. سيُطلب من الطالب تحديثها عند دخوله.');
+    }catch(err){box.innerHTML=msg(authError(err),'error');button.disabled=false;}
+  });
+};
+window.closeStudentPasswordModal=()=>$('#studentPasswordModal')?.remove();
+
+window.deleteSelectedStudentConversation=async function(){
+  if(role!=='admin'||!selectedChatStudentUid) return;
+  const student=cache.students.find(s=>s.uid===selectedChatStudentUid); if(!student) return;
+  if(!confirm(`حذف سجل المحادثة مع ${student.name} للطرفين؟ لا يمكن التراجع عن الحذف.`)) return;
+  try{
+    if(unsubChat){unsubChat();unsubChat=null;}
+    await httpsCallable(functions,'deleteStudentConversation')({studentUid:student.uid});
+    logAction('حذف محادثة طالب',String(student.studentId));
+    selectedChatStudentUid=null;
+    showToast('تم حذف المحادثة للطرفين');
+    renderApp();
+  }catch(err){showToast(authError(err),'error');startChatListener();}
+};
+
+let attendanceQrTimer=null,attendanceQrBusy=false,attendanceQrSession=null;
+window.stopAttendanceQrRefresh=function(){
+  if(attendanceQrTimer){clearInterval(attendanceQrTimer);attendanceQrTimer=null;}
+  attendanceQrSession=null;
+};
+window.startAttendanceQrRefresh=function(){
+  const card=$('#attendanceQrCard');
+  if(!card){stopAttendanceQrRefresh();return;}
+  const sessionId=card.dataset.sessionId;
+  if(attendanceQrSession===sessionId&&attendanceQrTimer) return;
+  stopAttendanceQrRefresh(); attendanceQrSession=sessionId;
+  refreshAttendanceQrCode();
+  attendanceQrTimer=setInterval(refreshAttendanceQrCode,15000);
+};
+async function refreshAttendanceQrCode(){
+  const card=$('#attendanceQrCard'),canvas=$('#attendanceQrCanvas'),message=$('#attendanceQrMessage');
+  if(!card||!canvas||!message||attendanceQrBusy) return;
+  if(Date.now()>=Number(card.dataset.expiresAt||0)){
+    message.textContent='انتهت جلسة الحضور.';stopAttendanceQrRefresh();return;
+  }
+  if(!window.QRCode?.toCanvas){message.textContent='تعذر تحميل مولد رمز QR. أعد تحميل الصفحة.';return;}
+  attendanceQrBusy=true;
+  try{
+    const {data}=await httpsCallable(functions,'refreshAttendanceQr')({sessionId:card.dataset.sessionId});
+    const target=new URL(window.location.href);target.search='';target.hash='';target.searchParams.set('attendance',data.token);
+    await new Promise((resolve,reject)=>QRCode.toCanvas(canvas,target.toString(),{width:240,margin:2,errorCorrectionLevel:'M'},error=>error?reject(error):resolve()));
+    message.textContent=`رمز مؤقت يتجدد تلقائيًا. صالح حتى ${new Date(data.expiresAt).toLocaleTimeString('ar-EG')}.`;
+  }catch(err){message.textContent=authError(err);}
+  finally{attendanceQrBusy=false;}
+}
+
+window.closeAttendanceSession=async function(){
+  if(!['admin','academic'].includes(role)||!cache.activeAttendance) return;
+  try{
+    await updateDoc(doc(db,'settings','attendance_public'),{expiresAt:Date.now()});
+    cache.activeAttendance={...cache.activeAttendance,expiresAt:Date.now()};
+    stopAttendanceQrRefresh();
+    logAction('إيقاف حضور',cache.activeAttendance.sessionName||'');
+    showToast('تم إيقاف جلسة الحضور');
+    await loadData();renderApp();
+  }catch(err){showToast(authError(err),'error');}
+};
+
+async function handleAttendanceQr(){
+  const params=new URLSearchParams(window.location.search),token=params.get('attendance');
+  if(!token||role!=='student') return;
+  const cleanUrl=()=>history.replaceState({},document.title,window.location.pathname+window.location.hash);
+  activeTab='myattendance';localStorage.setItem('activeTab',activeTab);
+  try{
+    const {data}=await httpsCallable(functions,'recordAttendanceFromQr')({token});
+    showToast(data.alreadyRegistered?'الحضور مسجل مسبقًا لهذه المحاضرة.':'تم تسجيل حضورك بنجاح.');
+    cleanUrl();
+    await loadData();
+  }catch(err){
+    cleanUrl();
+    showToast(authError(err),'error');
+  }
+}

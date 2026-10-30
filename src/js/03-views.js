@@ -23,7 +23,8 @@ function renderView(){
       <div class="dashboard-content-grid">
         <section class="card dashboard-chart-card"><div class="section-heading"><div><span class="section-kicker">ملخص مالي</span><h3>توزيع المدفوعات</h3></div><span class="section-icon"><i class="fas fa-chart-pie"></i></span></div><div class="dashboard-chart-wrap"><canvas id="paymentMethodsChart"></canvas></div></section>
         <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${shortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
-      </div>`;
+      </div>
+      ${['admin','academic'].includes(role)?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
   }
   else if(activeTab==='library' && isStaff){
     html = `<section class="card">
@@ -64,6 +65,11 @@ function renderView(){
         <button style="grid-column:1/-1;margin-top:10px;background:var(--green);">فتح جلسة</button>
       </form>
       <div id="attMsg" style="margin-top:10px;"></div>
+      ${cache.activeAttendance && Date.now()<Number(cache.activeAttendance.expiresAt||0) ? `<section id="attendanceQrCard" class="attendance-qr-card" data-session-id="${esc(cache.activeAttendance.sessionId)}" data-expires-at="${Number(cache.activeAttendance.expiresAt)}">
+        <div><span class="section-kicker">حضور المحاضرة</span><h3>${esc(cache.activeAttendance.sessionName||'جلسة حضور')}</h3><p class="muted">يتغير الرمز تلقائيًا. وجّه الطلاب لمسحه بكاميرا الهاتف.</p></div>
+        <div class="attendance-qr-content"><canvas id="attendanceQrCanvas" width="240" height="240" aria-label="رمز تسجيل الحضور"></canvas><div id="attendanceQrMessage" class="muted">جارٍ تجهيز رمز الحضور…</div></div>
+        <button type="button" class="danger" onclick="closeAttendanceSession()"><i class="fas fa-stop"></i> إيقاف الجلسة</button>
+      </section>` : ''}
     </section>
     <section class="card">
       <h3>سجل الحضور</h3>
@@ -117,7 +123,15 @@ function renderView(){
         <button type="submit" style="grid-column:1/-1;margin-top:10px;background:var(--green);">حفظ</button>
       </form>
       <div id="accountsMsg" style="margin-top:10px;"></div>
-    </section>`;
+    </section>${role==='admin'?`<section class="card">
+      <h3><i class="fas fa-screwdriver-wrench" style="color:var(--blue);"></i> صيانة الموقع للطلاب</h3>
+      <p class="muted">عند التفعيل، يرى الطلاب رسالة الصيانة وتتوقف عنهم صفحات وبيانات البوابة. يظل دخول الإدارة والمساعدين متاحًا.</p>
+      <form id="siteMaintenanceForm" class="fields">
+        <label class="maintenance-toggle"><input type="checkbox" name="maintenanceMode" ${cache.siteStatus?.maintenanceMode?'checked':''}> تفعيل وضع الصيانة</label>
+        <div style="grid-column:1/-1"><label>الرسالة التي تظهر للطلاب</label><input name="message" maxlength="240" value="${esc(cache.siteStatus?.message||'نعمل على تحديث الموقع. يرجى المحاولة مرة أخرى لاحقًا.')}"></div>
+        <button type="submit">حفظ حالة الموقع</button>
+      </form><div id="siteMaintenanceMsg"></div>
+    </section>`:''}`;
   }
   else if(activeTab==='logs' && (role==='admin'||role==='finance')){
     html = `<section class="card">
@@ -161,7 +175,8 @@ function renderView(){
         </div>
       </div>
       <div style="background:var(--pale);padding:12px;border-radius:10px;margin-bottom:15px;">
-        <label style="font-weight:bold;color:var(--blue);"><i class="fas fa-file-upload"></i> استيراد من Excel:</label>
+        <label style="font-weight:bold;color:var(--blue);"><i class="fas fa-file-upload"></i> استيراد الطلاب من Excel:</label>
+        <p class="muted" style="margin:6px 0;">يقبل أسماء الأعمدة العربية أو الإنجليزية: الاسم، الرقم الجامعي، البريد، كلمة المرور، الفرقة، القسم، المصروفات، وصورة الطالب (اختياري كرابط مباشر). يمكن ترك البريد فارغًا ليُنشأ من الرقم الجامعي، وكلمة المرور الفارغة تُنشأ تلقائيًا.</p>
         <input type="file" accept=".xlsx,.xls" onchange="importStudentsFromExcel(event)" style="margin-top:5px;background:#fff;padding:6px;">
       </div>
       <div class="fields" style="margin-bottom:15px;">
@@ -499,6 +514,7 @@ function renderView(){
   else if(activeTab==='myattendance' && role==='student'){
     html = `<section class="card">
       <h2><i class="fas fa-user-check" style="color:var(--blue);"></i> تسجيل الحضور</h2>
+      <p class="muted">امسح رمز QR المعروض في المحاضرة بكاميرا الهاتف لتسجيل حضورك تلقائيًا. يمكنك استخدام كود المحاضر عند الحاجة.</p>
       <form id="studentAttForm" class="fields" style="max-width:400px;margin-bottom:20px;">
         <div><label>كود الحضور (PIN):</label><input name="pinCode" placeholder="كود المحاضر" required></div>
         <button style="background:var(--green);">تسجيل</button>
@@ -538,19 +554,15 @@ function renderView(){
   }
   else if(activeTab==='chat'){
     if(isStaff){
-      if(!selectedChatStudentUid && cache.students.length>0) selectedChatStudentUid = cache.students[0].uid;
       const activeStu = cache.students.find(s=>s.uid===selectedChatStudentUid);
       html = `<section class="card">
         <h2><i class="fas fa-comments" style="color:var(--blue);"></i> محادثات الطلاب</h2>
         <div class="fields" style="margin-bottom:15px;">
-          <div><label>الطالب:</label>
-            <select id="adminChatStudentSelect" onchange="changeChatStudent(this.value)">
-              ${cache.students.map(s=>`<option value="${s.uid}" ${s.uid===selectedChatStudentUid?'selected':''}>${esc(s.studentId)} — ${esc(s.name)}</option>`).join('')}
-            </select>
-          </div>
+          <div><label for="adminChatSearch">ابحث عن الطالب بالاسم أو الرقم الجامعي</label><input id="adminChatSearch" type="search" autocomplete="off" placeholder="اكتب اسم الطالب أو رقمه" oninput="filterAdminChatStudents(this.value)"></div>
         </div>
+        <div id="adminChatStudentResults" class="chat-student-results">اكتب اسم الطالب أو رقمه للبحث عن المحادثة.</div>
         <div class="chatbox-container">
-          <div style="background:var(--pale);padding:10px 15px;font-weight:bold;border-bottom:1px solid var(--line);">${esc(activeStu?.name||'')}</div>
+          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
           <div id="chatMessagesArea" class="chat-messages-area"></div>
           <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
             <input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
@@ -579,5 +591,7 @@ function renderView(){
   if(isStaff && activeTab==='dashboard') renderChart();
   if(activeTab==='chat') startChatListener();
   if(activeTab==='gpasimulator') renderSimTable();
+  if(activeTab==='attendance' && isStaff) startAttendanceQrRefresh();
+  else stopAttendanceQrRefresh();
 }
 

@@ -2,6 +2,7 @@
 function renderLogin(){
   $('#headerActions').innerHTML = '';
   appRoot.innerHTML = `<section class="card loginbox">
+    ${cache.siteStatus?.maintenanceMode ? `<div class="maintenance-banner"><i class="fas fa-screwdriver-wrench"></i><div><strong>الموقع في حالة صيانة</strong><p>${esc(cache.siteStatus.message||'الخدمات الطلابية متوقفة مؤقتًا. حاول مرة أخرى لاحقًا.')}</p></div></div>` : ''}
     <h2>تسجيل الدخول</h2>
     <p class="muted">استخدم البريد الإلكتروني وكلمة المرور.</p>
     <form id="loginForm">
@@ -32,6 +33,17 @@ function renderLogin(){
   };
 }
 
+function renderMaintenanceScreen(){
+  $('#headerActions').innerHTML = '';
+  appRoot.innerHTML = `<section id="maintenanceScreen" class="card maintenance-screen" role="status">
+    <div class="maintenance-icon"><i class="fas fa-screwdriver-wrench"></i></div>
+    <span class="section-kicker">بوابة الطالب</span>
+    <h2>الموقع في حالة صيانة</h2>
+    <p>${esc(cache.siteStatus?.message||'نعمل على تحديث الموقع. يرجى المحاولة مرة أخرى لاحقًا.')}</p>
+    <button class="secondary" type="button" onclick="location.reload()"><i class="fas fa-rotate"></i> إعادة المحاولة</button>
+  </section>`;
+}
+
 window.forgotPassword = async function(){
   const email = prompt('أدخل بريدك الإلكتروني:');
   if(!email) return;
@@ -49,7 +61,12 @@ function authError(e){
     'auth/invalid-email':'صيغة البريد غير صحيحة.',
     'auth/email-already-in-use':'البريد مستخدم مسبقًا.',
     'auth/weak-password':'كلمة المرور ضعيفة (6 أحرف على الأقل).',
-    'permission-denied':'لا تملك صلاحية هذه العملية.'
+    'permission-denied':'لا تملك صلاحية هذه العملية.',
+    'functions/unauthenticated':'سجّل الدخول ثم أعد المحاولة.',
+    'functions/permission-denied':'لا تملك صلاحية هذه العملية.',
+    'functions/not-found':'حساب الطالب غير موجود.',
+    'functions/failed-precondition':'انتهت جلسة الحضور أو لم تعد نشطة.',
+    'functions/unavailable':'الخدمة غير متاحة أثناء الصيانة. حاول لاحقًا.'
   })[e.code] || e.message || 'حدث خطأ.';
 }
 
@@ -67,6 +84,9 @@ async function loadData(){
       ? setSnap.data()
       : { vodafone:'', instapay:'', fawryCode:'', bankAccount:'', maintenanceMode:false };
   } catch { cache.settings = {}; }
+
+  const activeAttendance = await safe(getDoc(doc(db,'settings','attendance_public')), none);
+  cache.activeAttendance = activeAttendance.exists() ? activeAttendance.data() : null;
 
   const isStaffUser = ['admin','finance','academic'].includes(role);
 
@@ -167,6 +187,7 @@ function renderApp(){
   $('#headerActions').innerHTML = `<button class="secondary" id="logout" style="padding:7px 12px;font-size:.82rem;"><i class="fas fa-sign-out-alt"></i> خروج</button>`;
   $('#logout').onclick = async () => {
     if(unsubChat) { unsubChat(); unsubChat=null; }
+    stopAttendanceQrRefresh();
     localStorage.removeItem('activeTab');
     await signOut(auth);
   };

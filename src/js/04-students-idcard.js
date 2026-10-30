@@ -6,6 +6,7 @@ function renderStudentsRows(list){
     <td><div class="actions">
       <button class="secondary" onclick="showStudentCard('${s.uid}')" style="background:#e0f2fe; color:#0369a1;"><i class="fas fa-id-card"></i> كارنيه</button>
       <button class="secondary" onclick="openEditStudentModal('${s.uid}')"><i class="fas fa-edit"></i></button>
+      ${role==='admin'?`<button class="secondary" onclick="openStudentPasswordModal('${s.uid}')"><i class="fas fa-key"></i> كلمة المرور</button>`:''}
       <button class="danger" data-delete-student="${s.uid}"><i class="fas fa-trash"></i></button>
     </div></td>
   </tr>`).join(''));
@@ -97,27 +98,47 @@ window.exportStudentsToCSV = function(){
   document.body.appendChild(link); link.click(); document.body.removeChild(link);
 };
 
-const genPw=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';return Array.from(crypto.getRandomValues(new Uint32Array(10)),x=>a[x%a.length]).join('')};
+const genPw=()=>{const pools=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghijkmnopqrstuvwxyz','23456789','!@#$%&*'],pool=pools.join(''),pick=s=>s[crypto.getRandomValues(new Uint32Array(1))[0]%s.length],a=[...pools.map(pick),...Array.from({length:12},()=>pick(pool))];for(let i=a.length-1;i>0;i--){const j=crypto.getRandomValues(new Uint32Array(1))[0]%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a.join('')};
 async function createStudentAccount(d,pw){
   const secApp=initializeApp(firebaseConfig,'imp-'+Date.now()+Math.random()),secAuth=getAuth(secApp);
   try{
     const c=await createUserWithEmailAndPassword(secAuth,d.email,pw);
     await setDoc(doc(db,'users',c.user.uid),{role:'student',name:d.name,email:d.email,mustChangePassword:true});
-    await setDoc(doc(db,'students',c.user.uid),{studentId:d.studentId,name:d.name,email:d.email,level:d.level,department:d.department,totalFees:d.totalFees,paidAmount:0,createdAt:serverTimestamp()});
+    await setDoc(doc(db,'students',c.user.uid),{studentId:d.studentId,name:d.name,email:d.email,level:d.level,department:d.department,totalFees:d.totalFees,paidAmount:0,photo:d.photo||'',createdAt:serverTimestamp()});
   }finally{ await signOut(secAuth).catch(()=>{}); deleteApp(secApp); }
 }
 window.importStudentsFromExcel=function(event){
   const file=event.target.files[0]; if(!file) return;
+  const normKey=value=>String(value??'').trim().toLowerCase().normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[\s_\-()]+/g,'');
   const reader=new FileReader();
   reader.onload=async ev=>{
-    let rows; try{ const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'}); rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); }
+    let rows; try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];
+      const grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}),headers=grid[0]||[];
+      const photoColumn=headers.findIndex(h=>['photo','صورةالطالب','صورةالطالبلكرنية','رابطالصورة'].includes(normKey(h)));
+      rows=grid.slice(1).map((cells,index)=>{
+        const row=Object.fromEntries(headers.map((header,col)=>[header,cells[col]??'']));
+        if(photoColumn>=0){
+          const key=headers[photoColumn],cell=ws[XLSX.utils.encode_cell({r:index+1,c:photoColumn})];
+          if(!row[key]&&cell?.l?.Target) row[key]=cell.l.Target;
+        }
+        return row;
+      }).filter(row=>Object.values(row).some(value=>String(value??'').trim()!==''));
+    }
     catch(err){ showToast('خطأ في قراءة الملف','error'); event.target.value=''; return; }
     if(rows.length>200){ showToast('الحد الأقصى 200 طالب في الملف الواحد','error'); event.target.value=''; return; }
     let ok=0,skip=0,fail=0; const creds=[['studentId','email','tempPassword']];
+    const getField=(row,aliases)=>{const wanted=new Set(aliases.map(normKey));const key=Object.keys(row).find(k=>wanted.has(normKey(k)));return key===undefined?'':row[key];};
+    const seenIds=new Set(cache.students.map(s=>String(s.studentId)));
     for(const r of rows){
-      const d={studentId:String(r.studentId||'').trim(),name:String(r.name||'').trim(),email:String(r.email||'').trim(),level:String(r.level||'الفرقة الأولى'),department:String(r.department||'نظم المعلومات'),totalFees:Number(r.totalFees||18000)};
-      if(!d.studentId||!d.name||!/^\S+@\S+\.\S+$/.test(d.email)||cache.students.some(x=>String(x.studentId)===d.studentId)){ skip++; continue; }
-      const pw=genPw();
+      const studentId=String(getField(r,['studentId','student_id','id','الرقم الجامعي','رقم الطالب','رقم ID'])||'').trim();
+      const fees=getField(r,['totalFees','fees','المصروفات','إجمالي المصروفات']);
+      const d={studentId,name:String(getField(r,['name','الاسم','اسم الطالب'])||'').trim(),email:String(getField(r,['email','البريد','البريد الإلكتروني'])||`${studentId}@al.es.net`).trim(),level:String(getField(r,['level','الفرقة','السنة الدراسية'])||'الفرقة الأولى').trim(),department:String(getField(r,['department','القسم','التخصص'])||'نظم المعلومات').trim(),totalFees:fees===''?15000:Number(fees),photo:String(getField(r,['photo','صورة الطالب','صورة الطالب (للكرنية)','رابط الصورة'])||'').trim()};
+      const importedPassword=String(getField(r,['password','tempPassword','كلمة المرور','كلمة السر'])||'').trim();
+      if(!d.studentId||!d.name||!/^\S+@\S+\.\S+$/.test(d.email)||seenIds.has(d.studentId)||!Number.isFinite(d.totalFees)||d.totalFees<0){ skip++; continue; }
+      if(d.photo.length>700000|| (d.photo&&!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(d.photo))){skip++;continue;}
+      seenIds.add(d.studentId);
+      const pw=importedPassword||genPw();
       try{ await createStudentAccount(d,pw); creds.push([d.studentId,d.email,pw]); ok++; showToast(`جاري الإنشاء... ${ok}`); }catch(err){ fail++; }
     }
     if(ok){ const blob=new Blob(["\ufeff"+creds.map(c=>c.join(',')).join('\n')],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='كلمات_المرور_المؤقتة.csv'; document.body.appendChild(a); a.click(); a.remove(); }

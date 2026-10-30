@@ -6,6 +6,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc,
          updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
          onSnapshot, runTransaction, deleteField }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js';
 import { firebaseConfig, isFirebaseConfigured } from '../firebase-config.js';
 
 /* ---------- Helpers ---------- */
@@ -13,15 +14,16 @@ const $ = s => document.querySelector(s);
 window.$ = $;
 const appRoot = $('#app');
 
-let auth, db, user=null, profile=null, role=null;
+let auth, db, functions, user=null, profile=null, role=null;
 let activeTab = localStorage.getItem('activeTab') || 'dashboard';
 let cache = { students:[], news:[], exams:[], results:[], payments:[], settings:{},
-              logs:[], staff:[], library:[], attendance:[] };
+              siteStatus:{}, activeAttendance:null, logs:[], staff:[], library:[], attendance:[] };
 let pendingPaymentData = null;
 let paymentFilterStatus = 'all';
 let selectedChatStudentUid = null;
 let editCtx = null;
 let unsubChat = null;
+let unsubSiteStatus = null;
 
 const esc = v => String(v??'').replace(/[&<>"']/g, c => (
   {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
@@ -59,10 +61,23 @@ if(!isFirebaseConfigured()){
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    functions = getFunctions(app, 'us-central1');
+
+    unsubSiteStatus = onSnapshot(doc(db,'settings','site_status'), snap => {
+      const previous = !!cache.siteStatus?.maintenanceMode;
+      cache.siteStatus = snap.exists() ? snap.data() : {maintenanceMode:false};
+      const enabled = !!cache.siteStatus.maintenanceMode;
+      if(!user && previous !== enabled) renderLogin();
+      if(role==='student' && previous !== enabled){
+        if(enabled) renderMaintenanceScreen();
+        else if($('#maintenanceScreen')) loadData().then(renderApp).catch(()=>renderApp());
+      }
+    }, err => console.warn('تعذر متابعة حالة الموقع', err));
 
     onAuthStateChanged(auth, async u => {
       user = u;
       if(!u){
+        stopAttendanceQrRefresh();
         profile = null; role = null;
         renderLogin();
         return;
@@ -76,9 +91,16 @@ if(!isFirebaseConfigured()){
         }
         profile = snap.data();
         role = profile.role;
+        const siteStatusSnap = await getDoc(doc(db,'settings','site_status'));
+        cache.siteStatus = siteStatusSnap.exists() ? siteStatusSnap.data() : {maintenanceMode:false};
+        if(role==='student' && cache.siteStatus.maintenanceMode){
+          renderMaintenanceScreen();
+          return;
+        }
         await loadData();
         if(['admin','academic'].includes(role)) cache.students.filter(x=>'password' in x).forEach(x=>updateDoc(doc(db,'students',x.uid),{password:deleteField()}).catch(()=>{}));
         if(profile.mustChangePassword){ showForcePasswordChange(); return; }
+        await handleAttendanceQr();
         const validTabs = getValidTabsForRole(role);
         if(!validTabs.includes(activeTab)) activeTab = validTabs[0];
         renderApp();

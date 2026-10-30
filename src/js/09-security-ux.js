@@ -12,7 +12,7 @@ function showForcePasswordChange(){
     try{
       await updatePassword(user,a);
       await updateDoc(doc(db,'users',user.uid),{mustChangePassword:false});
-      profile.mustChangePassword=false; showToast('تم تغيير كلمة المرور'); await loadData(); renderApp();
+      profile.mustChangePassword=false; showToast('تم تغيير كلمة المرور'); await loadData(); await handleAttendanceQr(); renderApp();
     }catch(err){
       box.innerHTML=msg(err.code==='auth/requires-recent-login'?'انتهت صلاحية الجلسة، سجّل الدخول من جديد ثم أعد المحاولة':err.code==='auth/weak-password'?'كلمة المرور ضعيفة':err.message,'error');
     }

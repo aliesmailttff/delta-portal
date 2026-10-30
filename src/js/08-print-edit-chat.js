@@ -205,14 +205,14 @@ window.calculateMonthlyInstallment = function(remainingAmount) {
 };
 
 window.setPaymentFilter = function(s){ paymentFilterStatus = s; renderApp(); };
-window.changeChatStudent = function(uid){ selectedChatStudentUid = uid; startChatListener(); };
+window.changeChatStudent = function(uid){ selectedChatStudentUid = uid; renderApp(); };
 
 function startChatListener(){
   if(unsubChat) unsubChat();
   const area = $('#chatMessagesArea'); if(!area) return;
   const isStaff = ['admin','finance','academic'].includes(role);
   const targetUid = isStaff ? selectedChatStudentUid : user.uid;
-  if(!targetUid) return;
+  if(!targetUid){ area.innerHTML='<p class="muted" style="text-align:center;margin:auto;">ابحث عن الطالب واختره لعرض المحادثة.</p>'; return; }
 
   const q = query(collection(db,'chats',targetUid,'messages'), orderBy('createdAt','asc'));
   unsubChat = onSnapshot(q, snap => {

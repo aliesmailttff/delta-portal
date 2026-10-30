@@ -5,7 +5,7 @@
     npm i -g firebase-tools
     firebase login
     firebase use delta-student-portal
-    firebase deploy --only firestore:rules,hosting
+    firebase deploy --only functions,firestore:rules,hosting
 
 الموقع هيبقى على: https://delta-student-portal.web.app
 
@@ -15,6 +15,9 @@
 3. جرّب بحساب طالب وحساب مالي وحساب أكاديمي (قواعد Firestore اتكتبت من غير emulator، اختبرها في Rules Playground).
 4. من Google Cloud > APIs & Services > Credentials قيّد الـ API key على دومين موقعك.
 5. التطبيق: افتح الموقع على الموبايل واختار "إضافة إلى الشاشة الرئيسية".
+
+## وظائف الإدارة والحضور
+إعادة تعيين كلمة مرور الطالب، حذف المحادثة للطرفين، ورموز QR المتغيرة تعتمد على Cloud Functions. يتطلب نشرها تفعيل خطة Blaze في مشروع Firebase وربط حساب فوترة. الكود يعمل محليًا بعد تثبيت الاعتماديات داخل `functions`، وانشره مع قواعد Firestore والاستضافة بالأمر أعلاه. وضع صيانة الطلاب يُدار من تبويب الحسابات، بينما وضع صيانة الدفع منفصل.
 
 ## ملاحظة أمنية مهمة
 النسخة السابقة كانت بتخزّن كلمة مرور الطالب كنص عادي في Firestore وبتعرضها في بطاقة الطالب. الكود الجديد وقف ده،

@@ -54,8 +54,6 @@ window.printTranscript=()=>{
 };
 function resultsViews(staff,st){
   if(activeTab==='results'&&staff){
-    const rows=cache.results.slice().sort((a,b)=>String(b.year||'').localeCompare(String(a.year||''))).map(r=>{const s=cache.students.find(x=>x.uid===r.studentUid);
-      return `<tr><td>${esc(s?.name||r.studentName||'—')}</td><td>${esc(r.course)}</td><td>${esc(r.year||'—')} ${esc(r.semester||'')}</td><td>${r.credits??'—'}</td><td>${Number(r.score)}</td><td>${grade(Number(r.score))}</td><td><div class="actions"><button class="secondary" onclick="editResultModal('${r.id}')"><i class="fas fa-edit"></i></button><button class="danger" data-delete="results" data-id="${r.id}"><i class="fas fa-trash"></i></button></div></td></tr>`;}).join('');
     return `<section class="card"><h2>رصد النتائج</h2><form id="resultForm" class="fields">
       <div><label>الطالب</label><select name="studentUid" required>${cache.students.map(s=>`<option value="${s.uid}">${esc(s.studentId)} — ${esc(s.name)}</option>`).join('')}</select></div>
       <div><label>المادة</label><input name="course" required></div>
@@ -66,7 +64,10 @@ function resultsViews(staff,st){
       <button ${cache.students.length?'':'disabled'} style="margin-top:10px;">حفظ</button></form></section>
       <section class="card"><h3><i class="fas fa-file-excel"></i> رفع درجات من Excel</h3><p class="muted">الصف الأول عناوين، والأعمدة بالترتيب: الرقم الجامعي | المادة | السنة (2025/2026) | الفصل (الفصل الأول/الفصل الثاني/الفصل الصيفي) | الساعات | الدرجة</p>
       <input type="file" accept=".xlsx,.xls,.csv" onchange="previewGradesExcel(this)"><div id="gradesPreview" style="margin-top:10px;">${gradesView()}</div></section>
-      <section class="card"><h3>النتائج المسجلة</h3>${table(['الطالب','المادة','الفصل','الساعات','الدرجة','التقدير','إجراء'],rows)}</section>`;
+      <section class="card"><h3>البحث عن نتيجة طالب</h3><label for="adminResultsSearch">ابحث باسم الطالب أو الرقم الجامعي</label>
+        <input id="adminResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)">
+        <div id="adminResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div>
+      </section>`;
   }
   if(activeTab==='myresults'&&role==='student'){
     const all=cache.results, tot=calcGpa(all), earned=all.filter(r=>Number(r.score)>=50).reduce((a,r)=>a+(Number(r.credits)||3),0);

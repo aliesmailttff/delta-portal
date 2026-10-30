@@ -18,6 +18,7 @@
       10-schedule-requests الجدول الأسبوعي وطلبات الطلاب
       11-results-gpa      النتائج، المعدل، رفع Excel، كشف الدرجات
       12-courses-registration المواد وتسجيلها
+      13-admin-tools          الاستيراد، الصيانة، البحث، المحادثة، وQR
     build.mjs             يجمّع src/js في public/js/app.js
     tests/                اختبارات قواعد Firestore
 

@@ -39,6 +39,7 @@ function bindForms(){
   }
 
   $('#accountsForm')?.addEventListener('submit', saveAccountsData);
+  $('#siteMaintenanceForm')?.addEventListener('submit', saveSiteMaintenance);
   $('#studentForm')?.addEventListener('submit', createStudent);
   $('#staffForm')?.addEventListener('submit', createStaff);
   $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);

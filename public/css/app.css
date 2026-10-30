@@ -141,3 +141,21 @@ th{background:var(--pale);color:var(--blue);font-size:.9rem}
 @media(max-width:1100px){.dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-content-grid{grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr)}}
 @media(max-width:820px){.wrap{padding:0 14px;margin:18px auto}.app-layout{grid-template-columns:minmax(0,1fr);gap:16px}.app-sidebar{position:static;max-height:none;padding:14px;border-radius:18px}.sidebar-brand{padding:0 5px 12px}.sidebar-caption{padding-top:10px}.tabs.side-nav{flex-direction:row;gap:7px;overflow-x:auto;overflow-y:hidden;padding:2px 0 8px}.side-nav button{width:auto;min-width:max-content;min-height:40px;padding:8px 11px}.side-nav button:hover{transform:none}.sidebar-account{display:none}.dashboard-content-grid{grid-template-columns:minmax(0,1fr)}.app-page-heading{margin-bottom:15px}}
 @media(max-width:560px){.top{padding:14px}.brand h1{font-size:.98rem}.brand p{font-size:.72rem}.dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.dashboard-stat{gap:9px;padding:13px 10px}.dashboard-stat-icon{flex-basis:38px;width:38px;height:38px;border-radius:12px;font-size:.9rem}.dashboard-stat span{font-size:.67rem}.dashboard-stat strong{font-size:1.15rem}.dashboard-stat small{font-size:.61rem}.app-page-heading h2{font-size:1.15rem}.secure-status{padding:7px 9px;font-size:.68rem}.dashboard-alert{align-items:flex-start;flex-wrap:wrap}.dashboard-alert button{margin-right:50px}.dashboard-chart-card,.dashboard-shortcuts{padding:15px}.dashboard-chart-wrap{height:230px}}
+
+/* Student maintenance, searchable admin views, and attendance QR. */
+.maintenance-banner{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;padding:14px;border:1px solid #f0d28a;border-radius:14px;background:#fff8e7;color:#765400}
+.maintenance-banner>i{font-size:1.2rem;margin-top:2px}.maintenance-banner p{margin:4px 0 0;font-size:.84rem}
+.maintenance-screen{max-width:620px;margin:8vh auto;padding:36px 24px;text-align:center}
+.maintenance-icon{display:grid;place-items:center;width:68px;height:68px;margin:0 auto 16px;border-radius:22px;background:#fff3d6;color:#b77900;font-size:1.6rem}
+.maintenance-screen h2{margin:10px 0;color:var(--ink)}.maintenance-screen p{margin:0 auto 20px;color:var(--muted);max-width:460px}
+.maintenance-toggle{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px}
+.attendance-qr-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;margin:16px 0;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--bg)}
+.attendance-qr-card h3{margin:4px 0}.attendance-qr-content{grid-row:span 2;display:grid;justify-items:center;gap:8px;padding:12px;border-radius:14px;background:#fff;text-align:center}
+.attendance-qr-content canvas{display:block;max-width:100%;height:auto!important}.attendance-qr-content .muted{max-width:240px;font-size:.75rem}
+.chat-student-results{display:flex;flex-wrap:wrap;gap:8px;margin:-5px 0 14px}
+.chat-student-result{display:flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);box-shadow:none}
+.chat-student-result span,.chat-conversation-heading span{color:var(--muted);font-size:.76rem}
+.chat-student-result.active{border-color:var(--blue2);background:var(--pale)}
+.chat-conversation-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 15px;border-bottom:1px solid var(--line);background:var(--pale)}
+.chat-conversation-heading button{margin-right:auto}
+@media(max-width:560px){.attendance-qr-card{grid-template-columns:minmax(0,1fr)}.attendance-qr-content{grid-row:auto}.chat-conversation-heading button{margin-right:0}}

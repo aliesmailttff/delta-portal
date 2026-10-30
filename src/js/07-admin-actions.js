@@ -90,7 +90,8 @@ async function saveAttendanceSession(e){
   try{
     await setDoc(doc(db,'settings','active_attendance'),{code:String(d.code).trim(),sessionId,createdAt:serverTimestamp()});
     await setDoc(doc(db,'settings','attendance_public'),{sessionName:d.sessionName.trim(),sessionId,expiresAt});
-    logAction('فتح حضور',d.sessionName); showToast('تم فتح الجلسة'); 
+    logAction('فتح حضور',d.sessionName); showToast('تم فتح الجلسة');
+    await loadData(); renderApp();
   }catch(err){showToast(err.message,'error');}
 }
 
