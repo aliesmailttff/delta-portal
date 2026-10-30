@@ -83,6 +83,7 @@ function renderView(){
     <section class="card"><h3>ملخص الجلسات المسجلة</h3><p class="muted">الغياب يُحسب من الجلسات التي انتهت بعد تفعيل تسجيل المادة والفرقة.</p>
       ${table(['المادة','الفرقة','المحاضرة','الحضور','الغياب','التاريخ'],sessionRows)}</section>
     <section class="card"><h3>حد تنبيه الغياب</h3><form id="attendanceThresholdForm" class="fields" style="max-width:480px"><div><label>تنبيه عند وصول نسبة الغياب إلى</label><input type="number" name="absenceAlertPercent" min="1" max="100" value="${Number(cache.activeAttendance?.absenceAlertPercent)||25}" required></div><button type="submit">حفظ النسبة</button></form></section>
+    <section class="card"><h3>تصدير تقرير الحضور</h3><p class="muted">ينشئ ملف CSV متوافقًا مع Excel، ويعرض حالة كل طالب في كل جلسة مكتملة.</p><div class="fields"><div><label>المادة</label><select id="attendanceExportCourse"><option value="">كل المواد</option>${[...new Set((cache.activeAttendance?.sessions||[]).map(s=>s.course).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar')).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></div><div><label>الفرقة</label><select id="attendanceExportLevel"><option value="">كل الفرق</option>${LEVELS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><button type="button" id="attendanceExportBtn">تنزيل التقرير</button></div></section>
     <section class="card">
       <h3>سجل الحضور</h3>
       ${table(['الطالب','الرقم','المادة','المحاضرة','الوقت'], cache.attendance.map(a=>`<tr>
