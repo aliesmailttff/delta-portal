@@ -157,7 +157,7 @@ function getNavItems(){
     ['schedule','الجدول'],['requests',`الطلبات${reqBadge()}`],['courses','المواد والتسجيل'],['news','الأخبار'],['chat','شؤون الطلاب']
   ];
   else items = [
-    ['home','ملفي والمصروفات'],['gpasimulator','محاكي GPA'],
+    ['home','الرئيسية'],['gpasimulator','محاكي GPA'],
     ['mylibrary','المكتبة PDF'],['myattendance','سجل الحضور'],
     ['myresults','نتيجتي'],['myexams','الامتحانات'],
     ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['chat','التواصل']

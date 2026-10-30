@@ -358,7 +358,8 @@ function renderView(){
               </button>
             </form><div id="paymentMsg" style="margin-top:10px;"></div>`);
 
-    html = `<h2>أهلاً بك يا ${esc(s.name||profile.name||'الطالب')} 👋</h2>
+    html = `${studentDashboardView(s,{totalFees,paidAmount,remaining,pendingTotal})}
+      <h2 class="student-section-title">ملفي والمصروفات</h2>
     
       <div class="grid" style="margin-bottom:20px;">
         <div class="stat" style="border-right:4px solid var(--blue);">
