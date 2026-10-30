@@ -6,25 +6,24 @@ function renderView(){
   if(activeTab==='dashboard' && isStaff){
     const totalPaid = cache.payments.filter(p=>p.status==='مقبول').reduce((a,p)=>a+Number(p.amount||0),0);
     const pending = cache.payments.filter(p=>p.status==='قيد المراجعة').length;
+    const shortcuts = role==='finance'
+      ? [['payments','مراجعة المدفوعات','fa-wallet'],['accounts','حسابات الدفع','fa-university'],['chat','رسائل الطلاب','fa-comments']]
+      : [['students','إدارة الطلاب','fa-users'],['results','النتائج','fa-chart-bar'],['requests','طلبات الطلاب','fa-inbox']];
     let banner = '';
     if(pending>0 && (role==='admin'||role==='finance')){
-      banner = `<div class="card" style="background:#fff3cd;border-color:#ffeeba;color:#856404;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <div><i class="fas fa-bell"></i> <strong>تنبيه:</strong> ${pending} إيصال بانتظار الاعتماد.</div>
-        <button style="background:#856404;" data-go="payments">المراجعة</button>
-      </div>`;
+      banner = `<div class="dashboard-alert"><span class="alert-icon"><i class="fas fa-bell"></i></span><div><strong>تحتاج إلى مراجعة</strong><p>${pending} إيصال دفع بانتظار الاعتماد.</p></div><button data-go="payments">فتح المدفوعات <i class="fas fa-arrow-left"></i></button></div>`;
     }
     html = `${banner}
-      <h2>لوحة التحكم</h2>
-      <div class="grid">
-        ${stat('الطلاب', cache.students.length)}
-        ${stat('النتائج', cache.results.length)}
-        ${stat('الامتحانات', cache.exams.length)}
-        ${stat('التحصيلات', money(totalPaid))}
+      <div class="dashboard-stats">
+        <article class="dashboard-stat"><div class="dashboard-stat-icon blue"><i class="fas fa-user-graduate"></i></div><div><span>إجمالي الطلاب</span><strong>${cache.students.length}</strong><small>ملفات الطلاب المسجلة</small></div></article>
+        <article class="dashboard-stat"><div class="dashboard-stat-icon violet"><i class="fas fa-chart-line"></i></div><div><span>النتائج المسجلة</span><strong>${cache.results.length}</strong><small>سجلات النتائج الأكاديمية</small></div></article>
+        <article class="dashboard-stat"><div class="dashboard-stat-icon amber"><i class="fas fa-receipt"></i></div><div><span>إيصالات قيد المراجعة</span><strong>${pending}</strong><small>تتطلب متابعة</small></div></article>
+        <article class="dashboard-stat"><div class="dashboard-stat-icon green"><i class="fas fa-coins"></i></div><div><span>إجمالي التحصيلات</span><strong>${money(totalPaid)}</strong><small>المدفوعات المعتمدة</small></div></article>
       </div>
-      <section class="card" style="margin-top:20px;">
-        <h3><i class="fas fa-chart-pie" style="color:var(--blue);"></i> توزيع المدفوعات</h3>
-        <div style="max-width:400px;margin:20px auto;"><canvas id="paymentMethodsChart"></canvas></div>
-      </section>`;
+      <div class="dashboard-content-grid">
+        <section class="card dashboard-chart-card"><div class="section-heading"><div><span class="section-kicker">ملخص مالي</span><h3>توزيع المدفوعات</h3></div><span class="section-icon"><i class="fas fa-chart-pie"></i></span></div><div class="dashboard-chart-wrap"><canvas id="paymentMethodsChart"></canvas></div></section>
+        <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${shortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
+      </div>`;
   }
   else if(activeTab==='library' && isStaff){
     html = `<section class="card">

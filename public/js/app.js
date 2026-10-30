@@ -242,7 +242,7 @@ async function loadData(){
 }
 
 /* ---------- Nav ---------- */
-function nav(){
+function getNavItems(){
   const pendingCount = cache.payments.filter(p=>p.status==='قيد المراجعة').length;
   const badge = pendingCount>0 ? ` <span style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:99px;font-size:.75rem;">${pendingCount}</span>` : '';
   let items = [];
@@ -271,15 +271,35 @@ function nav(){
     activeTab = items[0][0];
     localStorage.setItem('activeTab', activeTab);
   }
-  return `<nav class="tabs">${items.map(([id,label])=>`<button class="${activeTab===id?'active':''}" data-tab="${id}">${label}</button>`).join('')}</nav>`;
+  return items;
+}
+
+function navIcon(id){
+  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper'};
+  return icons[id]||'fa-circle';
+}
+
+function nav(){
+  const items=getNavItems();
+  const p=profile||{};
+  const roleLabel=role==='admin'?'مدير النظام':role==='finance'?'الشؤون المالية':role==='academic'?'الشؤون الأكاديمية':'طالب';
+  const displayName=p.name||user.email;
+  const initial=String(displayName||'د').trim().charAt(0)||'د';
+  return `<aside class="app-sidebar" aria-label="القائمة الرئيسية">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo"><i class="fas fa-graduation-cap"></i></div>
+      <div><strong>دلتا</strong><span>بوابة الخدمات</span></div>
+    </div>
+    <div class="sidebar-caption">التنقل الرئيسي</div>
+    <nav class="tabs side-nav">${items.map(([id,label])=>`<button type="button" class="${activeTab===id?'active':''}" data-tab="${id}"><i class="fas ${navIcon(id)}" aria-hidden="true"></i><span class="nav-item-label">${label}</span></button>`).join('')}</nav>
+    <div class="sidebar-account"><div class="sidebar-avatar">${esc(initial)}</div><div class="sidebar-account-copy"><strong>${esc(displayName)}</strong><span>${roleLabel}</span></div></div>
+  </aside>`;
 }
 
 function renderApp(){
   const p = profile || {};
   const roleLabel = role==='admin'?'(Super Admin)':role==='finance'?'(مالي)':role==='academic'?'(أكاديمي)':'';
-  $('#headerActions').innerHTML = `
-    <span style="font-size:.85rem;">${esc(p.name||user.email)} ${roleLabel}</span>
-    <button class="secondary" id="logout" style="margin-right:10px;padding:6px 10px;font-size:.8rem;">خروج</button>`;
+  $('#headerActions').innerHTML = `<button class="secondary" id="logout" style="padding:7px 12px;font-size:.82rem;"><i class="fas fa-sign-out-alt"></i> خروج</button>`;
   $('#logout').onclick = async () => {
     if(unsubChat) { unsubChat(); unsubChat=null; }
     localStorage.removeItem('activeTab');
@@ -289,7 +309,11 @@ function renderApp(){
   const tBtn = $('#themeBtnText');
   if(tBtn) tBtn.textContent = document.body.dataset.theme === 'dark' ? 'فاتح' : 'داكن';
 
-  appRoot.innerHTML = nav() + `<div id="view"></div>`;
+  const displayName=esc(p.name||user.email);
+  appRoot.innerHTML = `<div class="app-layout">${nav()}<section class="app-main">
+    <div class="app-page-heading"><div><span class="page-eyebrow">بوابة الخدمات الأكاديمية ${roleLabel}</span><h2>أهلًا بعودتك، ${displayName}</h2><p>كل خدماتك ومتابعاتك في مكان واحد.</p></div><div class="secure-status"><i class="fas fa-shield-alt"></i><span>جلسة آمنة</span></div></div>
+    <div id="view"></div>
+  </section></div>`;
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
     if(unsubChat){ unsubChat(); unsubChat=null; }
     activeTab = b.dataset.tab;
@@ -322,25 +346,24 @@ function renderView(){
   if(activeTab==='dashboard' && isStaff){
     const totalPaid = cache.payments.filter(p=>p.status==='مقبول').reduce((a,p)=>a+Number(p.amount||0),0);
     const pending = cache.payments.filter(p=>p.status==='قيد المراجعة').length;
+    const shortcuts = role==='finance'
+      ? [['payments','مراجعة المدفوعات','fa-wallet'],['accounts','حسابات الدفع','fa-university'],['chat','رسائل الطلاب','fa-comments']]
+      : [['students','إدارة الطلاب','fa-users'],['results','النتائج','fa-chart-bar'],['requests','طلبات الطلاب','fa-inbox']];
     let banner = '';
     if(pending>0 && (role==='admin'||role==='finance')){
-      banner = `<div class="card" style="background:#fff3cd;border-color:#ffeeba;color:#856404;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <div><i class="fas fa-bell"></i> <strong>تنبيه:</strong> ${pending} إيصال بانتظار الاعتماد.</div>
-        <button style="background:#856404;" data-go="payments">المراجعة</button>
-      </div>`;
+      banner = `<div class="dashboard-alert"><span class="alert-icon"><i class="fas fa-bell"></i></span><div><strong>تحتاج إلى مراجعة</strong><p>${pending} إيصال دفع بانتظار الاعتماد.</p></div><button data-go="payments">فتح المدفوعات <i class="fas fa-arrow-left"></i></button></div>`;
     }
     html = `${banner}
-      <h2>لوحة التحكم</h2>
-      <div class="grid">
-        ${stat('الطلاب', cache.students.length)}
-        ${stat('النتائج', cache.results.length)}
-        ${stat('الامتحانات', cache.exams.length)}
-        ${stat('التحصيلات', money(totalPaid))}
+      <div class="dashboard-stats">
+        <article class="dashboard-stat"><div class="dashboard-stat-icon blue"><i class="fas fa-user-graduate"></i></div><div><span>إجمالي الطلاب</span><strong>${cache.students.length}</strong><small>ملفات الطلاب المسجلة</small></div></article>
+        <article class="dashboard-stat"><div class="dashboard-stat-icon violet"><i class="fas fa-chart-line"></i></div><div><span>النتائج المسجلة</span><strong>${cache.results.length}</strong><small>سجلات النتائج الأكاديمية</small></div></article>
+        <article class="dashboard-stat"><div class="dashboard-stat-icon amber"><i class="fas fa-receipt"></i></div><div><span>إيصالات قيد المراجعة</span><strong>${pending}</strong><small>تتطلب متابعة</small></div></article>
+        <article class="dashboard-stat"><div class="dashboard-stat-icon green"><i class="fas fa-coins"></i></div><div><span>إجمالي التحصيلات</span><strong>${money(totalPaid)}</strong><small>المدفوعات المعتمدة</small></div></article>
       </div>
-      <section class="card" style="margin-top:20px;">
-        <h3><i class="fas fa-chart-pie" style="color:var(--blue);"></i> توزيع المدفوعات</h3>
-        <div style="max-width:400px;margin:20px auto;"><canvas id="paymentMethodsChart"></canvas></div>
-      </section>`;
+      <div class="dashboard-content-grid">
+        <section class="card dashboard-chart-card"><div class="section-heading"><div><span class="section-kicker">ملخص مالي</span><h3>توزيع المدفوعات</h3></div><span class="section-icon"><i class="fas fa-chart-pie"></i></span></div><div class="dashboard-chart-wrap"><canvas id="paymentMethodsChart"></canvas></div></section>
+        <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${shortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
+      </div>`;
   }
   else if(activeTab==='library' && isStaff){
     html = `<section class="card">
