@@ -5,7 +5,7 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc,
          updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
-         onSnapshot, runTransaction, deleteField }
+         onSnapshot, runTransaction, deleteField, writeBatch }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js';
 import { firebaseConfig, isFirebaseConfigured } from '../firebase-config.js';
@@ -449,10 +449,19 @@ function renderView(){
     </section>`;
   }
   else if(activeTab==='attendance' && isStaff){
+    const courseChoices=[...new Set([...(cache.courses||[]).map(x=>x.name),...(cache.schedule||[]).map(x=>x.course)].filter(Boolean))];
+    const sessionRows=(cache.activeAttendance?.sessions||[]).filter(x=>Number(x.expiresAt||0)<=Date.now()&&x.course)
+      .slice().sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0)).map(x=>{
+        const enrolled=cache.students.filter(s=>s.level===x.level).length;
+        const present=cache.attendance.filter(a=>a.sessionId===x.sessionId).length;
+        return `<tr><td>${esc(x.course)}</td><td>${esc(x.level)}</td><td>${esc(x.sessionName)}</td><td>${present} / ${enrolled}</td><td>${Math.max(0,enrolled-present)}</td><td>${new Date(Number(x.createdAt||x.expiresAt)).toLocaleDateString('ar-EG')}</td></tr>`;
+      }).join('');
     html = `<section class="card">
       <h2><i class="fas fa-qrcode" style="color:var(--blue);"></i> فتح جلسة حضور</h2>
       <form id="attForm" class="fields">
         <div><label>اسم المحاضرة</label><input name="sessionName" required></div>
+        <div><label>المادة</label><input name="course" list="attendanceCourseList" required><datalist id="attendanceCourseList">${courseChoices.map(x=>`<option value="${esc(x)}"></option>`).join('')}</datalist></div>
+        <div><label>الفرقة</label><select name="level">${LEVELS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
         <div><label>كود الجلسة (PIN)</label><input name="code" value="${Math.floor(1000+Math.random()*9000)}" required></div>
         <div><label>مدة الجلسة (دقيقة)</label><input name="minutes" type="number" min="1" max="180" value="15" required></div>
         <button style="grid-column:1/-1;margin-top:10px;background:var(--green);">فتح جلسة</button>
@@ -464,11 +473,14 @@ function renderView(){
         <button type="button" class="danger" onclick="closeAttendanceSession()"><i class="fas fa-stop"></i> إيقاف الجلسة</button>
       </section>` : ''}
     </section>
+    <section class="card"><h3>ملخص الجلسات المسجلة</h3><p class="muted">الغياب يُحسب من الجلسات التي انتهت بعد تفعيل تسجيل المادة والفرقة.</p>
+      ${table(['المادة','الفرقة','المحاضرة','الحضور','الغياب','التاريخ'],sessionRows)}</section>
+    <section class="card"><h3>حد تنبيه الغياب</h3><form id="attendanceThresholdForm" class="fields" style="max-width:480px"><div><label>تنبيه عند وصول نسبة الغياب إلى</label><input type="number" name="absenceAlertPercent" min="1" max="100" value="${Number(cache.activeAttendance?.absenceAlertPercent)||25}" required></div><button type="submit">حفظ النسبة</button></form></section>
     <section class="card">
       <h3>سجل الحضور</h3>
-      ${table(['الطالب','الرقم','المحاضرة','الوقت'], cache.attendance.map(a=>`<tr>
+      ${table(['الطالب','الرقم','المادة','المحاضرة','الوقت'], cache.attendance.map(a=>`<tr>
         <td>${esc(a.studentName)}</td><td><code>${esc(a.studentId)}</code></td>
-        <td>${esc(a.sessionName)}</td>
+        <td>${esc(a.course||'—')}</td><td>${esc(a.sessionName)}</td>
         <td><small class="muted">${a.createdAt?.toDate ? a.createdAt.toDate().toLocaleTimeString('ar-EG') : '—'}</small></td>
       </tr>`).join(''))}
     </section>`;
@@ -914,6 +926,7 @@ function renderView(){
         <button style="background:var(--green);">تسجيل</button>
       </form>
       <div id="studentAttMsg"></div>
+      ${renderStudentAttendanceSummary()}
       <h3>سجل الحضور</h3>
       ${table(['المحاضرة','الوقت'], cache.attendance.filter(a=>a.studentUid===user.uid).map(a=>`<tr>
         <td>${esc(a.sessionName)}</td>
@@ -1233,6 +1246,7 @@ function bindForms(){
   $('#staffForm')?.addEventListener('submit', createStaff);
   $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);
   $('#attForm')?.addEventListener('submit', saveAttendanceSession);
+  $('#attendanceThresholdForm')?.addEventListener('submit', saveAttendanceThreshold);
   $('#studentAttForm')?.addEventListener('submit', verifyStudentAttendance);
   $('#resultForm')?.addEventListener('submit', saveResult);
   $('#examForm')?.addEventListener('submit', saveExam);
@@ -1450,12 +1464,33 @@ async function createStaff(e){
 async function saveAttendanceSession(e){
   e.preventDefault();
   const form=e.currentTarget,d=Object.fromEntries(new FormData(form).entries());
-  const sessionId=String(Date.now()),expiresAt=Date.now()+Number(d.minutes||15)*60000;
+  const now=Date.now(),expiresAt=now+Number(d.minutes||15)*60000;
+  const sessionId=`${now}-${Math.random().toString(36).slice(2,8)}`;
+  const sessionName=String(d.sessionName||'').trim(),course=String(d.course||'').trim(),level=String(d.level||'').trim();
+  if(!sessionName||!course||!level){showToast('أدخل اسم المحاضرة والمادة والفرقة','error');return;}
+  if(cache.activeAttendance&&Number(cache.activeAttendance.expiresAt||0)>now){showToast('أوقف جلسة الحضور الحالية أولاً','error');return;}
   try{
-    await setDoc(doc(db,'settings','active_attendance'),{code:String(d.code).trim(),sessionId,createdAt:serverTimestamp()});
-    await setDoc(doc(db,'settings','attendance_public'),{sessionName:d.sessionName.trim(),sessionId,expiresAt});
-    logAction('فتح حضور',d.sessionName); showToast('تم فتح الجلسة');
+    const priorSessions=Array.isArray(cache.activeAttendance?.sessions)?cache.activeAttendance.sessions:[];
+    const session={sessionId,sessionName,course,level,createdAt:now,expiresAt,status:'open'};
+    const publicData={sessionName,course,level,sessionId,expiresAt,absenceAlertPercent:Number(cache.activeAttendance?.absenceAlertPercent)||25,sessions:[...priorSessions,session].slice(-1000)};
+    const batch=writeBatch(db);
+    batch.set(doc(db,'settings','active_attendance'),{code:String(d.code).trim(),sessionId,createdAt:serverTimestamp()});
+    batch.set(doc(db,'settings','attendance_public'),publicData);
+    await batch.commit();
+    cache.activeAttendance=publicData;
+    logAction('فتح حضور',`${course} — ${level}`); showToast('تم فتح الجلسة');
     await loadData(); renderApp();
+  }catch(err){showToast(err.message,'error');}
+}
+
+async function saveAttendanceThreshold(e){
+  e.preventDefault();
+  const percent=Number(new FormData(e.currentTarget).get('absenceAlertPercent'));
+  if(!(percent>=1&&percent<=100)){showToast('أدخل نسبة بين 1 و100','error');return;}
+  try{
+    await setDoc(doc(db,'settings','attendance_public'),{absenceAlertPercent:percent},{merge:true});
+    cache.activeAttendance={...(cache.activeAttendance||{}),absenceAlertPercent:percent};
+    showToast('تم حفظ حد تنبيه الغياب');renderApp();
   }catch(err){showToast(err.message,'error');}
 }
 
@@ -1467,7 +1502,7 @@ async function verifyStudentAttendance(e){
     if(!pub.exists()||Date.now()>pub.data().expiresAt){box.innerHTML=msg('لا توجد جلسة حضور مفتوحة حالياً','error');return;}
     const a=pub.data(),s=cache.students[0];
     if(cache.attendance.some(x=>x.sessionId===a.sessionId&&x.studentUid===user.uid)){box.innerHTML=msg('سجلت حضورك مسبقًا','error');return;}
-    await setDoc(doc(db,'attendance',a.sessionId+'_'+user.uid),{studentUid:user.uid,studentName:s.name,studentId:s.studentId,sessionName:a.sessionName,sessionId:a.sessionId,pin:String(d.pinCode).trim(),createdAt:serverTimestamp()});
+    await setDoc(doc(db,'attendance',a.sessionId+'_'+user.uid),{studentUid:user.uid,studentName:s.name,studentId:s.studentId,sessionName:a.sessionName,course:a.course||'',level:a.level||'',sessionId:a.sessionId,pin:String(d.pinCode).trim(),createdAt:serverTimestamp()});
     showToast('تم تسجيل الحضور'); form.reset(); await loadData(); renderApp();
   }catch(err){box.innerHTML=msg(err.code==='permission-denied'?'كود الحضور غير صحيح أو انتهت الجلسة':err.message,'error');}
 }
@@ -2151,8 +2186,10 @@ async function refreshAttendanceQrCode(){
 window.closeAttendanceSession=async function(){
   if(!['admin','academic'].includes(role)||!cache.activeAttendance) return;
   try{
-    await updateDoc(doc(db,'settings','attendance_public'),{expiresAt:Date.now()});
-    cache.activeAttendance={...cache.activeAttendance,expiresAt:Date.now()};
+    const closedAt=Date.now(),sessionId=cache.activeAttendance.sessionId;
+    const sessions=(cache.activeAttendance.sessions||[]).map(s=>s.sessionId===sessionId?{...s,status:'completed',expiresAt:closedAt,closedAt}:s);
+    await updateDoc(doc(db,'settings','attendance_public'),{expiresAt:closedAt,sessions});
+    cache.activeAttendance={...cache.activeAttendance,expiresAt:closedAt,sessions};
     stopAttendanceQrRefresh();
     logAction('إيقاف حضور',cache.activeAttendance.sessionName||'');
     showToast('تم إيقاف جلسة الحضور');
@@ -2262,4 +2299,27 @@ function studentDashboardView(student,financial){
       <button type="button" class="student-dashboard-card" data-go="home"><span class="student-dashboard-icon amber"><i class="fas fa-wallet"></i></span><span class="student-dashboard-label">المتبقي من المصروفات</span><strong>${money(financial.remaining)}</strong><small>${financial.pendingTotal?`${money(financial.pendingTotal)} قيد المراجعة`:`إجمالي المصروفات ${money(financial.totalFees)}`}</small></button>
     </div>
     <section class="card student-notices-card"><div class="section-heading"><div><span class="section-kicker">آخر التحديثات</span><h3><i class="fas fa-bell" style="color:var(--blue)"></i> تنبيهات ومتابعات</h3></div><span class="pill">${notices.length} تحديث</span></div><div class="student-notices-list">${noticeContent}</div></section>`;
+}
+function renderStudentAttendanceSummary(){
+  const student=cache.students?.[0]||{};
+  const level=student.level||'';
+  const threshold=Number(cache.activeAttendance?.absenceAlertPercent)||25;
+  const sessions=(cache.activeAttendance?.sessions||[]).filter(s=>
+    s.course&&s.level===level&&Number(s.expiresAt||0)<=Date.now()&&s.status!=='cancelled'
+  );
+  if(!sessions.length) return `<section class="card"><h3>ملخص الحضور والغياب</h3><p class="muted">سيظهر الملخص بعد انتهاء جلسات حضور مسجلة لمادتك وفرقتك. لا تتضمن السجلات السابقة بيانات الجلسات التي لم يحضرها الطالب.</p></section>`;
+  const presentIds=new Set((cache.attendance||[]).filter(a=>a.studentUid===user.uid).map(a=>a.sessionId));
+  const byCourse=new Map();
+  for(const session of sessions){
+    const row=byCourse.get(session.course)||{total:0,present:0};
+    row.total++;
+    if(presentIds.has(session.sessionId)) row.present++;
+    byCourse.set(session.course,row);
+  }
+  const rows=[...byCourse.entries()].sort(([a],[b])=>a.localeCompare(b,'ar')).map(([course,row])=>{
+    const absent=row.total-row.present,percent=Math.round(absent/row.total*100);
+    const alert=absent>0&&percent>=threshold?` <span class="pill" style="background:#fee2e2;color:#991b1b">تنبيه غياب</span>`:'';
+    return `<tr><td>${esc(course)}${alert}</td><td>${row.total}</td><td>${row.present}</td><td>${absent}</td><td>${percent}%</td></tr>`;
+  }).join('');
+  return `<section class="card"><h3>ملخص الحضور والغياب حسب المادة</h3><p class="muted">يظهر التنبيه عند بلوغ الغياب ${threshold}% أو أكثر.</p>${table(['المادة','الجلسات','حضور','غياب','نسبة الغياب'],rows)}</section>`;
 }

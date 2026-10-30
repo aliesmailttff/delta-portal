@@ -44,6 +44,7 @@ function bindForms(){
   $('#staffForm')?.addEventListener('submit', createStaff);
   $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);
   $('#attForm')?.addEventListener('submit', saveAttendanceSession);
+  $('#attendanceThresholdForm')?.addEventListener('submit', saveAttendanceThreshold);
   $('#studentAttForm')?.addEventListener('submit', verifyStudentAttendance);
   $('#resultForm')?.addEventListener('submit', saveResult);
   $('#examForm')?.addEventListener('submit', saveExam);

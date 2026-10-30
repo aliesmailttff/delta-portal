@@ -56,10 +56,19 @@ function renderView(){
     </section>`;
   }
   else if(activeTab==='attendance' && isStaff){
+    const courseChoices=[...new Set([...(cache.courses||[]).map(x=>x.name),...(cache.schedule||[]).map(x=>x.course)].filter(Boolean))];
+    const sessionRows=(cache.activeAttendance?.sessions||[]).filter(x=>Number(x.expiresAt||0)<=Date.now()&&x.course)
+      .slice().sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0)).map(x=>{
+        const enrolled=cache.students.filter(s=>s.level===x.level).length;
+        const present=cache.attendance.filter(a=>a.sessionId===x.sessionId).length;
+        return `<tr><td>${esc(x.course)}</td><td>${esc(x.level)}</td><td>${esc(x.sessionName)}</td><td>${present} / ${enrolled}</td><td>${Math.max(0,enrolled-present)}</td><td>${new Date(Number(x.createdAt||x.expiresAt)).toLocaleDateString('ar-EG')}</td></tr>`;
+      }).join('');
     html = `<section class="card">
       <h2><i class="fas fa-qrcode" style="color:var(--blue);"></i> فتح جلسة حضور</h2>
       <form id="attForm" class="fields">
         <div><label>اسم المحاضرة</label><input name="sessionName" required></div>
+        <div><label>المادة</label><input name="course" list="attendanceCourseList" required><datalist id="attendanceCourseList">${courseChoices.map(x=>`<option value="${esc(x)}"></option>`).join('')}</datalist></div>
+        <div><label>الفرقة</label><select name="level">${LEVELS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
         <div><label>كود الجلسة (PIN)</label><input name="code" value="${Math.floor(1000+Math.random()*9000)}" required></div>
         <div><label>مدة الجلسة (دقيقة)</label><input name="minutes" type="number" min="1" max="180" value="15" required></div>
         <button style="grid-column:1/-1;margin-top:10px;background:var(--green);">فتح جلسة</button>
@@ -71,11 +80,14 @@ function renderView(){
         <button type="button" class="danger" onclick="closeAttendanceSession()"><i class="fas fa-stop"></i> إيقاف الجلسة</button>
       </section>` : ''}
     </section>
+    <section class="card"><h3>ملخص الجلسات المسجلة</h3><p class="muted">الغياب يُحسب من الجلسات التي انتهت بعد تفعيل تسجيل المادة والفرقة.</p>
+      ${table(['المادة','الفرقة','المحاضرة','الحضور','الغياب','التاريخ'],sessionRows)}</section>
+    <section class="card"><h3>حد تنبيه الغياب</h3><form id="attendanceThresholdForm" class="fields" style="max-width:480px"><div><label>تنبيه عند وصول نسبة الغياب إلى</label><input type="number" name="absenceAlertPercent" min="1" max="100" value="${Number(cache.activeAttendance?.absenceAlertPercent)||25}" required></div><button type="submit">حفظ النسبة</button></form></section>
     <section class="card">
       <h3>سجل الحضور</h3>
-      ${table(['الطالب','الرقم','المحاضرة','الوقت'], cache.attendance.map(a=>`<tr>
+      ${table(['الطالب','الرقم','المادة','المحاضرة','الوقت'], cache.attendance.map(a=>`<tr>
         <td>${esc(a.studentName)}</td><td><code>${esc(a.studentId)}</code></td>
-        <td>${esc(a.sessionName)}</td>
+        <td>${esc(a.course||'—')}</td><td>${esc(a.sessionName)}</td>
         <td><small class="muted">${a.createdAt?.toDate ? a.createdAt.toDate().toLocaleTimeString('ar-EG') : '—'}</small></td>
       </tr>`).join(''))}
     </section>`;
@@ -521,6 +533,7 @@ function renderView(){
         <button style="background:var(--green);">تسجيل</button>
       </form>
       <div id="studentAttMsg"></div>
+      ${renderStudentAttendanceSummary()}
       <h3>سجل الحضور</h3>
       ${table(['المحاضرة','الوقت'], cache.attendance.filter(a=>a.studentUid===user.uid).map(a=>`<tr>
         <td>${esc(a.sessionName)}</td>
