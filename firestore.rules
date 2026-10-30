@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function userPath(uid) { return /databases/$(database)/documents/users/$(uid); }
+    function hasRole(roles) {
+      return signedIn() && exists(userPath(request.auth.uid))
+        && get(userPath(request.auth.uid)).data.role in roles;
+    }
+    function isAdmin()    { return hasRole(['admin']); }
+    function isFinance()  { return hasRole(['admin','finance']); }
+    function isAcademic() { return hasRole(['admin','academic']); }
+    function isStaff()    { return hasRole(['admin','finance','academic']); }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function changedKeys() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if (isAdmin() && request.resource.data.role in ['student','finance','academic'])
+                    || (isAcademic() && request.resource.data.role == 'student');
+      allow update: if (isAdmin() && resource.data.role != 'admin' && request.resource.data.role != 'admin')
+                    // المستخدم يلغي علامة "غيّر كلمة المرور" فقط
+                    || (isOwner(uid) && changedKeys().hasOnly(['mustChangePassword'])
+                        && request.resource.data.mustChangePassword == false);
+      allow delete: if (isAdmin() && resource.data.role != 'admin')
+                    || (isAcademic() && resource.data.role == 'student');
+    }
+
+    match /students/{uid} {
+      allow read: if isOwner(uid) || isStaff();
+      allow create, delete: if isAcademic();
+      // الطالب لا يعدّل ملفه إطلاقاً. المالي يحدّث paidAmount فقط (اعتماد الإيصال)
+      allow update: if isAcademic() || (isFinance() && changedKeys().hasOnly(['paidAmount']));
+    }
+
+    match /results/{id} {
+      allow read: if isStaff() || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow write: if isAcademic();
+    }
+
+    match /exams/{id}   { allow read: if signedIn(); allow write: if isAcademic(); }
+    match /news/{id}    { allow read: if signedIn(); allow write: if isAcademic(); }
+    match /library/{id} { allow read: if signedIn(); allow write: if isAcademic(); }
+
+    match /payments/{id} {
+      allow read: if isFinance() || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if hasRole(['student'])
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.status == 'قيد المراجعة'
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.amount <= get(/databases/$(database)/documents/students/$(request.auth.uid)).data.totalFees
+        && !(exists(/databases/$(database)/documents/settings/payment_accounts)
+             && get(/databases/$(database)/documents/settings/payment_accounts).data.get('maintenanceMode', false) == true);
+      allow update: if isFinance()
+        && changedKeys().hasOnly(['status','approvedBy','approvedAt','rejectReason']);
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      // كود الحضور السري (PIN) لا يقرأه إلا الموظفون، والتحقق منه يتم هنا في القواعد
+      allow read: if signedIn() && (docId != 'active_attendance' || isStaff());
+      allow write: if (docId == 'payment_accounts' && isFinance())
+                   || ((docId == 'active_attendance' || docId == 'attendance_public' || docId == 'registration') && isAcademic());
+    }
+
+    match /attendance/{id} {
+      allow read: if isStaff() || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if hasRole(['student'])
+        && request.resource.data.studentUid == request.auth.uid
+        && id == request.resource.data.sessionId + '_' + request.auth.uid
+        && request.resource.data.sessionId == get(/databases/$(database)/documents/settings/attendance_public).data.sessionId
+        && request.time.toMillis() < get(/databases/$(database)/documents/settings/attendance_public).data.expiresAt
+        && request.resource.data.pin == get(/databases/$(database)/documents/settings/active_attendance).data.code;
+      allow update: if false;
+      allow delete: if isAcademic();
+    }
+
+    match /audit_logs/{id} {
+      allow read: if isFinance();
+      allow create: if signedIn() && request.resource.data.adminEmail == request.auth.token.email;
+      allow update, delete: if false;
+    }
+
+    match /chats/{studentUid}/messages/{msgId} {
+      allow read: if isOwner(studentUid) || isStaff();
+      allow create: if (isOwner(studentUid) || isStaff())
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 1000;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    match /courses/{id} { allow read: if signedIn(); allow write: if isAcademic(); }
+
+    match /registrations/{id} {
+      allow read: if isAcademic() || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if hasRole(['student'])
+        && request.resource.data.studentUid == request.auth.uid
+        && id.matches(request.auth.uid + '_.*')
+        && exists(/databases/$(database)/documents/courses/$(request.resource.data.courseId))
+        && request.resource.data.credits == get(/databases/$(database)/documents/courses/$(request.resource.data.courseId)).data.credits
+        && get(/databases/$(database)/documents/courses/$(request.resource.data.courseId)).data.level
+           == get(/databases/$(database)/documents/students/$(request.auth.uid)).data.level
+        && get(/databases/$(database)/documents/settings/registration).data.open == true
+        && request.resource.data.year == get(/databases/$(database)/documents/settings/registration).data.year
+        && request.resource.data.semester == get(/databases/$(database)/documents/settings/registration).data.semester;
+      allow update: if false;
+      allow delete: if isAcademic()
+        || (signedIn() && resource.data.studentUid == request.auth.uid && get(/databases/$(database)/documents/settings/registration).data.open == true);
+    }
+
+    match /schedule/{id} { allow read: if signedIn(); allow write: if isAcademic(); }
+
+    match /requests/{id} {
+      allow read: if isAcademic() || (signedIn() && resource.data.studentUid == request.auth.uid);
+      allow create: if hasRole(['student'])
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.status == 'قيد المراجعة'
+        && request.resource.data.type in ['تظلم من نتيجة','شهادة قيد','إفادة التحاق','كشف درجات رسمي','أخرى']
+        && request.resource.data.details is string && request.resource.data.details.size() <= 1000;
+      allow update: if isAcademic() && changedKeys().hasOnly(['status','reply','handledBy','handledAt']);
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#174ea6">
+<meta name="description" content="بوابة طلابية لمعهد الدلتا العالي للحاسبات">
+<title>بوابة الطالب | معهد الدلتا العالي</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- مكتبة الباركود للكارنيه -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="toastContainer"></div>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo">🎓</div>
+    <div>
+      <h1 id="txtInstituteName">معهد الدلتا العالي للحاسبات</h1>
+      <p id="txtSubTitle">بوابة الطالب والخدمات الأكاديمية</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <button class="secondary" style="padding:6px 10px;font-size:.8rem;" onclick="toggleHighContrast()" title="تباين عالي">
+      <i class="fas fa-eye"></i> تباين
+    </button>
+    <button class="secondary" id="themeBtn" style="padding:6px 10px;font-size:.8rem;" onclick="toggleDarkMode()">
+      <i class="fas fa-moon"></i> <span id="themeBtnText">داكن</span>
+    </button>
+    <div id="headerActions"></div>
+  </div>
+</header>
+
+<div class="marquee-wrap">
+  <div class="marquee-inner">
+    📢 تنبيه هام: يرجى متابعة جداول الامتحانات وسداد المصروفات الدراسية في المواعيد المقررة — معهد الدلتا العالي للحاسبات.
+  </div>
+</div>
+
+<main class="wrap"><div id="app"><div class="card">جاري تجهيز المنصة…</div></div></main>
+
+<!-- Generic Edit Modal -->
+<div id="genericEditModal" class="modal-overlay">
+  <div class="modal-card" style="max-width:500px;text-align:right;">
+    <h3 style="color:var(--blue);" id="genericEditTitle"><i class="fas fa-edit"></i> تعديل العنصر</h3>
+    <form id="genericEditForm" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+      <div id="genericEditFields"></div>
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button type="button" class="secondary" style="width:50%;" onclick="closeGenericEdit()">إلغاء</button>
+        <button type="submit" style="width:50%;background:var(--green);">حفظ التعديلات</button>
+      </div>
+    </form>
+    <div id="genericEditMsg" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- Screenshot Modal -->
+<div id="screenshotModal" class="modal-overlay">
+  <div class="modal-card" style="max-width:500px;">
+    <h3 style="color:var(--blue);"><i class="fas fa-image"></i> سكرين شوت الإيصال</h3>
+    <div id="screenshotContainer" style="margin:15px 0;max-height:350px;overflow:auto;"></div>
+    <button class="secondary" style="width:100%;" onclick="document.getElementById('screenshotModal').classList.remove('active')">إغلاق</button>
+  </div>
+</div>
+
+<div id="printable-receipt"></div>
+
+<footer class="foot">مشروع تخرج — بوابة الخدمات الطلابية</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
