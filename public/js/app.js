@@ -1,7 +1,8 @@
 // ملف مُولَّد من src/js بواسطة build.mjs — لا تعدّله يدوياً
 import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
-         createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword }
+         createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword,
+         EmailAuthProvider, reauthenticateWithCredential }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc,
          updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
@@ -149,10 +150,12 @@ window.toggleHighContrast = function(){
 
 /* ---------- Permissions ---------- */
 function getValidTabsForRole(r){
-  if(r==='admin') return ['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','payments','accounts','staff','logs','chat'];
-  if(r==='finance') return ['dashboard','payments','accounts','logs','chat'];
-  if(r==='academic') return ['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','chat'];
-  return ['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','chat'];
+  let tabs=r==='admin'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','payments','accounts','staff','logs','chat','security']
+    :r==='finance'?['dashboard','payments','accounts','logs','chat','security']
+    :r==='academic'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','chat','security']
+    :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','chat','security'];
+  if(r!=='admin'&&Array.isArray(profile?.permissions)) tabs=tabs.filter(id=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
+  return tabs;
 }
 
 /* ---------- Login ---------- */
@@ -317,8 +320,11 @@ function getNavItems(){
     ['home','الرئيسية'],['gpasimulator','محاكي GPA'],
     ['mylibrary','المكتبة PDF'],['myattendance','سجل الحضور'],
     ['myresults','نتيجتي'],['myexams','الامتحانات'],
-    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['chat','التواصل']
+    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['chat','التواصل'],['security','الأمان']
   ];
+  if(role==='admin') items.push(['security','الأمان']);
+  if(role==='finance'||role==='academic') items.push(['security','الأمان']);
+  if(Array.isArray(profile?.permissions)&&role!=='admin') items=items.filter(([id])=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   if(!items.some(i=>i[0]===activeTab)){
     activeTab = items[0][0];
     localStorage.setItem('activeTab', activeTab);
@@ -327,7 +333,7 @@ function getNavItems(){
 }
 
 function navIcon(id){
-  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper'};
+  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper',security:'fa-lock'};
   return icons[id]||'fa-circle';
 }
 
@@ -396,12 +402,16 @@ function renderView(){
   const isStaff = ['admin','finance','academic'].includes(role);
   let html = '';
 
-  if(activeTab==='dashboard' && isStaff){
+  if(activeTab==='security'){
+    html = `<section class="card"><h2><i class="fas fa-shield-halved" style="color:var(--blue)"></i> أمان الحساب</h2><p class="muted">آخر دخول مسجل: ${esc(user?.metadata?.lastSignInTime?new Date(user.metadata.lastSignInTime).toLocaleString('ar-EG'):'غير متاح')}</p><form id="ownPasswordForm" class="fields" style="max-width:640px"><div><label>كلمة المرور الحالية</label><input type="password" name="currentPassword" autocomplete="current-password" required></div><div><label>كلمة المرور الجديدة</label><input type="password" name="newPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><div><label>تأكيد كلمة المرور الجديدة</label><input type="password" name="confirmPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><button type="submit">تغيير كلمة المرور وإنهاء الجلسات الأخرى</button></form><div id="ownPasswordMsg" style="margin-top:10px"></div><p class="muted small">يتطلب التغيير تأكيد كلمة المرور الحالية. بعد نجاحه ستنتهي الجلسات القديمة، وسيُطلب منك تسجيل الدخول مجددًا.</p></section>`;
+  }
+  else if(activeTab==='dashboard' && isStaff){
     const totalPaid = cache.payments.filter(p=>p.status==='مقبول').reduce((a,p)=>a+Number(p.amount||0),0);
     const pending = cache.payments.filter(p=>p.status==='قيد المراجعة').length;
     const shortcuts = role==='finance'
       ? [['payments','مراجعة المدفوعات','fa-wallet'],['accounts','حسابات الدفع','fa-university'],['chat','رسائل الطلاب','fa-comments']]
       : [['students','إدارة الطلاب','fa-users'],['results','النتائج','fa-chart-bar'],['requests','طلبات الطلاب','fa-inbox']];
+    const visibleShortcuts=shortcuts.filter(([id])=>hasModuleAccess(id));
     let banner = '';
     if(pending>0 && (role==='admin'||role==='finance')){
       banner = `<div class="dashboard-alert"><span class="alert-icon"><i class="fas fa-bell"></i></span><div><strong>تحتاج إلى مراجعة</strong><p>${pending} إيصال دفع بانتظار الاعتماد.</p></div><button data-go="payments">فتح المدفوعات <i class="fas fa-arrow-left"></i></button></div>`;
@@ -415,9 +425,10 @@ function renderView(){
       </div>
       <div class="dashboard-content-grid">
         <section class="card dashboard-chart-card"><div class="section-heading"><div><span class="section-kicker">ملخص مالي</span><h3>توزيع المدفوعات</h3></div><span class="section-icon"><i class="fas fa-chart-pie"></i></span></div><div class="dashboard-chart-wrap"><canvas id="paymentMethodsChart"></canvas></div></section>
-        <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${shortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
+        <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${visibleShortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
       </div>
-      ${['admin','academic'].includes(role)?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
+      <section class="card"><div class="section-heading"><div><span class="section-kicker">التقارير والإدارة</span><h3>وصول سريع للتقارير</h3></div></div><div class="actions">${['admin','academic'].includes(role)&&hasModuleAccess('results')?'<button type="button" class="secondary" data-go="results"><i class="fas fa-chart-bar"></i> النتائج</button>':''}${['admin','academic'].includes(role)&&hasModuleAccess('attendance')?'<button type="button" class="secondary" data-go="attendance"><i class="fas fa-clipboard-check"></i> الحضور والغياب</button>':''}${['admin','finance'].includes(role)&&hasModuleAccess('payments')?'<button type="button" class="secondary" data-go="payments"><i class="fas fa-wallet"></i> تقارير المصروفات</button>':''}${role==='admin'?'<button type="button" class="secondary" data-go="logs"><i class="fas fa-shield-alt"></i> سجل التدقيق</button>':''}</div></section>
+      ${['admin','academic'].includes(role)&&hasModuleAccess('results')?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
   }
   else if(activeTab==='library' && isStaff){
     html = `<section class="card">
@@ -476,7 +487,7 @@ function renderView(){
     <section class="card"><h3>ملخص الجلسات المسجلة</h3><p class="muted">الغياب يُحسب من الجلسات التي انتهت بعد تفعيل تسجيل المادة والفرقة.</p>
       ${table(['المادة','الفرقة','المحاضرة','الحضور','الغياب','التاريخ'],sessionRows)}</section>
     <section class="card"><h3>حد تنبيه الغياب</h3><form id="attendanceThresholdForm" class="fields" style="max-width:480px"><div><label>تنبيه عند وصول نسبة الغياب إلى</label><input type="number" name="absenceAlertPercent" min="1" max="100" value="${Number(cache.activeAttendance?.absenceAlertPercent)||25}" required></div><button type="submit">حفظ النسبة</button></form></section>
-    <section class="card"><h3>تصدير تقرير الحضور</h3><p class="muted">ينشئ ملف CSV متوافقًا مع Excel، ويعرض حالة كل طالب في كل جلسة مكتملة.</p><div class="fields"><div><label>المادة</label><select id="attendanceExportCourse"><option value="">كل المواد</option>${[...new Set((cache.activeAttendance?.sessions||[]).map(s=>s.course).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar')).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></div><div><label>الفرقة</label><select id="attendanceExportLevel"><option value="">كل الفرق</option>${LEVELS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><button type="button" id="attendanceExportBtn">تنزيل التقرير</button></div></section>
+    <section class="card"><h3>تصدير تقرير الحضور</h3><p class="muted">ينشئ كشفًا بحالة كل طالب في كل جلسة مكتملة. Excel ينزّل ملفًا، وPDF يفتح نافذة الطباعة.</p><div class="fields"><div><label>المادة</label><select id="attendanceExportCourse"><option value="">كل المواد</option>${[...new Set((cache.activeAttendance?.sessions||[]).map(s=>s.course).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar')).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></div><div><label>الفرقة</label><select id="attendanceExportLevel"><option value="">كل الفرق</option>${LEVELS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><div class="actions"><button type="button" id="attendanceExportBtn">تنزيل Excel</button><button type="button" class="secondary" onclick="printAttendanceReport()">PDF / طباعة</button></div></div></section>
     <section class="card">
       <h3>سجل الحضور</h3>
       ${table(['الطالب','الرقم','المادة','المحاضرة','الوقت'], cache.attendance.map(a=>`<tr>
@@ -505,9 +516,10 @@ function renderView(){
     </section>
     <section class="card">
       <h3>المساعدون</h3>
-      ${table(['الاسم','البريد','الصلاحية'], cache.staff.map(st=>`<tr>
+      ${table(['الاسم','البريد','الصلاحية','إجراء'], cache.staff.map(st=>`<tr>
         <td><strong>${esc(st.name)}</strong></td><td>${esc(st.email)}</td>
         <td><span class="pill">${st.role==='admin'?'Super Admin':st.role==='finance'?'مالي':'أكاديمي'}</span></td>
+        <td>${st.role==='admin'?'—':`<button type="button" class="secondary" onclick="editStaffPermissions('${st.uid}')"><i class="fas fa-user-lock"></i> تحديد الصلاحيات</button>`}</td>
       </tr>`).join(''))}
     </section>`;
   }
@@ -541,7 +553,7 @@ function renderView(){
   }
   else if(activeTab==='logs' && (role==='admin'||role==='finance')){
     html = `<section class="card">
-      <h2><i class="fas fa-history" style="color:var(--blue);"></i> سجل النشاطات</h2>
+        <h2><i class="fas fa-history" style="color:var(--blue);"></i> سجل النشاطات</h2><p class="muted">استخدم البحث أعلى الجدول لتصفية السجل حسب المستخدم أو الإجراء أو التفاصيل.</p>
       ${table(['الوقت','المسؤول','الإجراء','التفاصيل'], cache.logs.map(l=>`<tr>
         <td><small class="muted">${l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString('ar-EG') : '—'}</small></td>
         <td><strong>${esc(l.adminEmail||'—')}</strong></td>
@@ -677,6 +689,7 @@ function renderView(){
       <div class="headrow">
         <h2>مراجعة المدفوعات</h2>
         <div class="actions">
+          <button type="button" class="secondary" onclick="exportFinanceExcel('all')">Excel</button><button type="button" class="secondary" onclick="printFinanceReport('all')">PDF</button>
           <button class="${paymentFilterStatus==='all'?'':'secondary'}" onclick="setPaymentFilter('all')">الكل</button>
           <button class="${paymentFilterStatus==='pending'?'':'secondary'}" onclick="setPaymentFilter('pending')">المعلقة</button>
           <button class="${paymentFilterStatus==='approved'?'':'secondary'}" onclick="setPaymentFilter('approved')">المعتمدة</button>
@@ -822,9 +835,7 @@ function renderView(){
       <section class="card">
         <div class="headrow" style="margin-bottom:15px;">
           <h3>سجل الإيصالات والمدفوعات</h3>
-          <button class="secondary" onclick="printFullFinancialStatement()">
-            <i class="fas fa-file-pdf"></i> تحميل كشف حساب
-          </button>
+          <div class="actions"><button class="secondary" onclick="printFullFinancialStatement()"><i class="fas fa-file-pdf"></i> تحميل كشف حساب</button><button class="secondary" onclick="exportFinanceExcel('mine')"><i class="fas fa-file-excel"></i> Excel</button></div>
         </div>
         ${table(['رقم الإيصال', 'التاريخ', 'الوسيلة', 'المبلغ', 'الحالة', 'الإجراء'], cache.payments.map(p=>{
           let statusBadge = '';
@@ -920,7 +931,7 @@ function renderView(){
   }
   else if(activeTab==='myattendance' && role==='student'){
     html = `<section class="card">
-      <h2><i class="fas fa-user-check" style="color:var(--blue);"></i> تسجيل الحضور</h2>
+      <div class="headrow"><h2><i class="fas fa-user-check" style="color:var(--blue);"></i> تسجيل الحضور</h2><div class="actions"><button type="button" class="secondary" onclick="exportMyAttendanceExcel()">Excel</button><button type="button" class="secondary" onclick="printMyAttendanceReport()">PDF / طباعة</button></div></div>
       <p class="muted">امسح رمز QR المعروض في المحاضرة بكاميرا الهاتف لتسجيل حضورك تلقائيًا. يمكنك استخدام كود المحاضر عند الحاجة.</p>
       <form id="studentAttForm" class="fields" style="max-width:400px;margin-bottom:20px;">
         <div><label>كود الحضور (PIN):</label><input name="pinCode" placeholder="كود المحاضر" required></div>
@@ -1135,6 +1146,16 @@ window.importStudentsFromExcel=function(event){
     let ok=0,skip=0,fail=0; const creds=[['studentId','email','tempPassword']];
     const getField=(row,aliases)=>{const wanted=new Set(aliases.map(normKey));const key=Object.keys(row).find(k=>wanted.has(normKey(k)));return key===undefined?'':row[key];};
     const seenIds=new Set(cache.students.map(s=>String(s.studentId)));
+    const previewIds=new Set(seenIds);let validPreview=0;
+    for(const r of rows){
+      const id=String(getField(r,['studentId','student_id','id','الرقم الجامعي','رقم الطالب','رقم ID'])||'').trim();
+      const name=String(getField(r,['name','الاسم','اسم الطالب'])||'').trim();
+      const email=String(getField(r,['email','البريد','البريد الإلكتروني'])||`${id}@al.es.net`).trim();
+      const feesRaw=getField(r,['totalFees','fees','المصروفات','إجمالي المصروفات']),fees=feesRaw===''?15000:Number(feesRaw);
+      if(id&&name&&/^\S+@\S+\.\S+$/.test(email)&&!previewIds.has(id)&&Number.isFinite(fees)&&fees>=0){validPreview++;previewIds.add(id);}
+    }
+    if(!validPreview){showToast('لم يتم العثور على صفوف صالحة للاستيراد','error');event.target.value='';return;}
+    if(!confirm(`معاينة الاستيراد:\nعدد الصفوف: ${rows.length}\nصفوف صالحة مبدئيًا: ${validPreview}\nسيتم تجاوز الصفوف الناقصة أو المكررة. هل تريد المتابعة؟`)){event.target.value='';return;}
     for(const r of rows){
       const studentId=String(getField(r,['studentId','student_id','id','الرقم الجامعي','رقم الطالب','رقم ID'])||'').trim();
       const fees=getField(r,['totalFees','fees','المصروفات','إجمالي المصروفات']);
@@ -1247,6 +1268,7 @@ function bindForms(){
   $('#staffForm')?.addEventListener('submit', createStaff);
   $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);
   $('#attForm')?.addEventListener('submit', saveAttendanceSession);
+  $('#ownPasswordForm')?.addEventListener('submit', changeOwnPassword);
   $('#attendanceThresholdForm')?.addEventListener('submit', saveAttendanceThreshold);
   $('#attendanceExportBtn')?.addEventListener('click', exportAttendanceReport);
   $('#studentAttForm')?.addEventListener('submit', verifyStudentAttendance);
@@ -1268,6 +1290,7 @@ function bindForms(){
     editCtx.fields.forEach(([k,,t]) => { if(t==='number') d[k] = Number(d[k]); });
     try {
       await updateDoc(doc(db, editCtx.coll, editCtx.id), d);
+      logAction('تعديل بيانات',`${editCtx.coll}:${editCtx.id}`);
       closeGenericEdit();
       showToast('تم التعديل بنجاح');
       await loadData(); renderApp();
@@ -1969,7 +1992,7 @@ window.printTranscript=()=>{
 };
 function resultsViews(staff,st){
   if(activeTab==='results'&&staff){
-    return `<section class="card"><h2>رصد النتائج</h2><form id="resultForm" class="fields">
+    return `<section class="card"><div class="headrow"><h2>رصد النتائج</h2><div class="actions"><button type="button" class="secondary" onclick="exportResultsExcel('all')">Excel</button><button type="button" class="secondary" onclick="printResultsReport('all')">PDF</button></div></div><form id="resultForm" class="fields">
       <div><label>الطالب</label><select name="studentUid" required>${cache.students.map(s=>`<option value="${s.uid}">${esc(s.studentId)} — ${esc(s.name)}</option>`).join('')}</select></div>
       <div><label>المادة</label><input name="course" required></div>
       <div><label>السنة الدراسية</label><input name="year" value="${acYear()}" required></div>
@@ -1988,7 +2011,7 @@ function resultsViews(staff,st){
     const all=cache.results, tot=calcGpa(all), earned=all.filter(r=>Number(r.score)>=50).reduce((a,r)=>a+(Number(r.credits)||3),0);
     const sems=groupSem(all).map(g=>{const c=calcGpa(g.items);
       return `<section class="card"><div class="headrow"><h3>${esc(g.year)} — ${esc(g.semester)}</h3><span class="pill">معدل الفصل ${c.gpa.toFixed(2)}</span></div>${table(['المادة','الساعات','الدرجة','التقدير','النقاط'],g.items.map(r=>`<tr><td>${esc(r.course)}</td><td>${Number(r.credits)||3}</td><td>${Number(r.score)} / 100</td><td>${grade(Number(r.score))}</td><td>${gp(Number(r.score)).toFixed(1)}</td></tr>`).join(''))}</section>`;}).join('');
-    return `<div class="headrow"><h2>نتائجي</h2><button style="background:var(--green);" onclick="printTranscript()"><i class="fas fa-file-pdf"></i> كشف الدرجات PDF</button></div>
+    return `<div class="headrow"><h2>نتائجي</h2><div class="actions"><button style="background:var(--green);" onclick="printTranscript()"><i class="fas fa-file-pdf"></i> كشف الدرجات PDF</button><button class="secondary" onclick="exportResultsExcel('mine')"><i class="fas fa-file-excel"></i> Excel</button></div></div>
       <div class="grid">${stat('المعدل التراكمي',tot.gpa.toFixed(2)+' / 4.0')}${stat('الساعات المسجلة',tot.credits)}${stat('الساعات المكتسبة',earned)}</div>`+
       (sems||'<section class="card muted">لا توجد نتائج.</section>')+(all.some(r=>!r.credits)?'<p class="muted">النتائج القديمة بدون ساعات تُحتسب 3 ساعات.</p>':'');
   }
@@ -2327,26 +2350,118 @@ function renderStudentAttendanceSummary(){
   return `<section class="card"><h3>ملخص الحضور والغياب حسب المادة</h3><p class="muted">يظهر التنبيه عند بلوغ الغياب ${threshold}% أو أكثر.</p>${table(['المادة','الجلسات','حضور','غياب','نسبة الغياب'],rows)}</section>`;
 }
 
-function exportAttendanceReport(){
-  if(!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية تصدير التقرير','error');return;}
+function buildAttendanceReport(){
   const courseFilter=$('#attendanceExportCourse')?.value||'';
   const levelFilter=$('#attendanceExportLevel')?.value||'';
   const sessions=(cache.activeAttendance?.sessions||[]).filter(s=>s.course&&Number(s.expiresAt||0)<=Date.now()&&s.status!=='cancelled'&&(!courseFilter||s.course===courseFilter)&&(!levelFilter||s.level===levelFilter));
-  if(!sessions.length){showToast('لا توجد جلسات مكتملة للفلاتر المحددة','error');return;}
+  if(!sessions.length)return {headers:[],rows:[]};
   const attendanceBySession=new Map((cache.attendance||[]).map(a=>[`${a.sessionId}:${a.studentUid}`,a]));
-  const quote=value=>'"'+String(value??'').replace(/"/g,'""')+'"';
-  const lines=[['اسم الطالب','الرقم الجامعي','المادة','الفرقة','المحاضرة','التاريخ','الحالة']];
+  const headers=['اسم الطالب','الرقم الجامعي','المادة','الفرقة','المحاضرة','التاريخ','الحالة'],rows=[];
   for(const session of sessions){
     const students=(cache.students||[]).filter(s=>s.level===session.level);
     for(const student of students){
       const attendance=attendanceBySession.get(`${session.sessionId}:${student.uid}`);
       const date=attendance?.createdAt?.toDate?.()||new Date(Number(session.createdAt||session.expiresAt));
-      lines.push([student.name,student.studentId,session.course,session.level,session.sessionName,date.toLocaleString('ar-EG'),attendance?'حاضر':'غائب']);
+      rows.push([student.name,student.studentId,session.course,session.level,session.sessionName,date.toLocaleString('ar-EG'),attendance?'حاضر':'غائب']);
     }
   }
-  if(lines.length===1){showToast('لا يوجد طلاب مطابقون للفرقة المحددة','error');return;}
-  const csv='\uFEFF'+lines.map(row=>row.map(quote).join(',')).join('\r\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download=`attendance-report-${new Date().toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
-  showToast(`تم تجهيز التقرير (${lines.length-1} سجل)`);
+  return {headers,rows};
+}
+function exportAttendanceReport(){
+  if(!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية تصدير التقرير','error');return;}
+  const {headers,rows}=buildAttendanceReport();
+  if(!rows.length){showToast('لا توجد جلسات أو طلاب للفلاتر المحددة','error');return;}
+  exportXlsx(`attendance-report-${new Date().toISOString().slice(0,10)}.xlsx`,headers,rows,'الحضور والغياب');
+}
+function printAttendanceReport(){
+  if(!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية طباعة التقرير','error');return;}
+  const {headers,rows}=buildAttendanceReport();
+  if(!rows.length){showToast('لا توجد جلسات أو طلاب للفلاتر المحددة','error');return;}
+  printReport('تقرير الحضور والغياب',headers,rows);
+}
+const STAFF_PERMISSION_GROUPS={
+  finance:[['payments','المدفوعات'],['accounts','حسابات الدفع'],['logs','سجل النشاط'],['chat','محادثات الطلاب']],
+  academic:[['students','الطلاب'],['results','النتائج'],['exams','الامتحانات'],['library','المكتبة'],['attendance','الحضور'],['schedule','الجدول'],['requests','الطلبات'],['courses','المواد والتسجيل'],['news','الأخبار'],['chat','محادثات الطلاب']]
+};
+function defaultStaffPermissions(staffRole){return (STAFF_PERMISSION_GROUPS[staffRole]||[]).map(([id])=>id);}
+function hasModuleAccess(module){return role==='admin'||!Array.isArray(profile?.permissions)||profile.permissions.includes(module);}
+
+function exportXlsx(filename,headers,rows,sheetName='التقرير'){
+  if(!window.XLSX){showToast('تعذر تحميل مكتبة Excel','error');return;}
+  const sheet=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  sheet['!cols']=headers.map((_,i)=>({wch:Math.min(34,Math.max(14,...rows.slice(0,100).map(row=>String(row[i]??'').length)))}));
+  const workbook=XLSX.utils.book_new();XLSX.utils.book_append_sheet(workbook,sheet,sheetName.slice(0,31));XLSX.writeFile(workbook,filename);
+  showToast('تم تنزيل تقرير Excel');
+}
+function exportResultsExcel(scope='mine'){
+  const isMine=scope==='mine',records=isMine?cache.results:cache.results;
+  if(!isMine&&!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية تصدير النتائج','error');return;}
+  const student=cache.students?.[0]||{};
+  const headers=['الرقم الجامعي','اسم الطالب','المادة','السنة','الفصل','الساعات','الدرجة','التقدير'];
+  const rows=records.map(r=>{
+    const s=isMine?student:cache.students.find(x=>x.uid===r.studentUid)||{};
+    return [s.studentId||r.studentId||'',s.name||r.studentName||'',r.course||'',r.year||'',r.semester||'',Number(r.credits)||3,Number(r.score)||0,grade(Number(r.score))];
+  });
+  exportXlsx(`results-${isMine?(student.studentId||'student'):'all'}-${dateNow()}.xlsx`,headers,rows,'النتائج');
+}
+function exportFinanceExcel(scope='mine'){
+  const isMine=scope==='mine';
+  if(!isMine&&!['admin','finance'].includes(role)){showToast('ليس لديك صلاحية تصدير المصروفات','error');return;}
+  const payments=isMine?cache.payments.filter(p=>p.studentUid===user.uid):cache.payments;
+  const headers=['رقم الإيصال','الرقم الجامعي','اسم الطالب','التاريخ','وسيلة الدفع','المبلغ','الرقم المرجعي','الحالة'];
+  const rows=payments.map(p=>[p.receiptNo||'',p.studentId||'',p.studentName||'',p.date||'',p.method||'',Number(p.amount)||0,p.trxId||'',p.status||'']);
+  exportXlsx(`finance-${isMine?'student':'admin'}-${dateNow()}.xlsx`,headers,rows,'المصروفات');
+}
+function printReport(title,headers,rows){
+  const w=window.open('','_blank');if(!w){showToast('اسمح بفتح النافذة لطباعة التقرير','error');return;}
+  w.document.write(`<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><title>${esc(title)}</title><style>body{font:14px Tahoma,Arial;padding:24px;color:#172033}h1{text-align:center;font-size:22px}p{color:#586579}table{width:100%;border-collapse:collapse;margin-top:18px}th,td{border:1px solid #ccd5e1;padding:8px;text-align:right}th{background:#eef3f9}button{padding:9px 18px;margin:16px 0}@media print{button{display:none}}</style><h1>${esc(title)}</h1><p>تاريخ الإصدار: ${new Date().toLocaleDateString('ar-EG')}</p><button onclick="window.print()">طباعة أو حفظ PDF</button><table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${row.map(cell=>`<td>${esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></html>`);
+  w.document.close();
+}
+function printResultsReport(scope='mine'){
+  const mine=scope==='mine',student=cache.students?.[0]||{};
+  if(!mine&&!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية طباعة النتائج','error');return;}
+  const headers=['الرقم الجامعي','اسم الطالب','المادة','السنة','الفصل','الساعات','الدرجة','التقدير'];
+  const rows=cache.results.map(r=>{const s=mine?student:cache.students.find(x=>x.uid===r.studentUid)||{};return [s.studentId||r.studentId||'',s.name||r.studentName||'',r.course||'',r.year||'',r.semester||'',Number(r.credits)||3,Number(r.score)||0,grade(Number(r.score))];});
+  printReport('كشف النتائج',headers,rows);
+}
+function printFinanceReport(scope='mine'){
+  const mine=scope==='mine';if(!mine&&!['admin','finance'].includes(role)){showToast('ليس لديك صلاحية طباعة المصروفات','error');return;}
+  const rows=(mine?cache.payments.filter(p=>p.studentUid===user.uid):cache.payments).map(p=>[p.receiptNo||'',p.studentId||'',p.studentName||'',p.date||'',p.method||'',money(p.amount),p.trxId||'',p.status||'']);
+  printReport('كشف المصروفات والمدفوعات',['رقم الإيصال','الرقم الجامعي','اسم الطالب','التاريخ','وسيلة الدفع','المبلغ','الرقم المرجعي','الحالة'],rows);
+}
+function myAttendanceReport(){
+  const student=cache.students?.[0]||{},sessions=(cache.activeAttendance?.sessions||[]).filter(s=>s.course&&s.level===student.level&&Number(s.expiresAt||0)<=Date.now()&&s.status!=='cancelled');
+  const attendanceIds=new Set((cache.attendance||[]).filter(a=>a.studentUid===user.uid).map(a=>a.sessionId));
+  return {headers:['المادة','الفرقة','المحاضرة','التاريخ','الحالة'],rows:sessions.map(s=>[s.course,s.level,s.sessionName,new Date(Number(s.createdAt||s.expiresAt)).toLocaleString('ar-EG'),attendanceIds.has(s.sessionId)?'حاضر':'غائب'])};
+}
+function exportMyAttendanceExcel(){const {headers,rows}=myAttendanceReport();if(!rows.length){showToast('لا يوجد سجل حضور للتصدير','error');return;}exportXlsx(`attendance-${cache.students?.[0]?.studentId||'student'}-${dateNow()}.xlsx`,headers,rows,'الحضور');}
+function printMyAttendanceReport(){const {headers,rows}=myAttendanceReport();if(!rows.length){showToast('لا يوجد سجل حضور للطباعة','error');return;}printReport('سجل الحضور والغياب',headers,rows);}
+
+window.editStaffPermissions=function(uid){
+  if(role!=='admin')return;
+  const staff=cache.staff.find(x=>x.uid===uid);if(!staff||!STAFF_PERMISSION_GROUPS[staff.role])return;
+  const allowed=STAFF_PERMISSION_GROUPS[staff.role],selected=Array.isArray(staff.permissions)?staff.permissions:defaultStaffPermissions(staff.role);
+  document.querySelector('#staffPermissionsModal')?.remove();
+  document.body.insertAdjacentHTML('beforeend',`<div id="staffPermissionsModal" class="modal-overlay active" role="dialog" aria-modal="true"><section class="modal-card"><h3>صلاحيات ${esc(staff.name||staff.email)}</h3><p class="muted">حدد الأقسام التي يستطيع هذا المساعد فتحها. لتطبيق المنع على مستوى قاعدة البيانات، يجب نشر قواعد Firestore المحدّثة مع الموقع.</p><form id="staffPermissionsForm">${allowed.map(([id,label])=>`<label class="permission-option"><input type="checkbox" name="permission" value="${id}" ${selected.includes(id)?'checked':''}> ${label}</label>`).join('')}<div class="actions" style="margin-top:16px"><button type="button" class="secondary" onclick="document.querySelector('#staffPermissionsModal')?.remove()">إلغاء</button><button type="submit">حفظ الصلاحيات</button></div></form></section></div>`);
+  $('#staffPermissionsForm').addEventListener('submit',async e=>{
+    e.preventDefault();const permissions=[...e.currentTarget.querySelectorAll('[name=permission]:checked')].map(x=>x.value);
+    const button=e.currentTarget.querySelector('button[type=submit]');button.disabled=true;
+    try{await updateDoc(doc(db,'users',uid),{permissions});logAction('تعديل صلاحيات مساعد',staff.email);staff.permissions=permissions;$('#staffPermissionsModal')?.remove();showToast('تم تحديث الصلاحيات');if(uid===user.uid){profile.permissions=permissions;const tabs=getValidTabsForRole(role);if(!tabs.includes(activeTab))activeTab='dashboard';renderApp();}}
+    catch(err){button.disabled=false;showToast(authError(err),'error');}
+  });
+};
+
+async function changeOwnPassword(e){
+  e.preventDefault();const form=e.currentTarget,d=Object.fromEntries(new FormData(form).entries()),box=$('#ownPasswordMsg'),button=form.querySelector('button[type=submit]');
+  if(d.newPassword!==d.confirmPassword){box.innerHTML=msg('كلمتا المرور الجديدتان غير متطابقتين.','error');return;}
+  if(d.newPassword.length<8){box.innerHTML=msg('استخدم كلمة مرور من 8 أحرف على الأقل.','error');return;}
+  button.disabled=true;
+  try{
+    const credential=EmailAuthProvider.credential(user.email,d.currentPassword);
+    await reauthenticateWithCredential(user,credential);
+    await updatePassword(user,d.newPassword);
+    await logAction('تغيير كلمة المرور','تم تغيير كلمة المرور من الحساب الشخصي');
+    alert('تم تغيير كلمة المرور. سجّل الدخول مجددًا باستخدام كلمة المرور الجديدة.');
+    await signOut(auth);
+  }catch(err){box.innerHTML=msg(authError(err),'error');button.disabled=false;}
 }

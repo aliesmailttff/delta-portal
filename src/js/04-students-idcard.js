@@ -130,6 +130,16 @@ window.importStudentsFromExcel=function(event){
     let ok=0,skip=0,fail=0; const creds=[['studentId','email','tempPassword']];
     const getField=(row,aliases)=>{const wanted=new Set(aliases.map(normKey));const key=Object.keys(row).find(k=>wanted.has(normKey(k)));return key===undefined?'':row[key];};
     const seenIds=new Set(cache.students.map(s=>String(s.studentId)));
+    const previewIds=new Set(seenIds);let validPreview=0;
+    for(const r of rows){
+      const id=String(getField(r,['studentId','student_id','id','الرقم الجامعي','رقم الطالب','رقم ID'])||'').trim();
+      const name=String(getField(r,['name','الاسم','اسم الطالب'])||'').trim();
+      const email=String(getField(r,['email','البريد','البريد الإلكتروني'])||`${id}@al.es.net`).trim();
+      const feesRaw=getField(r,['totalFees','fees','المصروفات','إجمالي المصروفات']),fees=feesRaw===''?15000:Number(feesRaw);
+      if(id&&name&&/^\S+@\S+\.\S+$/.test(email)&&!previewIds.has(id)&&Number.isFinite(fees)&&fees>=0){validPreview++;previewIds.add(id);}
+    }
+    if(!validPreview){showToast('لم يتم العثور على صفوف صالحة للاستيراد','error');event.target.value='';return;}
+    if(!confirm(`معاينة الاستيراد:\nعدد الصفوف: ${rows.length}\nصفوف صالحة مبدئيًا: ${validPreview}\nسيتم تجاوز الصفوف الناقصة أو المكررة. هل تريد المتابعة؟`)){event.target.value='';return;}
     for(const r of rows){
       const studentId=String(getField(r,['studentId','student_id','id','الرقم الجامعي','رقم الطالب','رقم ID'])||'').trim();
       const fees=getField(r,['totalFees','fees','المصروفات','إجمالي المصروفات']);

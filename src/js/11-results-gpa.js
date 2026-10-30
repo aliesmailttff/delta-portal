@@ -54,7 +54,7 @@ window.printTranscript=()=>{
 };
 function resultsViews(staff,st){
   if(activeTab==='results'&&staff){
-    return `<section class="card"><h2>رصد النتائج</h2><form id="resultForm" class="fields">
+    return `<section class="card"><div class="headrow"><h2>رصد النتائج</h2><div class="actions"><button type="button" class="secondary" onclick="exportResultsExcel('all')">Excel</button><button type="button" class="secondary" onclick="printResultsReport('all')">PDF</button></div></div><form id="resultForm" class="fields">
       <div><label>الطالب</label><select name="studentUid" required>${cache.students.map(s=>`<option value="${s.uid}">${esc(s.studentId)} — ${esc(s.name)}</option>`).join('')}</select></div>
       <div><label>المادة</label><input name="course" required></div>
       <div><label>السنة الدراسية</label><input name="year" value="${acYear()}" required></div>
@@ -73,7 +73,7 @@ function resultsViews(staff,st){
     const all=cache.results, tot=calcGpa(all), earned=all.filter(r=>Number(r.score)>=50).reduce((a,r)=>a+(Number(r.credits)||3),0);
     const sems=groupSem(all).map(g=>{const c=calcGpa(g.items);
       return `<section class="card"><div class="headrow"><h3>${esc(g.year)} — ${esc(g.semester)}</h3><span class="pill">معدل الفصل ${c.gpa.toFixed(2)}</span></div>${table(['المادة','الساعات','الدرجة','التقدير','النقاط'],g.items.map(r=>`<tr><td>${esc(r.course)}</td><td>${Number(r.credits)||3}</td><td>${Number(r.score)} / 100</td><td>${grade(Number(r.score))}</td><td>${gp(Number(r.score)).toFixed(1)}</td></tr>`).join(''))}</section>`;}).join('');
-    return `<div class="headrow"><h2>نتائجي</h2><button style="background:var(--green);" onclick="printTranscript()"><i class="fas fa-file-pdf"></i> كشف الدرجات PDF</button></div>
+    return `<div class="headrow"><h2>نتائجي</h2><div class="actions"><button style="background:var(--green);" onclick="printTranscript()"><i class="fas fa-file-pdf"></i> كشف الدرجات PDF</button><button class="secondary" onclick="exportResultsExcel('mine')"><i class="fas fa-file-excel"></i> Excel</button></div></div>
       <div class="grid">${stat('المعدل التراكمي',tot.gpa.toFixed(2)+' / 4.0')}${stat('الساعات المسجلة',tot.credits)}${stat('الساعات المكتسبة',earned)}</div>`+
       (sems||'<section class="card muted">لا توجد نتائج.</section>')+(all.some(r=>!r.credits)?'<p class="muted">النتائج القديمة بدون ساعات تُحتسب 3 ساعات.</p>':'');
   }

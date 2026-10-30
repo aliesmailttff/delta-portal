@@ -3,12 +3,16 @@ function renderView(){
   const isStaff = ['admin','finance','academic'].includes(role);
   let html = '';
 
-  if(activeTab==='dashboard' && isStaff){
+  if(activeTab==='security'){
+    html = `<section class="card"><h2><i class="fas fa-shield-halved" style="color:var(--blue)"></i> أمان الحساب</h2><p class="muted">آخر دخول مسجل: ${esc(user?.metadata?.lastSignInTime?new Date(user.metadata.lastSignInTime).toLocaleString('ar-EG'):'غير متاح')}</p><form id="ownPasswordForm" class="fields" style="max-width:640px"><div><label>كلمة المرور الحالية</label><input type="password" name="currentPassword" autocomplete="current-password" required></div><div><label>كلمة المرور الجديدة</label><input type="password" name="newPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><div><label>تأكيد كلمة المرور الجديدة</label><input type="password" name="confirmPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><button type="submit">تغيير كلمة المرور وإنهاء الجلسات الأخرى</button></form><div id="ownPasswordMsg" style="margin-top:10px"></div><p class="muted small">يتطلب التغيير تأكيد كلمة المرور الحالية. بعد نجاحه ستنتهي الجلسات القديمة، وسيُطلب منك تسجيل الدخول مجددًا.</p></section>`;
+  }
+  else if(activeTab==='dashboard' && isStaff){
     const totalPaid = cache.payments.filter(p=>p.status==='مقبول').reduce((a,p)=>a+Number(p.amount||0),0);
     const pending = cache.payments.filter(p=>p.status==='قيد المراجعة').length;
     const shortcuts = role==='finance'
       ? [['payments','مراجعة المدفوعات','fa-wallet'],['accounts','حسابات الدفع','fa-university'],['chat','رسائل الطلاب','fa-comments']]
       : [['students','إدارة الطلاب','fa-users'],['results','النتائج','fa-chart-bar'],['requests','طلبات الطلاب','fa-inbox']];
+    const visibleShortcuts=shortcuts.filter(([id])=>hasModuleAccess(id));
     let banner = '';
     if(pending>0 && (role==='admin'||role==='finance')){
       banner = `<div class="dashboard-alert"><span class="alert-icon"><i class="fas fa-bell"></i></span><div><strong>تحتاج إلى مراجعة</strong><p>${pending} إيصال دفع بانتظار الاعتماد.</p></div><button data-go="payments">فتح المدفوعات <i class="fas fa-arrow-left"></i></button></div>`;
@@ -22,9 +26,10 @@ function renderView(){
       </div>
       <div class="dashboard-content-grid">
         <section class="card dashboard-chart-card"><div class="section-heading"><div><span class="section-kicker">ملخص مالي</span><h3>توزيع المدفوعات</h3></div><span class="section-icon"><i class="fas fa-chart-pie"></i></span></div><div class="dashboard-chart-wrap"><canvas id="paymentMethodsChart"></canvas></div></section>
-        <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${shortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
+        <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${visibleShortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
       </div>
-      ${['admin','academic'].includes(role)?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
+      <section class="card"><div class="section-heading"><div><span class="section-kicker">التقارير والإدارة</span><h3>وصول سريع للتقارير</h3></div></div><div class="actions">${['admin','academic'].includes(role)&&hasModuleAccess('results')?'<button type="button" class="secondary" data-go="results"><i class="fas fa-chart-bar"></i> النتائج</button>':''}${['admin','academic'].includes(role)&&hasModuleAccess('attendance')?'<button type="button" class="secondary" data-go="attendance"><i class="fas fa-clipboard-check"></i> الحضور والغياب</button>':''}${['admin','finance'].includes(role)&&hasModuleAccess('payments')?'<button type="button" class="secondary" data-go="payments"><i class="fas fa-wallet"></i> تقارير المصروفات</button>':''}${role==='admin'?'<button type="button" class="secondary" data-go="logs"><i class="fas fa-shield-alt"></i> سجل التدقيق</button>':''}</div></section>
+      ${['admin','academic'].includes(role)&&hasModuleAccess('results')?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
   }
   else if(activeTab==='library' && isStaff){
     html = `<section class="card">
@@ -83,7 +88,7 @@ function renderView(){
     <section class="card"><h3>ملخص الجلسات المسجلة</h3><p class="muted">الغياب يُحسب من الجلسات التي انتهت بعد تفعيل تسجيل المادة والفرقة.</p>
       ${table(['المادة','الفرقة','المحاضرة','الحضور','الغياب','التاريخ'],sessionRows)}</section>
     <section class="card"><h3>حد تنبيه الغياب</h3><form id="attendanceThresholdForm" class="fields" style="max-width:480px"><div><label>تنبيه عند وصول نسبة الغياب إلى</label><input type="number" name="absenceAlertPercent" min="1" max="100" value="${Number(cache.activeAttendance?.absenceAlertPercent)||25}" required></div><button type="submit">حفظ النسبة</button></form></section>
-    <section class="card"><h3>تصدير تقرير الحضور</h3><p class="muted">ينشئ ملف CSV متوافقًا مع Excel، ويعرض حالة كل طالب في كل جلسة مكتملة.</p><div class="fields"><div><label>المادة</label><select id="attendanceExportCourse"><option value="">كل المواد</option>${[...new Set((cache.activeAttendance?.sessions||[]).map(s=>s.course).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar')).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></div><div><label>الفرقة</label><select id="attendanceExportLevel"><option value="">كل الفرق</option>${LEVELS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><button type="button" id="attendanceExportBtn">تنزيل التقرير</button></div></section>
+    <section class="card"><h3>تصدير تقرير الحضور</h3><p class="muted">ينشئ كشفًا بحالة كل طالب في كل جلسة مكتملة. Excel ينزّل ملفًا، وPDF يفتح نافذة الطباعة.</p><div class="fields"><div><label>المادة</label><select id="attendanceExportCourse"><option value="">كل المواد</option>${[...new Set((cache.activeAttendance?.sessions||[]).map(s=>s.course).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar')).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></div><div><label>الفرقة</label><select id="attendanceExportLevel"><option value="">كل الفرق</option>${LEVELS.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><div class="actions"><button type="button" id="attendanceExportBtn">تنزيل Excel</button><button type="button" class="secondary" onclick="printAttendanceReport()">PDF / طباعة</button></div></div></section>
     <section class="card">
       <h3>سجل الحضور</h3>
       ${table(['الطالب','الرقم','المادة','المحاضرة','الوقت'], cache.attendance.map(a=>`<tr>
@@ -112,9 +117,10 @@ function renderView(){
     </section>
     <section class="card">
       <h3>المساعدون</h3>
-      ${table(['الاسم','البريد','الصلاحية'], cache.staff.map(st=>`<tr>
+      ${table(['الاسم','البريد','الصلاحية','إجراء'], cache.staff.map(st=>`<tr>
         <td><strong>${esc(st.name)}</strong></td><td>${esc(st.email)}</td>
         <td><span class="pill">${st.role==='admin'?'Super Admin':st.role==='finance'?'مالي':'أكاديمي'}</span></td>
+        <td>${st.role==='admin'?'—':`<button type="button" class="secondary" onclick="editStaffPermissions('${st.uid}')"><i class="fas fa-user-lock"></i> تحديد الصلاحيات</button>`}</td>
       </tr>`).join(''))}
     </section>`;
   }
@@ -148,7 +154,7 @@ function renderView(){
   }
   else if(activeTab==='logs' && (role==='admin'||role==='finance')){
     html = `<section class="card">
-      <h2><i class="fas fa-history" style="color:var(--blue);"></i> سجل النشاطات</h2>
+        <h2><i class="fas fa-history" style="color:var(--blue);"></i> سجل النشاطات</h2><p class="muted">استخدم البحث أعلى الجدول لتصفية السجل حسب المستخدم أو الإجراء أو التفاصيل.</p>
       ${table(['الوقت','المسؤول','الإجراء','التفاصيل'], cache.logs.map(l=>`<tr>
         <td><small class="muted">${l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString('ar-EG') : '—'}</small></td>
         <td><strong>${esc(l.adminEmail||'—')}</strong></td>
@@ -284,6 +290,7 @@ function renderView(){
       <div class="headrow">
         <h2>مراجعة المدفوعات</h2>
         <div class="actions">
+          <button type="button" class="secondary" onclick="exportFinanceExcel('all')">Excel</button><button type="button" class="secondary" onclick="printFinanceReport('all')">PDF</button>
           <button class="${paymentFilterStatus==='all'?'':'secondary'}" onclick="setPaymentFilter('all')">الكل</button>
           <button class="${paymentFilterStatus==='pending'?'':'secondary'}" onclick="setPaymentFilter('pending')">المعلقة</button>
           <button class="${paymentFilterStatus==='approved'?'':'secondary'}" onclick="setPaymentFilter('approved')">المعتمدة</button>
@@ -429,9 +436,7 @@ function renderView(){
       <section class="card">
         <div class="headrow" style="margin-bottom:15px;">
           <h3>سجل الإيصالات والمدفوعات</h3>
-          <button class="secondary" onclick="printFullFinancialStatement()">
-            <i class="fas fa-file-pdf"></i> تحميل كشف حساب
-          </button>
+          <div class="actions"><button class="secondary" onclick="printFullFinancialStatement()"><i class="fas fa-file-pdf"></i> تحميل كشف حساب</button><button class="secondary" onclick="exportFinanceExcel('mine')"><i class="fas fa-file-excel"></i> Excel</button></div>
         </div>
         ${table(['رقم الإيصال', 'التاريخ', 'الوسيلة', 'المبلغ', 'الحالة', 'الإجراء'], cache.payments.map(p=>{
           let statusBadge = '';
@@ -527,7 +532,7 @@ function renderView(){
   }
   else if(activeTab==='myattendance' && role==='student'){
     html = `<section class="card">
-      <h2><i class="fas fa-user-check" style="color:var(--blue);"></i> تسجيل الحضور</h2>
+      <div class="headrow"><h2><i class="fas fa-user-check" style="color:var(--blue);"></i> تسجيل الحضور</h2><div class="actions"><button type="button" class="secondary" onclick="exportMyAttendanceExcel()">Excel</button><button type="button" class="secondary" onclick="printMyAttendanceReport()">PDF / طباعة</button></div></div>
       <p class="muted">امسح رمز QR المعروض في المحاضرة بكاميرا الهاتف لتسجيل حضورك تلقائيًا. يمكنك استخدام كود المحاضر عند الحاجة.</p>
       <form id="studentAttForm" class="fields" style="max-width:400px;margin-bottom:20px;">
         <div><label>كود الحضور (PIN):</label><input name="pinCode" placeholder="كود المحاضر" required></div>

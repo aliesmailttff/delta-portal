@@ -11,6 +11,19 @@ service cloud.firestore {
     function isAdmin()    { return hasRole(['admin']); }
     function isFinance()  { return hasRole(['admin','finance']); }
     function isAcademic() { return hasRole(['admin','academic']); }
+    function defaultPermission(role, area) {
+      return (role == 'finance' && area in ['students','payments','accounts','logs','chat'])
+        || (role == 'academic' && area in ['students','results','exams','library','attendance','schedule','requests','courses','news','chat']);
+    }
+    function hasPermission(area) {
+      return signedIn() && exists(userPath(request.auth.uid))
+        && (get(userPath(request.auth.uid)).data.role == 'admin'
+          || (get(userPath(request.auth.uid)).data.role in ['finance','academic']
+            && (get(userPath(request.auth.uid)).data.get('permissions', null) == null
+              ? defaultPermission(get(userPath(request.auth.uid)).data.role, area)
+              : (get(userPath(request.auth.uid)).data.permissions is list
+                && area in get(userPath(request.auth.uid)).data.permissions))));
+    }
     function isStaff()    { return hasRole(['admin','finance','academic']); }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
     function siteIsOpen() {
@@ -24,33 +37,33 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create: if (isAdmin() && request.resource.data.role in ['student','finance','academic'])
-                    || (isAcademic() && request.resource.data.role == 'student');
+                    || (isAcademic() && hasPermission('students') && request.resource.data.role == 'student');
       allow update: if (isAdmin() && resource.data.role != 'admin' && request.resource.data.role != 'admin')
                     // المستخدم يلغي علامة "غيّر كلمة المرور" فقط
                     || (isOwner(uid) && changedKeys().hasOnly(['mustChangePassword'])
                         && request.resource.data.mustChangePassword == false);
       allow delete: if (isAdmin() && resource.data.role != 'admin')
-                    || (isAcademic() && resource.data.role == 'student');
+                    || (isAcademic() && hasPermission('students') && resource.data.role == 'student');
     }
 
     match /students/{uid} {
-      allow read: if (isOwner(uid) && isPortalStudent()) || isStaff();
-      allow create, delete: if isAcademic();
+      allow read: if (isOwner(uid) && isPortalStudent()) || hasPermission('students') || hasPermission('payments');
+      allow create, delete: if isAcademic() && hasPermission('students');
       // الطالب لا يعدّل ملفه إطلاقاً. المالي يحدّث paidAmount فقط (اعتماد الإيصال)
-      allow update: if isAcademic() || (isFinance() && changedKeys().hasOnly(['paidAmount']));
+      allow update: if (isAcademic() && hasPermission('students')) || (isFinance() && hasPermission('payments') && changedKeys().hasOnly(['paidAmount']));
     }
 
     match /results/{id} {
-      allow read: if isStaff() || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
-      allow write: if isAcademic();
+      allow read: if hasPermission('results') || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
+      allow write: if hasPermission('results');
     }
 
-    match /exams/{id}   { allow read: if canUsePortal(); allow write: if isAcademic(); }
-    match /news/{id}    { allow read: if canUsePortal(); allow write: if isAcademic(); }
-    match /library/{id} { allow read: if canUsePortal(); allow write: if isAcademic(); }
+    match /exams/{id}   { allow read: if isPortalStudent() || hasPermission('exams'); allow write: if hasPermission('exams'); }
+    match /news/{id}    { allow read: if isPortalStudent() || hasPermission('news'); allow write: if hasPermission('news'); }
+    match /library/{id} { allow read: if isPortalStudent() || hasPermission('library'); allow write: if hasPermission('library'); }
 
     match /payments/{id} {
-      allow read: if isFinance() || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
+      allow read: if hasPermission('payments') || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
       allow create: if isPortalStudent()
         && request.resource.data.studentUid == request.auth.uid
         && request.resource.data.status == 'قيد المراجعة'
@@ -59,24 +72,28 @@ service cloud.firestore {
         && request.resource.data.amount <= get(/databases/$(database)/documents/students/$(request.auth.uid)).data.totalFees
         && !(exists(/databases/$(database)/documents/settings/payment_accounts)
              && get(/databases/$(database)/documents/settings/payment_accounts).data.get('maintenanceMode', false) == true);
-      allow update: if isFinance()
+      allow update: if isFinance() && hasPermission('payments')
         && changedKeys().hasOnly(['status','approvedBy','approvedAt','rejectReason']);
       allow delete: if isAdmin();
     }
 
     match /settings/{docId} {
       // كود الحضور السري (PIN) لا يقرأه إلا الموظفون، والتحقق منه يتم هنا في القواعد
-      allow read: if docId == 'site_status' || (canUsePortal() && (docId != 'active_attendance' || isStaff()));
+      allow read: if docId == 'site_status' || (isPortalStudent() && docId != 'active_attendance')
+        || (docId == 'payment_accounts' && hasPermission('accounts'))
+        || (docId in ['attendance_public','active_attendance'] && hasPermission('attendance'))
+        || (docId == 'registration' && hasPermission('courses'));
       allow write: if (docId == 'site_status' && isAdmin())
-                   || (docId == 'payment_accounts' && isFinance())
-                   || ((docId == 'active_attendance' || docId == 'attendance_public' || docId == 'registration') && isAcademic());
+                   || (docId == 'payment_accounts' && hasPermission('accounts'))
+                   || ((docId == 'active_attendance' || docId == 'attendance_public') && hasPermission('attendance'))
+                   || (docId == 'registration' && hasPermission('courses'));
     }
 
     match /attendance_qr_sessions/{sessionId} { allow read, write: if false; }
     match /attendance_qr_tokens/{tokenHash} { allow read, write: if false; }
 
     match /attendance/{id} {
-      allow read: if isStaff() || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
+      allow read: if hasPermission('attendance') || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
       allow create: if isPortalStudent()
         && request.resource.data.studentUid == request.auth.uid
         && id == request.resource.data.sessionId + '_' + request.auth.uid
@@ -84,18 +101,18 @@ service cloud.firestore {
         && request.time.toMillis() < get(/databases/$(database)/documents/settings/attendance_public).data.expiresAt
         && request.resource.data.pin == get(/databases/$(database)/documents/settings/active_attendance).data.code;
       allow update: if false;
-      allow delete: if isAcademic();
+      allow delete: if hasPermission('attendance');
     }
 
     match /audit_logs/{id} {
-      allow read: if isFinance();
+      allow read: if hasPermission('logs');
       allow create: if canUsePortal() && request.resource.data.adminEmail == request.auth.token.email;
       allow update, delete: if false;
     }
 
     match /chats/{studentUid}/messages/{msgId} {
-      allow read: if (isOwner(studentUid) && isPortalStudent()) || isStaff();
-      allow create: if ((isOwner(studentUid) && isPortalStudent()) || isStaff())
+      allow read: if (isOwner(studentUid) && isPortalStudent()) || hasPermission('chat');
+      allow create: if ((isOwner(studentUid) && isPortalStudent()) || hasPermission('chat'))
         && request.resource.data.senderUid == request.auth.uid
         && request.resource.data.body is string
         && request.resource.data.body.size() > 0
@@ -104,10 +121,10 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /courses/{id} { allow read: if canUsePortal(); allow write: if isAcademic(); }
+    match /courses/{id} { allow read: if isPortalStudent() || hasPermission('courses'); allow write: if hasPermission('courses'); }
 
     match /registrations/{id} {
-      allow read: if isAcademic() || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
+      allow read: if hasPermission('courses') || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
       allow create: if isPortalStudent()
         && request.resource.data.studentUid == request.auth.uid
         && id.matches(request.auth.uid + '_.*')
@@ -119,20 +136,20 @@ service cloud.firestore {
         && request.resource.data.year == get(/databases/$(database)/documents/settings/registration).data.year
         && request.resource.data.semester == get(/databases/$(database)/documents/settings/registration).data.semester;
       allow update: if false;
-      allow delete: if isAcademic()
+      allow delete: if hasPermission('courses')
         || (isPortalStudent() && resource.data.studentUid == request.auth.uid && get(/databases/$(database)/documents/settings/registration).data.open == true);
     }
 
-    match /schedule/{id} { allow read: if canUsePortal(); allow write: if isAcademic(); }
+    match /schedule/{id} { allow read: if isPortalStudent() || hasPermission('schedule'); allow write: if hasPermission('schedule'); }
 
     match /requests/{id} {
-      allow read: if isAcademic() || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
+      allow read: if hasPermission('requests') || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
       allow create: if isPortalStudent()
         && request.resource.data.studentUid == request.auth.uid
         && request.resource.data.status == 'قيد المراجعة'
         && request.resource.data.type in ['تظلم من نتيجة','شهادة قيد','إفادة التحاق','كشف درجات رسمي','أخرى']
         && request.resource.data.details is string && request.resource.data.details.size() <= 1000;
-      allow update: if isAcademic() && changedKeys().hasOnly(['status','reply','handledBy','handledAt']);
+      allow update: if hasPermission('requests') && changedKeys().hasOnly(['status','reply','handledBy','handledAt']);
       allow delete: if isAdmin();
     }
 

@@ -160,8 +160,11 @@ function getNavItems(){
     ['home','الرئيسية'],['gpasimulator','محاكي GPA'],
     ['mylibrary','المكتبة PDF'],['myattendance','سجل الحضور'],
     ['myresults','نتيجتي'],['myexams','الامتحانات'],
-    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['chat','التواصل']
+    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['chat','التواصل'],['security','الأمان']
   ];
+  if(role==='admin') items.push(['security','الأمان']);
+  if(role==='finance'||role==='academic') items.push(['security','الأمان']);
+  if(Array.isArray(profile?.permissions)&&role!=='admin') items=items.filter(([id])=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   if(!items.some(i=>i[0]===activeTab)){
     activeTab = items[0][0];
     localStorage.setItem('activeTab', activeTab);
@@ -170,7 +173,7 @@ function getNavItems(){
 }
 
 function navIcon(id){
-  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper'};
+  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper',security:'fa-lock'};
   return icons[id]||'fa-circle';
 }
 

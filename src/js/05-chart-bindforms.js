@@ -44,6 +44,7 @@ function bindForms(){
   $('#staffForm')?.addEventListener('submit', createStaff);
   $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);
   $('#attForm')?.addEventListener('submit', saveAttendanceSession);
+  $('#ownPasswordForm')?.addEventListener('submit', changeOwnPassword);
   $('#attendanceThresholdForm')?.addEventListener('submit', saveAttendanceThreshold);
   $('#attendanceExportBtn')?.addEventListener('click', exportAttendanceReport);
   $('#studentAttForm')?.addEventListener('submit', verifyStudentAttendance);
@@ -65,6 +66,7 @@ function bindForms(){
     editCtx.fields.forEach(([k,,t]) => { if(t==='number') d[k] = Number(d[k]); });
     try {
       await updateDoc(doc(db, editCtx.coll, editCtx.id), d);
+      logAction('تعديل بيانات',`${editCtx.coll}:${editCtx.id}`);
       closeGenericEdit();
       showToast('تم التعديل بنجاح');
       await loadData(); renderApp();
