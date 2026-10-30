@@ -1,389 +1,1914 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíßİ9í:-jZ.¶›­–)Ş³^ËÈ6ava6`H6avcöb6a6c¶dv+È6avaˆÜ˜ËÚœÈ6*6b6)ö,ö-ö*HZ[›ZœÈ8 %6a6)È6*¶.v+ödva6aÈ6b¶+öb6b¶)öbÂš[\ÜÈ[š]X[^™P\[]P\Hœ›ÛH	ÚÎ‹ËİİİË™Üİ]XË˜ÛÛKÙš\™X˜\ÙZœËÌLŒMŒKÙš\™X˜\ÙKX\šœÉÎÂš[\ÜÈÙ]]]Û]]İ]PÚ[™ÙYÚYÛ’[•Ú][XZ[[™\ÜİÛÜ™ÚYÛ“İ]ˆÜ™X]U\Ù\•Ú][XZ[[™\ÜİÛÜ™Ù[™\ÜİÛÜ™™\Ù][XZ[\]T\ÜİÛÜ™Bˆœ›ÛH	ÚÎ‹ËİİİË™Üİ]XË˜ÛÛKÙš\™X˜\ÙZœËÌLŒMŒKÙš\™X˜\ÙKX]]šœÉÎÂš[\ÜÈÙ]š\™\İÜ™KÛÛXİ[Û‹ØËÙ]ØËÙ]ØÜËYØËÙ]ØËˆ\]QØË[]QØË]Y\KÚ\™KÜ™\KÙ\™\•[Y\İ[\ˆÛ”Û˜\Úİ[•˜[œØXİ[Û‹[]QšY[Bˆœ›ÛH	ÚÎ‹ËİİİË™Üİ]XË˜ÛÛKÙš\™X˜\ÙZœËÌLŒMŒKÙš\™X˜\ÙKYš\™\İÜ™KšœÉÎÂš[\ÜÈš\™X˜\ÙPÛÛ™šYË\Ñš\™X˜\ÙPÛÛ™šYİ\™YHœ›ÛH	Ë‹‹Ùš\™X˜\ÙKXÛÛ™šYËšœÉÎÂ‚‹ÊˆKKKKKKKKKH[\œÈKKKKKKKKKH
-‹Â˜ÛÛœİ	HÈOˆØİ[Y[œ]Y\TÙ[XİÜŠÊNÂÚ[™İË‰H	Â˜ÛÛœİ\›ÛİH	
-	ÈØ\	ÊNÂ‚›]]]‹\Ù\[[›Ùš[O[[›ÛO[[Â›]Xİ]™UXˆHØØ[İÜ˜YÙK™Ù]][J	ØXİ]™UX‰ÊH	Ù\Ú›Ø\™	ÎÂ›]ØXÚHHÈİY[Î–×K™]ÜÎ–×K^[\Î–×K™\İ[Î–×K^[Y[Î–×KÙ][™ÜÎßKˆÙÜÎ–×KİY™–×KXœ˜\N–×K][™[˜ÙN–×HNÂ›][™[™Ô^[Y[]HH[Â›]^[Y[š[\”İ]\ÈH	Ø[	ÎÂ›]Ù[XİYÚ]İY[ZYH[Â›]Y]İH[Â›][œİXÚ]H[Â‚˜ÛÛœİ\ØÈHˆOˆİš[™ÊÏÉÉÊKœ™\XÙJÖÉˆ‰×KÙËÈOˆ
-ˆÉÉ‰Î‰É˜[\ÉË	Ï	Î‰É›ÉË	Ï‰Î‰É™İÉË	È‰Î‰Éœ][İÉË‰È‰ÉˆÌÎNÉßVØ×BŠJNÂ˜ÛÛœİ[Û™^HHˆOˆ[X™\ŠŸ
-KÓØØ[Tİš[™Ê	Ø\‹QQÉÊJÉÈ6+¶aIÎÂ˜ÛÛœİ]S›İÈH
+// Ù…Ù„Ù Ù…ÙÙˆÙ„ÙÙ‘Ø¯ Ù…Ù† src/js Ø¨ÙˆØ§Ø³Ø·Ø© build.mjs â€” Ù„Ø§ ØªØ¹Ø¯Ù‘Ù„Ù‡ ÙŠØ¯ÙˆÙŠØ§Ù‹
+import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+         createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword }
+  from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc,
+         updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
+         onSnapshot, runTransaction, deleteField }
+  from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { firebaseConfig, isFirebaseConfigured } from '../firebase-config.js';
 
-HOˆ™]È]J
-KÓØØ[Q]Tİš[™Ê	Ù[‹PĞIÊNÂ˜ÛÛœİÜ˜YHHˆOˆNLÉö)öav*¶b¶)ö,‰ÎˆNÉö+6b¶+È6+6+ö)öbÉÎˆMOÉö+6b¶+ÉÎˆMLÉöav`¶*6b6a	Î‰ö,v)ö,ö*	ÎÂ˜ÛÛœİÈHÈOˆÏNLÍŒœÏNOÌËÎœÏNÌËŒÎœÏMÍOÌËŒœÏMÌÌ‹ÎœÏMOÌ‹œÏMŒÌ‹ŒœÏMLÌKŒŒŒÂ˜ÛÛœİ\ÙÈH
-\OIÛ›İXÙIÊHOˆ]ˆÛ\ÜÏH››İXÙH	İ\OOOIÙ\œ›Ü‰ÏÉÙ\œ›Ü‰Î\OOOIÜİXØÙ\ÜÉÏÉÜİXØÙ\ÜÉÎ‰ÉßH‰Ù\ØÊ
-_OÙ]˜Â‚Ú[™İËœÚİÕØ\İH[˜İ[ÛŠ^\OIÜİXØÙ\ÜÉÊHÂˆÛÛœİÈH	
-	ÈİØ\İÛÛZ[™\‰ÊNÈYŠXÊH™]\›ÂˆÛÛœİHØİ[Y[˜Ü™X]Q[[Y[
-	Ù]‰ÊNÂˆ˜Û\ÜÓ˜[YHHØ\İ	İ\_XÂˆš[›™\’SHHÛ\ÜÏH™˜\È˜KIİ\OOOIÜİXØÙ\ÜÉÏÉØÚXÚËXÚ\˜ÛIÎ‰Ù^Û[X][Û‹XÚ\˜ÛIßHÚOˆÜ[‰Ù\ØÊ^
-_OÜÜ[˜ÂˆË˜\[™Ú[
-
-NÂˆÙ][Y[İ]
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+window.$ = $;
+const appRoot = $('#app');
+
+let auth, db, user=null, profile=null, role=null;
+let activeTab = localStorage.getItem('activeTab') || 'dashboard';
+let cache = { students:[], news:[], exams:[], results:[], payments:[], settings:{},
+              logs:[], staff:[], library:[], attendance:[] };
+let pendingPaymentData = null;
+let paymentFilterStatus = 'all';
+let selectedChatStudentUid = null;
+let editCtx = null;
+let unsubChat = null;
+
+const esc = v => String(v??'').replace(/[&<>"']/g, c => (
+  {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+));
+const money = n => Number(n||0).toLocaleString('ar-EG')+' Ø¬.Ù…';
+const dateNow = () => new Date().toLocaleDateString('en-CA');
+const grade = n => n>=90?'Ø§Ù…ØªÙŠØ§Ø²': n>=80?'Ø¬ÙŠØ¯ Ø¬Ø¯Ø§Ù‹': n>=65?'Ø¬ÙŠØ¯': n>=50?'Ù…Ù‚Ø¨ÙˆÙ„':'Ø±Ø§Ø³Ø¨';
+const pts = s => s>=90?4.0:s>=85?3.7:s>=80?3.3:s>=75?3.0:s>=70?2.7:s>=65?2.4:s>=60?2.0:s>=50?1.0:0.0;
+const msg = (t, type='notice') => `<div class="notice ${type==='error'?'error':type==='success'?'success':''}">${esc(t)}</div>`;
+
+window.showToast = function(text, type='success') {
+  const c = $('#toastContainer'); if(!c) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> <span>${esc(text)}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+};
+
+function showFatal(text){
+  appRoot.innerHTML = `<section class="card loginbox">
+    <h2>Ø¥Ø¹Ø¯Ø§Ø¯ Ø§Ù„Ù…Ù†ØµØ©</h2>${msg(text,'error')}
+    <button onclick="location.reload()" style="margin-top:12px;width:100%;">Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©</button>
+  </section>`;
+}
+
+const safe = async (p, fb) => { try { return await p; } catch(e){ console.warn(e); return fb; } };
+const none = { docs: [], exists: () => false };
+
+/* ---------- Init Firebase ---------- */
+if(!isFirebaseConfigured()){
+  showFatal('Ù„Ù… ÙŠØªÙ… Ø±Ø¨Ø· Firebase Ø¨Ø¹Ø¯. ØªØ£ÙƒØ¯ Ù…Ù† ØªØ¹Ø¨Ø¦Ø© firebase-config.js');
+} else {
+  try {
+    const app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+
+    onAuthStateChanged(auth, async u => {
+      user = u;
+      if(!u){
+        profile = null; role = null;
+        renderLogin();
+        return;
+      }
+      try {
+        const snap = await getDoc(doc(db,'users',u.uid));
+        if(!snap.exists()){
+          await signOut(auth);
+          showFatal('Ø§Ù„Ø­Ø³Ø§Ø¨ Ù„Ø§ ÙŠÙ…Ù„Ùƒ Ù…Ù„Ù ØµÙ„Ø§Ø­ÙŠØ§Øª ÙÙŠ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª.');
+          return;
+        }
+        profile = snap.data();
+        role = profile.role;
+        await loadData();
+        if(['admin','academic'].includes(role)) cache.students.filter(x=>'password' in x).forEach(x=>updateDoc(doc(db,'students',x.uid),{password:deleteField()}).catch(()=>{}));
+        if(profile.mustChangePassword){ showForcePasswordChange(); return; }
+        const validTabs = getValidTabsForRole(role);
+        if(!validTabs.includes(activeTab)) activeTab = validTabs[0];
+        renderApp();
+      } catch(e) {
+        showFatal('ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨: '+e.message);
+      }
+    });
+  } catch(e) {
+    showFatal('Ø®Ø·Ø£ ÙÙŠ ØªÙ‡ÙŠØ¦Ø© Firebase: '+e.message);
+  }
+}
+
+/* ---------- PWA ---------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+/* ---------- Theme ---------- */
+(function initTheme(){
+  const hour = new Date().getHours();
+  const isNight = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const saved = localStorage.getItem('theme');
+  if(saved) document.body.dataset.theme = saved;
+  else if(isNight){ document.body.dataset.theme = 'dark'; }
+})();
+
+window.toggleDarkMode = function(){
+  const cur = document.body.dataset.theme;
+  const next = cur === 'dark' ? 'light' : 'dark';
+  if(next === 'dark') document.body.dataset.theme = 'dark';
+  else delete document.body.dataset.theme;
+  localStorage.setItem('theme', document.body.dataset.theme || 'light');
+  const btn = $('#themeBtnText'); if(btn) btn.textContent = next==='dark' ? 'ÙØ§ØªØ­' : 'Ø¯Ø§ÙƒÙ†';
+};
+
+window.toggleHighContrast = function(){
+  const cur = document.body.dataset.theme;
+  const next = cur === 'high-contrast' ? 'light' : 'high-contrast';
+  if(next === 'high-contrast') document.body.dataset.theme = 'high-contrast';
+  else delete document.body.dataset.theme;
+  localStorage.setItem('theme', document.body.dataset.theme || 'light');
+};
+
+/* ---------- Permissions ---------- */
+function getValidTabsForRole(r){
+  if(r==='admin') return ['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','payments','accounts','staff','logs','chat'];
+  if(r==='finance') return ['dashboard','payments','accounts','logs','chat'];
+  if(r==='academic') return ['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','chat'];
+  return ['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','chat'];
+}
+
+/* ---------- Login ---------- */
+function renderLogin(){
+  $('#headerActions').innerHTML = '';
+  appRoot.innerHTML = `<section class="card loginbox">
+    <h2>ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„</h2>
+    <p class="muted">Ø§Ø³ØªØ®Ø¯Ù… Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ ÙˆÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±.</p>
+    <form id="loginForm">
+      <label>Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ</label>
+      <input id="email" type="email" required autocomplete="username" placeholder="student@example.com">
+      <label style="margin-top:10px;">ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±</label>
+      <input id="password" type="password" required autocomplete="current-password">
+      <div id="loginError" style="margin-top:10px;"></div>
+      <button type="submit" style="width:100%;margin-top:14px;">Ø¯Ø®ÙˆÙ„ Ø¢Ù…Ù†</button>
+      <div style="text-align:center;margin-top:12px;">
+        <a href="#" onclick="forgotPassword();return false;" style="font-size:.85rem;color:var(--blue);text-decoration:underline;">Ù†Ø³ÙŠØª ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±ØŸ</a>
+      </div>
+    </form>
+  </section>`;
+
+  $('#loginForm').onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.currentTarget.querySelector('button[type="submit"]');
+    if(btn) btn.disabled = true;
+    $('#loginError').innerHTML = '';
+    try {
+      await signInWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
+    } catch(err) {
+      $('#loginError').innerHTML = msg(authError(err), 'error');
+    } finally {
+      if(btn) btn.disabled = false;
+    }
+  };
+}
+
+window.forgotPassword = async function(){
+  const email = prompt('Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ:');
+  if(!email) return;
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+    showToast('ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø±Ø§Ø¨Ø· Ø§Ù„Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø¥Ù„Ù‰ Ø¨Ø±ÙŠØ¯Ùƒ.');
+  } catch(err){ showToast(authError(err),'error'); }
+};
+
+function authError(e){
+  return ({
+    'auth/invalid-credential':'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­Ø©.',
+    'auth/too-many-requests':'Ù…Ø­Ø§ÙˆÙ„Ø§Øª ÙƒØ«ÙŠØ±Ø©ØŒ Ø§Ù†ØªØ¸Ø± Ù‚Ù„ÙŠÙ„Ù‹Ø§.',
+    'auth/network-request-failed':'ØªØ­Ù‚Ù‚ Ù…Ù† Ø§ØªØµØ§Ù„ Ø§Ù„Ø¥Ù†ØªØ±Ù†Øª.',
+    'auth/invalid-email':'ØµÙŠØºØ© Ø§Ù„Ø¨Ø±ÙŠØ¯ ØºÙŠØ± ØµØ­ÙŠØ­Ø©.',
+    'auth/email-already-in-use':'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ù…Ø³ØªØ®Ø¯Ù… Ù…Ø³Ø¨Ù‚Ù‹Ø§.',
+    'auth/weak-password':'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø¶Ø¹ÙŠÙØ© (6 Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„).',
+    'permission-denied':'Ù„Ø§ ØªÙ…Ù„Ùƒ ØµÙ„Ø§Ø­ÙŠØ© Ù‡Ø°Ù‡ Ø§Ù„Ø¹Ù…Ù„ÙŠØ©.'
+  })[e.code] || e.message || 'Ø­Ø¯Ø« Ø®Ø·Ø£.';
+}
+
+/* ---------- Data Loader ---------- */
+async function loadData(){
+  await loadExtra();
+  const newsP = safe(getDocs(collection(db,'news')), none);
+  const examsP = safe(getDocs(collection(db,'exams')), none);
+  const libP   = safe(getDocs(collection(db,'library')), none);
+  const attP   = safe(getDocs(collection(db,'attendance')), none);
+
+  try {
+    const setSnap = await getDoc(doc(db,'settings','payment_accounts'));
+    cache.settings = setSnap.exists()
+      ? setSnap.data()
+      : { vodafone:'', instapay:'', fawryCode:'', bankAccount:'', maintenanceMode:false };
+  } catch { cache.settings = {}; }
+
+  const isStaffUser = ['admin','finance','academic'].includes(role);
+
+  if(isStaffUser){
+    const [ss, ns, es, libs, atts, rs, ps, ls, stfSnap] = await Promise.all([
+      safe(getDocs(collection(db,'students')), none),
+      newsP, examsP, libP, attP,
+      safe(getDocs(collection(db,'results')), none),
+      safe(getDocs(collection(db,'payments')), none),
+      safe(getDocs(query(collection(db,'audit_logs'), orderBy('createdAt','desc'))), none),
+      safe(getDocs(query(collection(db,'users'), where('role','in',['admin','finance','academic']))), none)
+    ]);
+    cache.students   = ss.docs.map(d=>({uid:d.id, ...d.data()}));
+    cache.results    = rs.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.payments   = ps.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.news       = ns.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.exams      = es.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.library    = libs.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.attendance = atts.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.logs       = ls.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.staff      = stfSnap.docs.map(d=>({uid:d.id, ...d.data()}));
+  } else {
+    const [ss, ns, es, libs, atts, rs, ps] = await Promise.all([
+      safe(getDoc(doc(db,'students',user.uid)), { exists:()=>false }),
+      newsP, examsP, libP,
+      safe(getDocs(query(collection(db,'attendance'), where('studentUid','==',user.uid))), none),
+      safe(getDocs(query(collection(db,'results'), where('studentUid','==',user.uid))), none),
+      safe(getDocs(query(collection(db,'payments'), where('studentUid','==',user.uid))), none)
+    ]);
+    cache.students   = ss.exists() ? [{uid:ss.id, ...ss.data()}] : [];
+    cache.results    = rs.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.payments   = ps.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.news       = ns.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.exams      = es.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.library    = libs.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.attendance = atts.docs.map(d=>({id:d.id, ...d.data()}));
+  }
+}
+
+/* ---------- Nav ---------- */
+function nav(){
+  const pendingCount = cache.payments.filter(p=>p.status==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©').length;
+  const badge = pendingCount>0 ? ` <span style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:99px;font-size:.75rem;">${pendingCount}</span>` : '';
+  let items = [];
+  if(role==='admin') items = [
+    ['dashboard','Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©'],['students','Ø§Ù„Ø·Ù„Ø§Ø¨'],['results','Ø§Ù„Ù†ØªØ§Ø¦Ø¬'],
+    ['exams','Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª'],['library','Ø§Ù„Ù…ÙƒØªØ¨Ø©'],['attendance','Ø§Ù„Ø­Ø¶ÙˆØ±'],
+    ['schedule','Ø§Ù„Ø¬Ø¯ÙˆÙ„'],['requests',`Ø§Ù„Ø·Ù„Ø¨Ø§Øª${reqBadge()}`],['courses','Ø§Ù„Ù…ÙˆØ§Ø¯ ÙˆØ§Ù„ØªØ³Ø¬ÙŠÙ„'],['news','Ø§Ù„Ø£Ø®Ø¨Ø§Ø±'],['payments',`Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª${badge}`],['accounts','Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª'],
+    ['staff','Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯ÙŠÙ†'],['logs','Ø³Ø¬Ù„ Ø§Ù„Ø£Ù…Ø§Ù†'],['chat','Ø´Ø¤ÙˆÙ† Ø§Ù„Ø·Ù„Ø§Ø¨']
+  ];
+  else if(role==='finance') items = [
+    ['dashboard','Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©'],['payments',`Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª${badge}`],
+    ['accounts','Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª'],['logs','Ø³Ø¬Ù„ Ø§Ù„Ø£Ù…Ø§Ù†'],['chat','Ø´Ø¤ÙˆÙ† Ø§Ù„Ø·Ù„Ø§Ø¨']
+  ];
+  else if(role==='academic') items = [
+    ['dashboard','Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©'],['students','Ø§Ù„Ø·Ù„Ø§Ø¨'],['results','Ø§Ù„Ù†ØªØ§Ø¦Ø¬'],
+    ['exams','Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª'],['library','Ø§Ù„Ù…ÙƒØªØ¨Ø©'],['attendance','Ø§Ù„Ø­Ø¶ÙˆØ±'],
+    ['schedule','Ø§Ù„Ø¬Ø¯ÙˆÙ„'],['requests',`Ø§Ù„Ø·Ù„Ø¨Ø§Øª${reqBadge()}`],['courses','Ø§Ù„Ù…ÙˆØ§Ø¯ ÙˆØ§Ù„ØªØ³Ø¬ÙŠÙ„'],['news','Ø§Ù„Ø£Ø®Ø¨Ø§Ø±'],['chat','Ø´Ø¤ÙˆÙ† Ø§Ù„Ø·Ù„Ø§Ø¨']
+  ];
+  else items = [
+    ['home','Ù…Ù„ÙÙŠ ÙˆØ§Ù„Ù…ØµØ±ÙˆÙØ§Øª'],['gpasimulator','Ù…Ø­Ø§ÙƒÙŠ GPA'],
+    ['mylibrary','Ø§Ù„Ù…ÙƒØªØ¨Ø© PDF'],['myattendance','Ø³Ø¬Ù„ Ø§Ù„Ø­Ø¶ÙˆØ±'],
+    ['myresults','Ù†ØªÙŠØ¬ØªÙŠ'],['myexams','Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª'],
+    ['myschedule','Ø¬Ø¯ÙˆÙ„ÙŠ'],['myregistration','ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ù…ÙˆØ§Ø¯'],['myrequests','Ø·Ù„Ø¨Ø§ØªÙŠ'],['mynews','Ø§Ù„Ø£Ø®Ø¨Ø§Ø±'],['chat','Ø§Ù„ØªÙˆØ§ØµÙ„']
+  ];
+  if(!items.some(i=>i[0]===activeTab)){
+    activeTab = items[0][0];
+    localStorage.setItem('activeTab', activeTab);
+  }
+  return `<nav class="tabs">${items.map(([id,label])=>`<button class="${activeTab===id?'active':''}" data-tab="${id}">${label}</button>`).join('')}</nav>`;
+}
+
+function renderApp(){
+  const p = profile || {};
+  const roleLabel = role==='admin'?'(Super Admin)':role==='finance'?'(Ù…Ø§Ù„ÙŠ)':role==='academic'?'(Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠ)':'';
+  $('#headerActions').innerHTML = `
+    <span style="font-size:.85rem;">${esc(p.name||user.email)} ${roleLabel}</span>
+    <button class="secondary" id="logout" style="margin-right:10px;padding:6px 10px;font-size:.8rem;">Ø®Ø±ÙˆØ¬</button>`;
+  $('#logout').onclick = async () => {
+    if(unsubChat) { unsubChat(); unsubChat=null; }
+    localStorage.removeItem('activeTab');
+    await signOut(auth);
+  };
+  
+  const tBtn = $('#themeBtnText');
+  if(tBtn) tBtn.textContent = document.body.dataset.theme === 'dark' ? 'ÙØ§ØªØ­' : 'Ø¯Ø§ÙƒÙ†';
+
+  appRoot.innerHTML = nav() + `<div id="view"></div>`;
+  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
+    if(unsubChat){ unsubChat(); unsubChat=null; }
+    activeTab = b.dataset.tab;
+    localStorage.setItem('activeTab', activeTab);
+    renderApp();
+  });
+  renderView();
+}
+
+function stat(label,val){ return `<div class="stat"><span>${label}</span><b>${val}</b></div>`; }
+let tblSeq=0;
+function table(headers,rows){
+  const PAGE=25, id='tb'+(++tblSeq);
+  const parts=rows?String(rows).split(/(?=<tr[\s>])/).filter(x=>x.trim()):[];
+  const big=parts.length>PAGE;
+  const body=!rows?`<tr><td colspan="${headers.length}" class="muted">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª</td></tr>`
+    :big?parts.map((p,k)=>k>=PAGE?p.replace(/^<tr/,'<tr data-extra="1" style="display:none"'):p).join(''):rows;
+  const tools=parts.length>10?`<input type="search" placeholder="Ø¨Ø­Ø« ÙÙŠ Ø§Ù„Ø¬Ø¯ÙˆÙ„..." oninput="tblFilter('${id}',this.value)" style="max-width:260px;margin-bottom:8px;">`:'';
+  const more=big?`<div style="text-align:center;margin-top:8px;"><button type="button" class="secondary" onclick="tblMore('${id}',this)">Ø¹Ø±Ø¶ Ø§Ù„Ù…Ø²ÙŠØ¯ (${parts.length-PAGE})</button></div>`:'';
+  return `<div id="${id}">${tools}<div class="tablewrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>${more}</div>`;
+}
+window.tblMore=(id,b)=>{document.querySelectorAll(`#${id} tr[data-extra]`).forEach(r=>{r.style.display='';r.removeAttribute('data-extra')});b.parentElement.remove();};
+window.tblFilter=(id,q)=>{q=q.trim().toLowerCase();document.querySelectorAll(`#${id} tbody tr`).forEach(r=>{r.style.display=(!q||r.textContent.toLowerCase().includes(q))?'':'none';if(q)r.removeAttribute('data-extra');});};
+
+function renderView(){
+  const v = $('#view'); if(!v) return;
+  const isStaff = ['admin','finance','academic'].includes(role);
+  let html = '';
+
+  if(activeTab==='dashboard' && isStaff){
+    const totalPaid = cache.payments.filter(p=>p.status==='Ù…Ù‚Ø¨ÙˆÙ„').reduce((a,p)=>a+Number(p.amount||0),0);
+    const pending = cache.payments.filter(p=>p.status==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©').length;
+    let banner = '';
+    if(pending>0 && (role==='admin'||role==='finance')){
+      banner = `<div class="card" style="background:#fff3cd;border-color:#ffeeba;color:#856404;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div><i class="fas fa-bell"></i> <strong>ØªÙ†Ø¨ÙŠÙ‡:</strong> ${pending} Ø¥ÙŠØµØ§Ù„ Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯.</div>
+        <button style="background:#856404;" data-go="payments">Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©</button>
+      </div>`;
+    }
+    html = `${banner}
+      <h2>Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…</h2>
+      <div class="grid">
+        ${stat('Ø§Ù„Ø·Ù„Ø§Ø¨', cache.students.length)}
+        ${stat('Ø§Ù„Ù†ØªØ§Ø¦Ø¬', cache.results.length)}
+        ${stat('Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª', cache.exams.length)}
+        ${stat('Ø§Ù„ØªØ­ØµÙŠÙ„Ø§Øª', money(totalPaid))}
+      </div>
+      <section class="card" style="margin-top:20px;">
+        <h3><i class="fas fa-chart-pie" style="color:var(--blue);"></i> ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª</h3>
+        <div style="max-width:400px;margin:20px auto;"><canvas id="paymentMethodsChart"></canvas></div>
+      </section>`;
+  }
+  else if(activeTab==='library' && isStaff){
+    html = `<section class="card">
+      <h2><i class="fas fa-file-pdf" style="color:var(--red);"></i> Ø±ÙØ¹ Ù…Ù„Ù PDF Ø¬Ø¯ÙŠØ¯</h2>
+      <form id="libForm" class="fields">
+        <div><label>Ø§Ù„Ù…Ø§Ø¯Ø©</label><input name="course" required></div>
+        <div><label>Ø§Ù„Ø¹Ù†ÙˆØ§Ù†</label><input name="title" required></div>
+        <div><label>Ù…Ù„Ù PDF</label><input type="file" id="pdfFileInput" accept="application/pdf" required style="padding:7px;"></div>
+        <div><label>Ø§Ù„ÙØ±Ù‚Ø©</label>
+          <select name="level">
+            <option>ÙƒÙ„ Ø§Ù„ÙØ±Ù‚</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰</option>
+            <option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ©</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù„Ø«Ø©</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø±Ø§Ø¨Ø¹Ø©</option>
+          </select>
+        </div>
+        <button style="grid-column:1/-1;margin-top:10px;background:var(--green);">Ø±ÙØ¹ Ø§Ù„Ù…Ù„Ù</button>
+      </form>
+      <div id="libMsg" style="margin-top:10px;"></div>
+    </section>
+    <section class="card">
+      <h3>Ù…Ù„ÙØ§Øª Ø§Ù„Ù…ÙƒØªØ¨Ø©</h3>
+      ${table(['Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø¹Ù†ÙˆØ§Ù†','Ø§Ù„ÙØ±Ù‚Ø©','Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡'], cache.library.map(l=>`<tr>
+        <td>${esc(l.course)}</td><td><strong>${esc(l.title)}</strong></td>
+        <td><span class="pill">${esc(l.level)}</span></td>
+        <td><div class="actions">
+          <button class="secondary" onclick="viewPdfFile('${l.id}')"><i class="fas fa-eye"></i> Ø¹Ø±Ø¶</button>
+          <button class="danger" data-delete="library" data-id="${l.id}"><i class="fas fa-trash"></i></button>
+        </div></td>
+      </tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='attendance' && isStaff){
+    html = `<section class="card">
+      <h2><i class="fas fa-qrcode" style="color:var(--blue);"></i> ÙØªØ­ Ø¬Ù„Ø³Ø© Ø­Ø¶ÙˆØ±</h2>
+      <form id="attForm" class="fields">
+        <div><label>Ø§Ø³Ù… Ø§Ù„Ù…Ø­Ø§Ø¶Ø±Ø©</label><input name="sessionName" required></div>
+        <div><label>ÙƒÙˆØ¯ Ø§Ù„Ø¬Ù„Ø³Ø© (PIN)</label><input name="code" value="${Math.floor(1000+Math.random()*9000)}" required></div>
+        <div><label>Ù…Ø¯Ø© Ø§Ù„Ø¬Ù„Ø³Ø© (Ø¯Ù‚ÙŠÙ‚Ø©)</label><input name="minutes" type="number" min="1" max="180" value="15" required></div>
+        <button style="grid-column:1/-1;margin-top:10px;background:var(--green);">ÙØªØ­ Ø¬Ù„Ø³Ø©</button>
+      </form>
+      <div id="attMsg" style="margin-top:10px;"></div>
+    </section>
+    <section class="card">
+      <h3>Ø³Ø¬Ù„ Ø§Ù„Ø­Ø¶ÙˆØ±</h3>
+      ${table(['Ø§Ù„Ø·Ø§Ù„Ø¨','Ø§Ù„Ø±Ù‚Ù…','Ø§Ù„Ù…Ø­Ø§Ø¶Ø±Ø©','Ø§Ù„ÙˆÙ‚Øª'], cache.attendance.map(a=>`<tr>
+        <td>${esc(a.studentName)}</td><td><code>${esc(a.studentId)}</code></td>
+        <td>${esc(a.sessionName)}</td>
+        <td><small class="muted">${a.createdAt?.toDate ? a.createdAt.toDate().toLocaleTimeString('ar-EG') : 'â€”'}</small></td>
+      </tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='staff' && role==='admin'){
+    html = `<section class="card">
+      <h2><i class="fas fa-user-shield" style="color:var(--blue);"></i> Ø¥Ø¶Ø§ÙØ© Ù…Ø³Ø§Ø¹Ø¯</h2>
+      <form id="staffForm" class="fields">
+        <div><label>Ø§Ù„Ø§Ø³Ù…</label><input name="name" required></div>
+        <div><label>Ø§Ù„Ø¨Ø±ÙŠØ¯</label><input name="email" type="email" required></div>
+        <div><label>ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±</label><input name="password" type="password" minlength="6" required></div>
+        <div><label>Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ©</label>
+          <select name="role" required>
+            <option value="finance">Ù…Ø³Ø§Ø¹Ø¯ Ù…Ø§Ù„ÙŠ</option>
+            <option value="academic">Ù…Ø³Ø§Ø¹Ø¯ Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠ</option>
+          </select>
+        </div>
+        <button type="submit" style="grid-column:1/-1;margin-top:10px;">Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨</button>
+      </form>
+      <div id="staffMsg" style="margin-top:10px;"></div>
+    </section>
+    <section class="card">
+      <h3>Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯ÙˆÙ†</h3>
+      ${table(['Ø§Ù„Ø§Ø³Ù…','Ø§Ù„Ø¨Ø±ÙŠØ¯','Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ©'], cache.staff.map(st=>`<tr>
+        <td><strong>${esc(st.name)}</strong></td><td>${esc(st.email)}</td>
+        <td><span class="pill">${st.role==='admin'?'Super Admin':st.role==='finance'?'Ù…Ø§Ù„ÙŠ':'Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠ'}</span></td>
+      </tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='accounts' && (role==='admin'||role==='finance')){
+    const s = cache.settings || {};
+    html = `<section class="card">
+      <h2>Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª</h2>
+      <form id="accountsForm" class="fields">
+        <div><label>ÙÙˆØ¯Ø§ÙÙˆÙ† ÙƒØ§Ø´</label><input name="vodafone" value="${esc(s.vodafone||'')}" required></div>
+        <div><label>Ø¥Ù†Ø³ØªØ§Ø¨Ø§ÙŠ</label><input name="instapay" value="${esc(s.instapay||'')}" required></div>
+        <div><label>ÙƒÙˆØ¯ ÙÙˆØ±ÙŠ</label><input name="fawryCode" value="${esc(s.fawryCode||'')}" required></div>
+        <div><label>Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¨Ù†ÙƒÙŠ</label><input name="bankAccount" value="${esc(s.bankAccount||'')}" required></div>
+        <div style="grid-column:1/-1;background:#fff3cd;padding:15px;border-radius:10px;border:1px solid #ffeeba;margin-top:10px;">
+          <label style="color:#856404;font-size:1rem;">
+            <input type="checkbox" name="maintenanceMode" ${s.maintenanceMode?'checked':''}>
+            <i class="fas fa-tools"></i> ÙˆØ¶Ø¹ Ø§Ù„ØµÙŠØ§Ù†Ø© (Ø¥ØºÙ„Ø§Ù‚ Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹)
+          </label>
+        </div>
+        <button type="submit" style="grid-column:1/-1;margin-top:10px;background:var(--green);">Ø­ÙØ¸</button>
+      </form>
+      <div id="accountsMsg" style="margin-top:10px;"></div>
+    </section>`;
+  }
+  else if(activeTab==='logs' && (role==='admin'||role==='finance')){
+    html = `<section class="card">
+      <h2><i class="fas fa-history" style="color:var(--blue);"></i> Ø³Ø¬Ù„ Ø§Ù„Ù†Ø´Ø§Ø·Ø§Øª</h2>
+      ${table(['Ø§Ù„ÙˆÙ‚Øª','Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„','Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡','Ø§Ù„ØªÙØ§ØµÙŠÙ„'], cache.logs.map(l=>`<tr>
+        <td><small class="muted">${l.createdAt?.toDate ? l.createdAt.toDate().toLocaleString('ar-EG') : 'â€”'}</small></td>
+        <td><strong>${esc(l.adminEmail||'â€”')}</strong></td>
+        <td><span class="pill">${esc(l.action)}</span></td>
+        <td>${esc(l.details)}</td>
+      </tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='students' && (role==='admin'||role==='academic')){
+    html = `<section class="card">
+      <h2>Ø¥Ø¶Ø§ÙØ© Ø·Ø§Ù„Ø¨</h2>
+      <form id="studentForm" class="fields">
+        <div><label>Ø§Ù„Ø§Ø³Ù…</label><input name="name" required></div>
+        <div><label>Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ</label><input name="studentId" required></div>
+        <div><label>Ø§Ù„Ø¨Ø±ÙŠØ¯</label><input name="email" type="email" required></div>
+        <div><label>ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±</label><input name="password" type="password" minlength="6" required></div>
+        <div><label>Ø§Ù„ÙØ±Ù‚Ø©</label>
+          <select name="level">
+            <option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ©</option>
+            <option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù„Ø«Ø©</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø±Ø§Ø¨Ø¹Ø©</option>
+          </select>
+        </div>
+        <div><label>Ø§Ù„Ù‚Ø³Ù…</label><input name="department" value="Ù†Ø¸Ù… Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª"></div>
+        <div><label>Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª</label><input name="totalFees" type="number" min="0" value="18000" required></div>
+        <div><label>ØµÙˆØ±Ø© Ø§Ù„Ø·Ø§Ù„Ø¨ (Ù„Ù„ÙƒØ§Ø±Ù†ÙŠÙ‡)</label><input type="file" id="studentPhotoInput" accept="image/*" style="padding:7px;"></div>
+        <button type="submit" style="grid-column:1/-1;margin-top:10px;">Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨</button>
+      </form>
+      <div id="studentMsg" style="margin-top:10px;"></div>
+    </section>
+    <section class="card">
+      <div class="headrow" style="margin-bottom:15px;">
+        <h3>Ø§Ù„Ø·Ù„Ø§Ø¨</h3>
+        <div class="actions">
+          <button style="background:var(--green);" onclick="exportStudentsToCSV()">
+            <i class="fas fa-file-excel"></i> ØªØµØ¯ÙŠØ± CSV
+          </button>
+        </div>
+      </div>
+      <div style="background:var(--pale);padding:12px;border-radius:10px;margin-bottom:15px;">
+        <label style="font-weight:bold;color:var(--blue);"><i class="fas fa-file-upload"></i> Ø§Ø³ØªÙŠØ±Ø§Ø¯ Ù…Ù† Excel:</label>
+        <input type="file" accept=".xlsx,.xls" onchange="importStudentsFromExcel(event)" style="margin-top:5px;background:#fff;padding:6px;">
+      </div>
+      <div class="fields" style="margin-bottom:15px;">
+        <div><label>Ø¨Ø­Ø«:</label><input type="text" id="studentSearchInput" onkeyup="filterStudentsTable()"></div>
+        <div><label>Ø§Ù„ÙØ±Ù‚Ø©:</label>
+          <select id="levelFilterSelect" onchange="filterStudentsTable()">
+            <option value="">ÙƒÙ„ Ø§Ù„ÙØ±Ù‚</option>
+            <option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ©</option>
+            <option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù„Ø«Ø©</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø±Ø§Ø¨Ø¹Ø©</option>
+          </select>
+        </div>
+      </div>
+      <div id="studentsTableWrap">${renderStudentsRows(cache.students)}</div>
+    </section>`;
+  }
+  else if(activeTab==='results' && (role==='admin'||role==='academic')){
+    html = `<section class="card">
+      <h2>Ø±ØµØ¯ Ø§Ù„Ù†ØªØ§Ø¦Ø¬</h2>
+      <form id="resultForm" class="fields">
+        <div><label>Ø§Ù„Ø·Ø§Ù„Ø¨</label>
+          <select name="studentUid" required>${cache.students.map(s=>`<option value="${s.uid}">${esc(s.studentId)} â€” ${esc(s.name)}</option>`).join('')}</select>
+        </div>
+        <div><label>Ø§Ù„Ù…Ø§Ø¯Ø©</label><input name="course" required></div>
+        <div><label>Ø§Ù„Ø¯Ø±Ø¬Ø©</label><input name="score" type="number" min="0" max="100" required></div>
+        <button ${cache.students.length?'':'disabled'} style="margin-top:10px;">Ø­ÙØ¸</button>
+      </form>
+      <div id="resultMsg" style="margin-top:10px;"></div>
+    </section>
+    <section class="card">
+      <h3>Ø§Ù„Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ù…Ø³Ø¬Ù„Ø©</h3>
+      ${table(['Ø§Ù„Ø·Ø§Ù„Ø¨','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø¯Ø±Ø¬Ø©','Ø§Ù„ØªÙ‚Ø¯ÙŠØ±','Ø¥Ø¬Ø±Ø§Ø¡'], cache.results.map(r=>{
+        const s = cache.students.find(x=>x.uid===r.studentUid);
+        return `<tr>
+          <td>${esc(s?.name||r.studentName||'â€”')}</td>
+          <td>${esc(r.course)}</td><td>${Number(r.score)}</td><td>${grade(Number(r.score))}</td>
+          <td><div class="actions">
+            <button class="secondary" onclick="editResultModal('${r.id}')"><i class="fas fa-edit"></i></button>
+            <button class="danger" data-delete="results" data-id="${r.id}"><i class="fas fa-trash"></i></button>
+          </div></td>
+        </tr>`;
+      }).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='exams' && (role==='admin'||role==='academic')){
+    html = `<section class="card">
+      <h2>Ø¥Ø¶Ø§ÙØ© Ø§Ù…ØªØ­Ø§Ù†</h2>
+      <form id="examForm" class="fields">
+        <div><label>Ø§Ù„ÙØ±Ù‚Ø©</label>
+          <select name="level">
+            <option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ©</option>
+            <option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù„Ø«Ø©</option><option>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø±Ø§Ø¨Ø¹Ø©</option>
+          </select>
+        </div>
+        <div><label>Ø§Ù„Ù…Ø§Ø¯Ø©</label><input name="course" required></div>
+        <div><label>Ø§Ù„ØªØ§Ø±ÙŠØ®</label><input name="date" type="date" required></div>
+        <div><label>Ø§Ù„Ø³Ø§Ø¹Ø©</label><input name="time" type="time" required></div>
+        <div><label>Ø§Ù„Ù‚Ø§Ø¹Ø©</label><input name="hall" required></div>
+        <button style="margin-top:10px;">Ø¥Ø¶Ø§ÙØ©</button>
+      </form>
+      <div id="examMsg" style="margin-top:10px;"></div>
+    </section>
+    <section class="card">
+      <h3>Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª</h3>
+      ${table(['Ø§Ù„ÙØ±Ù‚Ø©','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„ØªØ§Ø±ÙŠØ®','Ø§Ù„ÙˆÙ‚Øª','Ø§Ù„Ù‚Ø§Ø¹Ø©','Ø¥Ø¬Ø±Ø§Ø¡'], cache.exams.map(e=>`<tr>
+        <td>${esc(e.level)}</td><td>${esc(e.course)}</td><td>${esc(e.date)}</td>
+        <td>${esc(e.time)}</td><td>${esc(e.hall)}</td>
+        <td><div class="actions">
+          <button class="secondary" onclick="editExamModal('${e.id}')"><i class="fas fa-edit"></i></button>
+          <button class="danger" data-delete="exams" data-id="${e.id}"><i class="fas fa-trash"></i></button>
+        </div></td>
+      </tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='news' && (role==='admin'||role==='academic')){
+    html = `<section class="card">
+      <h2>Ù†Ø´Ø± Ø®Ø¨Ø±</h2>
+      <form id="newsForm">
+        <label>Ø§Ù„Ø¹Ù†ÙˆØ§Ù†</label><input name="title" required style="margin-bottom:10px;">
+        <label>Ø§Ù„ØªÙØ§ØµÙŠÙ„</label><textarea name="body" rows="3" required style="margin-bottom:10px;"></textarea>
+        <button type="submit">Ù†Ø´Ø±</button>
+      </form>
+      <div id="newsMsg" style="margin-top:10px;"></div>
+    </section>` + newsCards(true);
+  }
+  else if(activeTab==='payments' && (role==='admin'||role==='finance')){
+    const filtered = cache.payments.filter(p => {
+      if(paymentFilterStatus==='pending') return p.status === 'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©';
+      if(paymentFilterStatus==='approved') return p.status === 'Ù…Ù‚Ø¨ÙˆÙ„';
+      return true;
+    });
+    html = `<section class="card">
+      <div class="headrow">
+        <h2>Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª</h2>
+        <div class="actions">
+          <button class="${paymentFilterStatus==='all'?'':'secondary'}" onclick="setPaymentFilter('all')">Ø§Ù„ÙƒÙ„</button>
+          <button class="${paymentFilterStatus==='pending'?'':'secondary'}" onclick="setPaymentFilter('pending')">Ø§Ù„Ù…Ø¹Ù„Ù‚Ø©</button>
+          <button class="${paymentFilterStatus==='approved'?'':'secondary'}" onclick="setPaymentFilter('approved')">Ø§Ù„Ù…Ø¹ØªÙ…Ø¯Ø©</button>
+        </div>
+      </div>
+      ${table(['Ø§Ù„Ø¥ÙŠØµØ§Ù„','Ø§Ù„Ø·Ø§Ù„Ø¨','Ø§Ù„ÙˆØ³ÙŠÙ„Ø©','Ø§Ù„Ù…Ø¨Ù„Øº','Ø§Ù„Ù…Ø±Ø¬Ø¹','Ø§Ù„Ø§Ø³ÙƒØ±ÙŠÙ†','Ø§Ù„Ø­Ø§Ù„Ø©','Ø¥Ø¬Ø±Ø§Ø¡'], filtered.map(p=>{
+        const statusBadge = p.status==='Ù…Ù‚Ø¨ÙˆÙ„'
+          ? `<span class="pill" style="background:#d1fae5;color:#065f46;">Ù…Ù‚Ø¨ÙˆÙ„ âœ…</span>`
+          : p.status==='Ù…Ø±ÙÙˆØ¶' ? `<span class="pill" style="background:#fee2e2;color:#991b1b;" title="${esc(p.rejectReason||'')}">Ù…Ø±ÙÙˆØ¶ âŒ</span>`
+          : `<span class="pill" style="background:#fef3c7;color:#92400e;">Ù…Ø¹Ù„Ù‚ â³</span>`;
+        const actionBtn = p.status==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©'
+          ? `<button style="background:var(--green);padding:5px 10px;font-size:.8rem;" onclick="approvePayment('${p.id}','${p.studentUid}',${p.amount})">Ø§Ø¹ØªÙ…Ø§Ø¯</button> <button class="danger" style="padding:5px 10px;font-size:.8rem;" onclick="rejectPayment('${p.id}')">Ø±ÙØ¶</button>`
+          : p.status==='Ù…Ù‚Ø¨ÙˆÙ„' ? `<button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="printReceipt('${p.id}')">Ø¥ÙŠØµØ§Ù„</button>` : 'â€”';
+        const imgBtn = p.screenshot
+          ? `<button class="secondary" style="padding:4px 8px;font-size:.75rem;" onclick="viewScreenshot('${p.id}')">Ø¹Ø±Ø¶</button>`
+          : 'â€”';
+        return `<tr>
+          <td><code>${esc(p.receiptNo)}</code></td>
+          <td><strong>${esc(p.studentName)}</strong></td>
+          <td><span class="pill">${esc(p.method)}</span></td>
+          <td style="color:var(--green);font-weight:700;">${money(p.amount)}</td>
+          <td><code>${esc(p.trxId||'â€”')}</code></td>
+          <td>${imgBtn}</td>
+          <td>${statusBadge}</td>
+          <td>${actionBtn}</td>
+        </tr>`;
+      }).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='home' && role==='student'){
+    const s = cache.students[0] || {};
+    const totalFees = Number(s.totalFees || 18000);
+    const approvedPayments = cache.payments.filter(p=>p.studentUid===user.uid && p.status==='Ù…Ù‚Ø¨ÙˆÙ„');
+    const paidAmount = approvedPayments.reduce((a,p)=>a+Number(p.amount||0),0);
+    
+    const pendingPayments = cache.payments.filter(p=>p.studentUid===user.uid && p.status==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©');
+    const pendingTotal = pendingPayments.reduce((a,p)=>a+Number(p.amount||0),0);
+    
+    const remaining = Math.max(0, totalFees - paidAmount);
+    const maxPayable = Math.max(0, remaining - pendingTotal);
+    const st = cache.settings || {};
+    const progress = Math.min(100, Math.round((paidAmount / (totalFees || 1)) * 100));
+
+    const formHTML = st.maintenanceMode
+      ? `<div class="notice error" style="text-align:center;padding:20px;"><i class="fas fa-tools"></i> Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹ Ù…ØºÙ„Ù‚Ø© Ù…Ø¤Ù‚ØªÙ‹Ø§ Ù„Ù„ØµÙŠØ§Ù†Ø©</div>`
+      : (maxPayable <= 0 
+          ? `<div class="notice success" style="text-align:center;padding:20px;font-size:1.1rem;font-weight:bold;">
+               <i class="fas fa-check-circle" style="font-size:2rem;margin-bottom:10px;"></i><br>
+               Ø´ÙƒØ±Ø§Ù‹ Ù„Ùƒ! Ù„Ù‚Ø¯ Ù‚Ù…Øª Ø¨Ø³Ø¯Ø§Ø¯ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª Ø¨Ø§Ù„ÙƒØ§Ù…Ù„ Ø£Ùˆ Ø§Ù„Ù…Ø¨Ø§Ù„Øº Ø§Ù„Ù…ØªØ¨Ù‚ÙŠØ© Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©.
+             </div>`
+          : `<form id="studentPaymentForm" style="max-width:600px;margin:0 auto;text-align:right;">
+              <div class="fields" style="margin-bottom:15px;">
+                <div>
+                  <label>ÙˆØ³ÙŠÙ„Ø© Ø§Ù„Ø¯ÙØ¹:</label>
+                  <select id="payMethodSelect" name="method" required>
+                    <option value="InstaPay">Ø¥Ù†Ø³ØªØ§Ø¨Ø§ÙŠ (InstaPay)</option>
+                    <option value="VodafoneCash">ÙÙˆØ¯Ø§ÙÙˆÙ† ÙƒØ§Ø´</option>
+                    <option value="Fawry">ÙÙˆØ±ÙŠ</option>
+                    
+                  </select>
+                </div>
+                <div>
+                  <label>Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø±Ø§Ø¯ Ø¯ÙØ¹Ù‡ (Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰: ${money(maxPayable)}):</label>
+                  <input id="payAmountInput" name="payAmount" type="number" min="1" max="${maxPayable}" value="${maxPayable}" required>
+                  <div style="display:flex; gap:5px; margin-top:8px;">
+                    <button type="button" class="secondary" style="padding:4px; font-size:0.75rem; flex:1;" onclick="setPayAmount(${maxPayable * 0.25})">25%</button>
+                    <button type="button" class="secondary" style="padding:4px; font-size:0.75rem; flex:1;" onclick="setPayAmount(${maxPayable * 0.5})">50%</button>
+                    <button type="button" class="secondary" style="padding:4px; font-size:0.75rem; flex:1;" onclick="setPayAmount(${maxPayable})">Ø§Ù„ÙƒÙ„</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="method-InstaPay" class="pay-method-box active"><p><i class="fas fa-info-circle"></i> ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­ÙˆÙŠÙ„ Ø¥Ù„Ù‰ Ø­Ø³Ø§Ø¨ Ø¥Ù†Ø³ØªØ§Ø¨Ø§ÙŠ: <b>${esc(st.instapay)||'<span class="muted">Ù„Ù… ÙŠÙØ­Ø¯ÙÙ‘Ø¯ Ø¨Ø¹Ø¯ â€” ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©</span>'}</b></p></div>
+              <div id="method-VodafoneCash" class="pay-method-box"><p><i class="fas fa-info-circle"></i> ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­ÙˆÙŠÙ„ Ø¥Ù„Ù‰ Ø±Ù‚Ù… ÙÙˆØ¯Ø§ÙÙˆÙ† ÙƒØ§Ø´: <b>${esc(st.vodafone)||'<span class="muted">Ù„Ù… ÙŠÙØ­Ø¯ÙÙ‘Ø¯ Ø¨Ø¹Ø¯ â€” ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©</span>'}</b></p></div>
+              <div id="method-Fawry" class="pay-method-box"><p><i class="fas fa-info-circle"></i> ÙŠØ±Ø¬Ù‰ Ø§Ø³ØªØ®Ø¯Ø§Ù… ÙƒÙˆØ¯ ÙÙˆØ±ÙŠ Ø§Ù„ØªØ§Ù„ÙŠ: <b>${esc(st.fawryCode)||'<span class="muted">Ù„Ù… ÙŠÙØ­Ø¯ÙÙ‘Ø¯ Ø¨Ø¹Ø¯ â€” ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©</span>'}</b></p></div>
+              
+
+              <div class="fields" style="margin-top:15px;">
+                <div><label>Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ù…Ø±Ø¬Ø¹ÙŠ Ù„Ù„Ø¹Ù…Ù„ÙŠØ© (TRX):</label><input name="trxId" placeholder="Ù…Ø«Ø§Ù„: TRX-12345"></div>
+                <div><label>ØµÙˆØ±Ø© Ø¥ÙŠØµØ§Ù„ Ø§Ù„Ø³Ø¯Ø§Ø¯:</label><input type="file" id="receiptImgFile" accept="image/*"></div>
+              </div>
+              
+              <button style="width:100%;background:var(--green);margin-top:20px;padding:12px;font-size:1.1rem;">
+                <i class="fas fa-paper-plane"></i> Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¥ÙŠØµØ§Ù„ Ù„Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©
+              </button>
+            </form><div id="paymentMsg" style="margin-top:10px;"></div>`);
+
+    html = `<h2>Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ ÙŠØ§ ${esc(s.name||profile.name||'Ø§Ù„Ø·Ø§Ù„Ø¨')} ğŸ‘‹</h2>
+    
+      <div class="grid" style="margin-bottom:20px;">
+        <div class="stat" style="border-right:4px solid var(--blue);">
+          <span>Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª</span><b>${money(totalFees)}</b>
+        </div>
+        <div class="stat" style="border-right:4px solid var(--green);">
+          <span>Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹</span><b style="color:var(--green);">${money(paidAmount)}</b>
+        </div>
+        <div class="stat" style="border-right:4px solid var(--red);">
+          <span>Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ (Ø§Ù„Ù…ØªØ£Ø®Ø±Ø§Øª)</span><b style="color:var(--red);">${money(remaining)}</b>
+        </div>
+        <div class="stat" style="border-right:4px solid var(--muted);">
+          <span>Ù…Ø¨Ø§Ù„Øº Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©</span><b style="color:var(--muted);">${money(pendingTotal)}</b>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="headrow" style="margin-bottom:10px;">
+          <strong>Ù†Ø³Ø¨Ø© Ø³Ø¯Ø§Ø¯ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª:</strong>
+          <span style="color:var(--blue);font-weight:bold;font-size:1.2rem;">${progress}%</span>
+        </div>
+        <div class="progress-bar-container"><div class="progress-bar-fill" style="width:${progress}%;"></div></div>
+      </section>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:15px; margin-bottom:20px;">
+        <section class="card" style="background:var(--pale); border:1px solid var(--blue2);">
+          <h3><i class="fas fa-calculator" style="color:var(--blue);"></i> Ø­Ø§Ø³Ø¨Ø© ØªÙ‚Ø³ÙŠØ· Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª</h3>
+          <p class="muted small">ØªØ±ÙŠØ¯ ØªÙ‚Ø³ÙŠØ· Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…ØªØ¨Ù‚ÙŠØŸ Ø§Ø­Ø³Ø¨ Ø§Ù„Ù‚Ø³Ø· Ø§Ù„Ø´Ù‡Ø±ÙŠ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹:</p>
+          <div class="fields">
+            <div><label>Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ:</label><input type="text" value="${money(remaining)}" readonly></div>
+            <div><label>Ø¹Ø¯Ø¯ Ø§Ù„Ø£Ø´Ù‡Ø± Ù„Ù„ØªÙ‚Ø³ÙŠØ·:</label><input type="number" id="calcMonths" min="1" max="12" value="3" oninput="calculateMonthlyInstallment(${remaining})"></div>
+          </div>
+          <div id="calcResultMsg" style="margin-top:15px; font-size:1.2rem; font-weight:bold; text-align:center; background:#fff; padding:10px; border-radius:10px;">
+            Ø§Ù„Ù‚Ø³Ø· Ø§Ù„Ø´Ù‡Ø±ÙŠ: <span style="color:var(--blue);" id="monthlyInstallmentVal">${money(remaining / 3)}</span>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3><i class="fas fa-id-card" style="color:var(--blue);"></i> Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠØ©</h3>
+          <div style="margin-top:15px;">
+            <p><strong>Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ:</strong> <span class="pill">${esc(s.studentId||'â€”')}</span></p>
+            <p><strong>Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ©:</strong> ${esc(s.level||'â€”')}</p>
+            <p><strong>Ø§Ù„Ù‚Ø³Ù…:</strong> ${esc(s.department||'â€”')}</p>
+            <p><strong>Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ:</strong> <span class="muted">${esc(s.email||user.email)}</span></p>
+          </div>
+        </section>
+      </div>
+
+      <section class="card" style="border-top:4px solid var(--green);">
+        <h3 style="color:var(--green);"><i class="fas fa-wallet"></i> Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ</h3>
+        ${formHTML}
+      </section>
+
+      <section class="card">
+        <div class="headrow" style="margin-bottom:15px;">
+          <h3>Ø³Ø¬Ù„ Ø§Ù„Ø¥ÙŠØµØ§Ù„Ø§Øª ÙˆØ§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª</h3>
+          <button class="secondary" onclick="printFullFinancialStatement()">
+            <i class="fas fa-file-pdf"></i> ØªØ­Ù…ÙŠÙ„ ÙƒØ´Ù Ø­Ø³Ø§Ø¨
+          </button>
+        </div>
+        ${table(['Ø±Ù‚Ù… Ø§Ù„Ø¥ÙŠØµØ§Ù„', 'Ø§Ù„ØªØ§Ø±ÙŠØ®', 'Ø§Ù„ÙˆØ³ÙŠÙ„Ø©', 'Ø§Ù„Ù…Ø¨Ù„Øº', 'Ø§Ù„Ø­Ø§Ù„Ø©', 'Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡'], cache.payments.map(p=>{
+          let statusBadge = '';
+          if(p.status === 'Ù…Ù‚Ø¨ÙˆÙ„') statusBadge = '<span class="pill" style="background:#d1fae5;color:#065f46;">Ù…Ø¹ØªÙ…Ø¯ âœ…</span>';
+          else if(p.status === 'Ù…Ø±ÙÙˆØ¶') statusBadge = '<span class="pill" style="background:#feeceb;color:#c0392b;">Ù…Ø±ÙÙˆØ¶ âŒ</span>';
+          else statusBadge = '<span class="pill" style="background:#fef3c7;color:#92400e;">Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø© â³</span>';
+
+          return `<tr>
+            <td><code>${esc(p.receiptNo)}</code></td>
+            <td><small class="muted">${esc(p.date)}</small></td>
+            <td><span class="pill">${esc(p.method)}</span></td>
+            <td style="font-weight:bold;">${money(p.amount)}</td>
+            <td>${statusBadge}</td>
+            <td>${p.status==='Ù…Ù‚Ø¨ÙˆÙ„' ? `<button class="secondary" style="padding:4px 8px;font-size:.75rem;" onclick="printReceipt('${p.id}')"><i class="fas fa-print"></i> Ø·Ø¨Ø§Ø¹Ø©</button>` : 'â€”'}</td>
+          </tr>`;
+        }).join(''))}
+      </section>`;
+  }
+  else if(activeTab==='gpasimulator' && role==='student'){
+    const currentResults = cache.results || [];
+    let currentPoints = 0;
+    let currentHours = 0;
+    currentResults.forEach(r => {
+      const hrs = Number(r.creditHours || 3);
+      currentPoints += pts(Number(r.score)) * hrs;
+      currentHours += hrs;
+    });
+    const currentGPA = currentHours > 0 ? (currentPoints / currentHours).toFixed(2) : '0.00';
+
+    html = `<section class="card">
+      <div class="headrow">
+        <h2><i class="fas fa-chart-line" style="color:var(--blue);"></i> Ù…Ø­Ø§ÙƒÙŠ Ø§Ù„Ù…Ø¹Ø¯Ù„ Ø§Ù„ØªØ±Ø§ÙƒÙ…ÙŠ (GPA)</h2>
+        <button class="secondary" onclick="clearSimCourses()"><i class="fas fa-trash"></i> Ù…Ø³Ø­ Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹Ø©</button>
+      </div>
+      <p class="muted">Ø£Ø¶Ù Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„ØªÙŠ Ø³ØªØ¯Ø±Ø³Ù‡Ø§ Ù‡Ø°Ø§ Ø§Ù„ÙØµÙ„ Ù„Ù…Ø¹Ø±ÙØ© Ø§Ù„ØªØ£Ø«ÙŠØ± Ø§Ù„Ù…ØªÙˆÙ‚Ø¹ Ø¹Ù„Ù‰ Ù…Ø¹Ø¯Ù„Ùƒ Ø§Ù„ØªØ±Ø§ÙƒÙ…ÙŠ.</p>
+
+      <div class="grid" style="margin:20px 0;">
+        <div class="stat" style="background:#fff; border:1px solid var(--line); text-align:center;">
+          <span>Ø§Ù„Ù…Ø¹Ø¯Ù„ Ø§Ù„Ø­Ø§Ù„ÙŠ (Ù…Ù† Ø§Ù„Ù†ØªØ§Ø¦Ø¬)</span>
+          <b style="color:var(--blue); font-size:2rem;">${currentGPA}</b>
+          <small class="muted">${currentHours} Ø³Ø§Ø¹Ø© Ù…Ø¹ØªÙ…Ø¯Ø©</small>
+        </div>
+        <div class="stat" style="background:var(--pale); border:1px solid var(--blue2); text-align:center;">
+          <span>Ø§Ù„Ù…Ø¹Ø¯Ù„ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹ (Ø¨Ø¹Ø¯ Ø§Ù„Ø¥Ø¶Ø§ÙØ©)</span>
+          <b id="simResultGPA" style="color:var(--green); font-size:2rem;">${currentGPA}</b>
+          <small class="muted" id="simHoursText">0 Ø³Ø§Ø¹Ø© Ø¬Ø¯ÙŠØ¯Ø©</small>
+        </div>
+      </div>
+
+      <div style="background:var(--bg); padding:15px; border-radius:12px; border:1px solid var(--line); margin-bottom:20px;">
+        <h4 style="margin-top:0;">Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø© Ù…ØªÙˆÙ‚Ø¹Ø©:</h4>
+        <div class="fields">
+          <div><label>Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø©:</label><input type="text" id="simCourseName" placeholder="Ù…Ø«Ø§Ù„: Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ"></div>
+          <div><label>Ø§Ù„Ø¯Ø±Ø¬Ø© Ø§Ù„Ù…ØªÙˆÙ‚Ø¹Ø© (0-100):</label><input type="number" id="simCourseScore" min="0" max="100" placeholder="90"></div>
+          <div><label>Ø¹Ø¯Ø¯ Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ù…Ø¹ØªÙ…Ø¯Ø©:</label>
+            <select id="simCourseHours">
+              <option value="1">1 Ø³Ø§Ø¹Ø©</option>
+              <option value="2">2 Ø³Ø§Ø¹Ø§Øª</option>
+              <option value="3" selected>3 Ø³Ø§Ø¹Ø§Øª</option>
+              <option value="4">4 Ø³Ø§Ø¹Ø§Øª</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:end;">
+            <button onclick="addSimCourse()" style="width:100%; background:var(--green);">
+              <i class="fas fa-plus"></i> Ø¥Ø¶Ø§ÙØ©
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <h4>Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹Ø©:</h4>
+      <div id="simTableWrap"></div>
+
+      <div style="margin-top:20px; padding:20px; background:var(--bg); border-radius:12px; text-align:center;">
+        <h4 style="margin-top:0;">ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ù…Ø¹Ø¯Ù„ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹:</h4>
+        <div class="progress-bar-container" style="height:24px;">
+          <div id="gpaProgressBar" class="progress-bar-fill" style="width:0%; background:linear-gradient(90deg, #c0392b, #f39c12, #16845b);"></div>
+        </div>
+        <p id="gpaStatusText" style="font-weight:bold; font-size:1.2rem; margin-top:10px;">â€”</p>
+      </div>
+    </section>`;
+  }
+  else if(activeTab==='mylibrary' && role==='student'){
+    const s = cache.students[0] || {};
+    const myLibs = cache.library.filter(l => l.level==='ÙƒÙ„ Ø§Ù„ÙØ±Ù‚' || l.level===s.level);
+    html = `<section class="card">
+      <h2><i class="fas fa-file-pdf" style="color:var(--red);"></i> Ø§Ù„Ù…ÙƒØªØ¨Ø©</h2>
+      ${table(['Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø¹Ù†ÙˆØ§Ù†','Ø¹Ø±Ø¶'], myLibs.map(l=>`<tr>
+        <td>${esc(l.course)}</td><td><b>${esc(l.title)}</b></td>
+        <td><button class="secondary" onclick="viewPdfFile('${l.id}')"><i class="fas fa-eye"></i> Ø¹Ø±Ø¶</button></td>
+      </tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='myattendance' && role==='student'){
+    html = `<section class="card">
+      <h2><i class="fas fa-user-check" style="color:var(--blue);"></i> ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø­Ø¶ÙˆØ±</h2>
+      <form id="studentAttForm" class="fields" style="max-width:400px;margin-bottom:20px;">
+        <div><label>ÙƒÙˆØ¯ Ø§Ù„Ø­Ø¶ÙˆØ± (PIN):</label><input name="pinCode" placeholder="ÙƒÙˆØ¯ Ø§Ù„Ù…Ø­Ø§Ø¶Ø±" required></div>
+        <button style="background:var(--green);">ØªØ³Ø¬ÙŠÙ„</button>
+      </form>
+      <div id="studentAttMsg"></div>
+      <h3>Ø³Ø¬Ù„ Ø§Ù„Ø­Ø¶ÙˆØ±</h3>
+      ${table(['Ø§Ù„Ù…Ø­Ø§Ø¶Ø±Ø©','Ø§Ù„ÙˆÙ‚Øª'], cache.attendance.filter(a=>a.studentUid===user.uid).map(a=>`<tr>
+        <td>${esc(a.sessionName)}</td>
+        <td>${a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('ar-EG') : 'â€”'}</td>
+      </tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='myresults' && role==='student'){
+    html = `<section class="card">
+      <div class="headrow" style="margin-bottom:15px;">
+        <h2>Ù†ØªØ§Ø¦Ø¬ÙŠ</h2>
+        <button style="background:var(--green);" onclick="downloadOfficialTranscript()">
+          <i class="fas fa-file-pdf"></i> ÙƒØ´Ù Ø§Ù„Ø¯Ø±Ø¬Ø§Øª PDF
+        </button>
+      </div>
+      ${table(['Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø¯Ø±Ø¬Ø©','Ø§Ù„ØªÙ‚Ø¯ÙŠØ±'], cache.results.map(r=>`<tr>
+        <td>${esc(r.course)}</td><td>${Number(r.score)} / 100</td><td>${grade(Number(r.score))}</td>
+      </tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='myexams' && role==='student'){
+    const s = cache.students[0] || {};
+    html = `<section class="card">
+      <div class="headrow"><h2>Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª</h2><button class="secondary" onclick="exportExamsICS()"><i class="fas fa-calendar-plus"></i> Ø¥Ø¶Ø§ÙØ© Ù„Ù„ØªÙ‚ÙˆÙŠÙ…</button></div>
+      ${table(['Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„ØªØ§Ø±ÙŠØ®','Ø§Ù„ÙˆÙ‚Øª','Ø§Ù„Ù‚Ø§Ø¹Ø©'], cache.exams
+        .filter(e=>!e.level || e.level===s.level)
+        .map(e=>`<tr><td>${esc(e.course)}</td><td>${esc(e.date)}</td><td>${esc(e.time)}</td><td>${esc(e.hall)}</td></tr>`).join(''))}
+    </section>`;
+  }
+  else if(activeTab==='mynews' && role==='student'){
+    html = newsCards(false);
+  }
+  else if(activeTab==='chat'){
+    if(isStaff){
+      if(!selectedChatStudentUid && cache.students.length>0) selectedChatStudentUid = cache.students[0].uid;
+      const activeStu = cache.students.find(s=>s.uid===selectedChatStudentUid);
+      html = `<section class="card">
+        <h2><i class="fas fa-comments" style="color:var(--blue);"></i> Ù…Ø­Ø§Ø¯Ø«Ø§Øª Ø§Ù„Ø·Ù„Ø§Ø¨</h2>
+        <div class="fields" style="margin-bottom:15px;">
+          <div><label>Ø§Ù„Ø·Ø§Ù„Ø¨:</label>
+            <select id="adminChatStudentSelect" onchange="changeChatStudent(this.value)">
+              ${cache.students.map(s=>`<option value="${s.uid}" ${s.uid===selectedChatStudentUid?'selected':''}>${esc(s.studentId)} â€” ${esc(s.name)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="chatbox-container">
+          <div style="background:var(--pale);padding:10px 15px;font-weight:bold;border-bottom:1px solid var(--line);">${esc(activeStu?.name||'')}</div>
+          <div id="chatMessagesArea" class="chat-messages-area"></div>
+          <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
+            <input name="body" required placeholder="Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„ØªÙƒ..." style="flex:1;margin:0;">
+            <button style="background:var(--green);"><i class="fas fa-paper-plane"></i></button>
+          </form>
+        </div>
+      </section>`;
+    } else {
+      html = `<section class="card">
+        <h2><i class="fas fa-headset" style="color:var(--blue);"></i> Ø§Ù„ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ø´Ø¤ÙˆÙ†</h2>
+        <div class="chatbox-container">
+          <div style="background:var(--pale);padding:10px 15px;font-weight:bold;border-bottom:1px solid var(--line);">Ù…Ø­Ø§Ø¯Ø«Ø© Ø±Ø³Ù…ÙŠØ©</div>
+          <div id="chatMessagesArea" class="chat-messages-area"></div>
+          <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
+            <input name="body" required placeholder="Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„ØªÙƒ..." style="flex:1;margin:0;">
+            <button style="background:var(--green);"><i class="fas fa-paper-plane"></i></button>
+          </form>
+        </div>
+      </section>`;
+    }
+  }
+
+  html = extraViews(html);
+  v.innerHTML = html;
+  bindForms();
+  if(isStaff && activeTab==='dashboard') renderChart();
+  if(activeTab==='chat') startChatListener();
+  if(activeTab==='gpasimulator') renderSimTable();
+}
+
+/* ---------- Students Table ---------- */
+function renderStudentsRows(list){
+  return table(['Ø§Ù„Ø±Ù‚Ù…','Ø§Ù„Ø§Ø³Ù…','Ø§Ù„ÙØ±Ù‚Ø©','Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª','Ø¥Ø¬Ø±Ø§Ø¡'], list.map(s=>`<tr>
+    <td>${esc(s.studentId)}</td><td>${esc(s.name)}</td><td>${esc(s.level)}</td>
+    <td>${money(s.totalFees)}</td>
+    <td><div class="actions">
+      <button class="secondary" onclick="showStudentCard('${s.uid}')" style="background:#e0f2fe; color:#0369a1;"><i class="fas fa-id-card"></i> ÙƒØ§Ø±Ù†ÙŠÙ‡</button>
+      <button class="secondary" onclick="openEditStudentModal('${s.uid}')"><i class="fas fa-edit"></i></button>
+      <button class="danger" data-delete-student="${s.uid}"><i class="fas fa-trash"></i></button>
+    </div></td>
+  </tr>`).join(''));
+}
+
+/* ---------- Student ID Card (ÙƒØ§Ø±Ù†ÙŠÙ‡ Ø§Ù„Ø·Ø§Ù„Ø¨) ---------- */
+window.showStudentCard = function(uid) {
+  const s = cache.students.find(x => x.uid === uid);
+  if(!s) return;
+
+  const html = `
+    <div id="cardModal" class="modal-overlay active" onclick="if(event.target===this) this.classList.remove('active')" style="backdrop-filter: blur(5px);">
+      <div class="modal-card" style="max-width:400px; padding:0; overflow:hidden; border-radius:20px; text-align:right;">
+        <div style="background:linear-gradient(135deg, var(--blue), var(--blue2)); padding:20px; color:#fff; position:relative; text-align:center;">
+          <div style="position:absolute; top:15px; left:15px; cursor:pointer; background:#ffffff30; padding:5px 10px; border-radius:8px;" onclick="document.getElementById('cardModal').remove()">
+            <i class="fas fa-times"></i>
+          </div>
+          <div style="font-size:2.5rem; margin-bottom:5px;">ğŸ“</div>
+          <h3 style="margin:0; font-size:1.1rem;">Ù…Ø¹Ù‡Ø¯ Ø§Ù„Ø¯Ù„ØªØ§ Ø§Ù„Ø¹Ø§Ù„ÙŠ Ù„Ù„Ø­Ø§Ø³Ø¨Ø§Øª</h3>
+          <p style="margin:0; font-size:0.8rem; opacity:0.8;">Ø¨Ø·Ø§Ù‚Ø© Ù‡ÙˆÙŠØ© Ø·Ø§Ù„Ø¨ (Student ID)</p>
+        </div>
+        <div style="padding:20px; background:#fff;">
+          <div style="text-align:center; margin-top:-40px; margin-bottom:15px;">
+            <div style="width:100px; height:100px; border-radius:50%; background:var(--bg); border:4px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.1); display:inline-flex; align-items:center; justify-content:center; overflow:hidden;">
+              ${s.photo ? `<img src="${s.photo}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fas fa-user" style="font-size:3rem; color:var(--muted);"></i>`}
+            </div>
+          </div>
+          <div style="text-align:center; margin-bottom:15px;">
+            <h2 style="margin:0 0 5px 0; color:var(--ink); font-size:1.3rem;">${esc(s.name)}</h2>
+            <span class="pill" style="font-size:0.9rem; padding:5px 15px;">${esc(s.level)} - ${esc(s.department)}</span>
+          </div>
+          <table style="width:100%; font-size:0.9rem; border-collapse:collapse; margin-bottom:15px;">
+            <tr>
+              <td style="padding:6px; color:var(--muted); border-bottom:1px solid var(--line);">Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ:</td>
+              <td style="padding:6px; font-weight:bold; border-bottom:1px solid var(--line); text-align:left;">${esc(s.studentId)}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px; color:var(--muted); border-bottom:1px solid var(--line);">Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ù…Ø±Ø¬Ø¹ÙŠ (UID):</td>
+              <td style="padding:6px; font-family:monospace; font-weight:bold; border-bottom:1px solid var(--line); text-align:left; direction:ltr;">${s.uid}</td>
+            </tr>
+          </table>
+          <div style="text-align:center; padding:10px; background:#f8fafc; border:1px dashed var(--line); border-radius:10px; margin-bottom:15px;">
+            <svg id="studentBarcode" style="max-width:100%;"></svg>
+            <p style="margin:5px 0 0 0; font-size:0.75rem; color:var(--muted); font-family:monospace;">${esc(s.studentId)}</p>
+          </div>
+          <div style="text-align:center; background:var(--pale); color:var(--muted); padding:8px; border-radius:8px; font-size:.8rem;">ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø³Ø±ÙŠØ© ÙˆÙ„Ø§ ØªÙØ¹Ø±Ø¶. Ù„ØªØºÙŠÙŠØ±Ù‡Ø§ Ø§Ø³ØªØ®Ø¯Ù… Â«Ù†Ø³ÙŠØª ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±Â» ÙÙŠ Ø´Ø§Ø´Ø© Ø§Ù„Ø¯Ø®ÙˆÙ„.</div>
+        </div>
+        <div style="padding:15px; background:var(--bg); display:flex; gap:10px; border-top:1px solid var(--line);">
+          <button class="secondary" style="flex:1;" onclick="window.print()"><i class="fas fa-print"></i> Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙƒØ§Ø±Ù†ÙŠÙ‡</button>
+          <button style="flex:1; background:var(--green);" onclick="document.getElementById('cardModal').remove()"><i class="fas fa-check"></i> Ø¥ØºÙ„Ø§Ù‚</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', html);
+  setTimeout(() => {
+    if(window.JsBarcode) {
+      JsBarcode("#studentBarcode", s.studentId, {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 2,
+        height: 50,
+        displayValue: false
+      });
+    }
+  }, 100);
+};
+
+window.filterStudentsTable = function(){
+  const q = $('#studentSearchInput')?.value.toLowerCase() || '';
+  const lvl = $('#levelFilterSelect')?.value || '';
+  const filtered = cache.students.filter(s =>
+    ((s.name||'').toLowerCase().includes(q) || (s.studentId||'').toLowerCase().includes(q)) &&
+    (!lvl || s.level === lvl)
+  );
+  $('#studentsTableWrap').innerHTML = renderStudentsRows(filtered);
+};
+
+window.exportStudentsToCSV = function(){
+  let csv = "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ,Ø§Ù„Ø§Ø³Ù…,Ø§Ù„Ø¨Ø±ÙŠØ¯,Ø§Ù„ÙØ±Ù‚Ø©,Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª\n";
+  cache.students.forEach(s => {
+    csv += `"${s.studentId}","${s.name}","${s.email||''}","${s.level}","${s.totalFees}"\n`;
+  });
+  const blob = new Blob(["\ufeff"+csv], { type:'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'Ø·Ù„Ø§Ø¨_Ø§Ù„Ø¯Ù„ØªØ§.csv';
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+};
+
+const genPw=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';return Array.from(crypto.getRandomValues(new Uint32Array(10)),x=>a[x%a.length]).join('')};
+async function createStudentAccount(d,pw){
+  const secApp=initializeApp(firebaseConfig,'imp-'+Date.now()+Math.random()),secAuth=getAuth(secApp);
+  try{
+    const c=await createUserWithEmailAndPassword(secAuth,d.email,pw);
+    await setDoc(doc(db,'users',c.user.uid),{role:'student',name:d.name,email:d.email,mustChangePassword:true});
+    await setDoc(doc(db,'students',c.user.uid),{studentId:d.studentId,name:d.name,email:d.email,level:d.level,department:d.department,totalFees:d.totalFees,paidAmount:0,createdAt:serverTimestamp()});
+  }finally{ await signOut(secAuth).catch(()=>{}); deleteApp(secApp); }
+}
+window.importStudentsFromExcel=function(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    let rows; try{ const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'}); rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); }
+    catch(err){ showToast('Ø®Ø·Ø£ ÙÙŠ Ù‚Ø±Ø§Ø¡Ø© Ø§Ù„Ù…Ù„Ù','error'); event.target.value=''; return; }
+    if(rows.length>200){ showToast('Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ 200 Ø·Ø§Ù„Ø¨ ÙÙŠ Ø§Ù„Ù…Ù„Ù Ø§Ù„ÙˆØ§Ø­Ø¯','error'); event.target.value=''; return; }
+    let ok=0,skip=0,fail=0; const creds=[['studentId','email','tempPassword']];
+    for(const r of rows){
+      const d={studentId:String(r.studentId||'').trim(),name:String(r.name||'').trim(),email:String(r.email||'').trim(),level:String(r.level||'Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰'),department:String(r.department||'Ù†Ø¸Ù… Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª'),totalFees:Number(r.totalFees||18000)};
+      if(!d.studentId||!d.name||!/^\S+@\S+\.\S+$/.test(d.email)||cache.students.some(x=>String(x.studentId)===d.studentId)){ skip++; continue; }
+      const pw=genPw();
+      try{ await createStudentAccount(d,pw); creds.push([d.studentId,d.email,pw]); ok++; showToast(`Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø¥Ù†Ø´Ø§Ø¡... ${ok}`); }catch(err){ fail++; }
+    }
+    if(ok){ const blob=new Blob(["\ufeff"+creds.map(c=>c.join(',')).join('\n')],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ÙƒÙ„Ù…Ø§Øª_Ø§Ù„Ù…Ø±ÙˆØ±_Ø§Ù„Ù…Ø¤Ù‚ØªØ©.csv'; document.body.appendChild(a); a.click(); a.remove(); }
+    logAction('Ø§Ø³ØªÙŠØ±Ø§Ø¯ Ø·Ù„Ø§Ø¨',`${ok} Ø·Ø§Ù„Ø¨`);
+    alert(`ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ ${ok} Ø­Ø³Ø§Ø¨. ØªØ®Ø·ÙŠ ${skip} (Ø¨ÙŠØ§Ù†Ø§Øª Ù†Ø§Ù‚ØµØ© Ø£Ùˆ Ø¥ÙŠÙ…ÙŠÙ„ ØºÙŠØ± ØµØ­ÙŠØ­ Ø£Ùˆ Ø±Ù‚Ù… Ù…ÙƒØ±Ø±). ÙØ´Ù„ ${fail}.\n${ok?'ØªÙ… ØªÙ†Ø²ÙŠÙ„ Ù…Ù„Ù ÙƒÙ„Ù…Ø§Øª Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ù…Ø¤Ù‚ØªØ©: Ø³Ù„Ù‘Ù…Ù‡Ø§ Ù„Ù„Ø·Ù„Ø§Ø¨ Ø«Ù… Ø§Ø­Ø°Ù Ø§Ù„Ù…Ù„Ù. ÙƒÙ„ Ø·Ø§Ù„Ø¨ Ø³ÙŠÙØ·Ù„Ø¨ Ù…Ù†Ù‡ ØªØºÙŠÙŠØ±Ù‡Ø§ Ø¹Ù†Ø¯ Ø£ÙˆÙ„ Ø¯Ø®ÙˆÙ„.':''}`);
+    event.target.value=''; await loadData(); renderApp();
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+window.downloadOfficialTranscript = function(){
+  if(!window.jspdf){ showToast('Ù…ÙƒØªØ¨Ø© PDF ØºÙŠØ± Ù…Ø­Ù…Ù‘Ù„Ø©', 'error'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const s = cache.students[0] || {};
+  doc.text("Delta Higher Institute for Computers", 105, 20, { align: 'center' });
+  doc.text("Official Academic Transcript", 105, 28, { align: 'center' });
+  doc.text(`Student Name: ${s.name || ''}`, 20, 45);
+  doc.text(`Student ID: ${s.studentId || ''}`, 20, 55);
+  doc.text(`Level: ${s.level || ''}`, 20, 65);
+  let y = 80;
+  doc.text("Course Name", 20, y);
+  doc.text("Score", 120, y);
+  doc.text("Grade", 160, y);
+  cache.results.forEach(r => {
+    y += 10;
+    doc.text(String(r.course), 20, y);
+    doc.text(String(r.score)+" / 100", 120, y);
+    doc.text(String(grade(r.score)), 160, y);
+  });
+  doc.save(`Transcript_${s.studentId || 'Student'}.pdf`);
+  showToast('ØªÙ… ØªØ­Ù…ÙŠÙ„ ÙƒØ´Ù Ø§Ù„Ø¯Ø±Ø¬Ø§Øª');
+};
+
+function newsCards(admin){
+  const sorted = cache.news.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  if(!sorted.length) return `<section class="card muted">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø£Ø®Ø¨Ø§Ø±.</section>`;
+  return sorted.map(n=>`<section class="card">
+    <div class="headrow"><h3>${esc(n.title)}</h3><span class="pill">${esc(n.date||'')}</span></div>
+    <p>${esc(n.body)}</p>
+    ${admin?`<div class="actions" style="margin-top:10px;">
+      <button class="secondary" onclick="editNewsModal('${n.id}')"><i class="fas fa-edit"></i> ØªØ¹Ø¯ÙŠÙ„</button>
+      <button class="danger" data-delete="news" data-id="${n.id}"><i class="fas fa-trash"></i></button>
+    </div>`:''}
+  </section>`).join('');
+}
+
+async function logAction(action, details){
+  try {
+    await addDoc(collection(db,'audit_logs'), {
+      adminEmail: user?.email || 'Ø§Ù„Ù†Ø¸Ø§Ù…',
+      action, details, createdAt: serverTimestamp()
+    });
+  } catch {}
+}
+
+let activeChart = null;
+function renderChart(){
+  const ctx = document.getElementById('paymentMethodsChart');
+  if(!ctx) return;
+  if(typeof Chart === 'undefined'){
+    ctx.parentElement.innerHTML = '<p class="muted" style="text-align:center;">ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø±Ø³ÙˆÙ…</p>';
+    return;
+  }
+  if(activeChart) activeChart.destroy();
+  const counts = { InstaPay:0, VodafoneCash:0, Fawry:0, Visa:0 };
+  cache.payments.forEach(p => {
+    const m = (p.method||'').trim();
+    if(counts[m] !== undefined) counts[m] += Number(p.amount||0);
+  });
+  activeChart = new Chart(ctx, {
+    type:'doughnut',
+    data: {
+      labels:['Ø¥Ù†Ø³ØªØ§Ø¨Ø§ÙŠ','ÙÙˆØ¯Ø§ÙÙˆÙ† ÙƒØ§Ø´','ÙÙˆØ±ÙŠ','ÙÙŠØ²Ø§'],
+      datasets:[{ data:[counts.InstaPay, counts.VodafoneCash, counts.Fawry, counts.Visa],
+        backgroundColor:['#174ea6','#c0392b','#16845b','#2563eb'] }]
+    },
+    options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+}
+
+function bindForms(){
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{
+    activeTab = b.dataset.go;
+    localStorage.setItem('activeTab', activeTab);
+    renderApp();
+  });
+
+  const paySelect = $('#payMethodSelect');
+  if(paySelect){
+    paySelect.onchange = () => {
+      document.querySelectorAll('.pay-method-box').forEach(el=>el.classList.remove('active'));
+      const t = $('#method-'+paySelect.value);
+      if(t) t.classList.add('active');
+    };
+  }
+
+  $('#accountsForm')?.addEventListener('submit', saveAccountsData);
+  $('#studentForm')?.addEventListener('submit', createStudent);
+  $('#staffForm')?.addEventListener('submit', createStaff);
+  $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);
+  $('#attForm')?.addEventListener('submit', saveAttendanceSession);
+  $('#studentAttForm')?.addEventListener('submit', verifyStudentAttendance);
+  $('#resultForm')?.addEventListener('submit', saveResult);
+  $('#examForm')?.addEventListener('submit', saveExam);
+  $('#scheduleForm')?.addEventListener('submit', addSchedule);
+  $('#requestForm')?.addEventListener('submit', sendRequest);
+  $('#courseForm')?.addEventListener('submit', addCourse);
+  $('#regSettingsForm')?.addEventListener('submit', saveRegSettings);
+  $('#newsForm')?.addEventListener('submit', saveNews);
+  $('#studentPaymentForm')?.addEventListener('submit', triggerPaymentOtp);
+  $('#chatForm')?.addEventListener('submit', sendChat);
+
+  // ØªÙ… Ø¥ØµÙ„Ø§Ø­ ÙˆØ±Ø¨Ø· Ù…Ø¹Ø§Ù„Ø¬ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¹Ø§Ù… Ù‡Ù†Ø§ Ø¨Ù†Ø¬Ø§Ø­:
+  $('#genericEditForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    if(!editCtx) return;
+    const d = Object.fromEntries(new FormData(e.currentTarget).entries());
+    editCtx.fields.forEach(([k,,t]) => { if(t==='number') d[k] = Number(d[k]); });
+    try {
+      await updateDoc(doc(db, editCtx.coll, editCtx.id), d);
+      closeGenericEdit();
+      showToast('ØªÙ… Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ø¨Ù†Ø¬Ø§Ø­');
+      await loadData(); renderApp();
+    } catch(err){ showToast(err.message, 'error'); }
+  });
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-delete],[data-delete-student]');
+  if(!b) return;
+  if(b.dataset.deleteStudent) deleteStudent(b.dataset.deleteStudent);
+  else deleteItem(b.dataset.delete, b.dataset.id);
+});
+
+window.setPayAmount = function(val) {
+  const input = document.getElementById('payAmountInput');
+  if(input) {
+    input.value = Math.floor(val);
+    input.focus();
+  }
+};
+
+function compressImage(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const i=new Image();i.onerror=rej;i.onload=()=>{const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.7))};i.src=r.result};r.readAsDataURL(file)})}
+async function triggerPaymentOtp(e){
+  e.preventDefault();
+  const form=e.currentTarget,btn=e.submitter,d=Object.fromEntries(new FormData(form).entries());
+  const amt=Number(d.payAmount),s=cache.students[0];
+  const sum=st=>cache.payments.filter(p=>p.status===st).reduce((a,p)=>a+Number(p.amount||0),0);
+  const max=Math.max(0,Number(s?.totalFees||0)-sum('Ù…Ù‚Ø¨ÙˆÙ„')-sum('Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©'));
+  const file=$('#receiptImgFile')?.files[0];
+  if(!s||!(amt>0)||amt>max){showToast('Ø§Ù„Ù…Ø¨Ù„Øº ØºÙŠØ± ØµØ§Ù„Ø­ Ø£Ùˆ ÙŠØªØ¬Ø§ÙˆØ² Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ (Ø´Ø§Ù…Ù„ Ø§Ù„Ø¥ÙŠØµØ§Ù„Ø§Øª Ø§Ù„Ù…Ø¹Ù„Ù‚Ø©)','error');return;}
+  if(!String(d.trxId||'').trim()&&!file){showToast('Ø£Ø¯Ø®Ù„ Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ù…Ø±Ø¬Ø¹ÙŠ Ø£Ùˆ Ø£Ø±ÙÙ‚ ØµÙˆØ±Ø© Ø§Ù„Ø¥ÙŠØµØ§Ù„','error');return;}
+  if(!confirm('Ø¥Ø±Ø³Ø§Ù„ Ø¥ÙŠØµØ§Ù„ Ø³Ø¯Ø§Ø¯ Ø¨Ù…Ø¨Ù„Øº '+money(amt)+' Ù„Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©ØŸ'))return;
+  if(btn)btn.disabled=true;
+  try{
+    const img=file?await compressImage(file):'';
+    await addDoc(collection(db,'payments'),{studentUid:user.uid,studentId:s.studentId,studentName:s.name,amount:amt,method:d.method,trxId:String(d.trxId||'').trim(),screenshot:img,status:'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©',receiptNo:'REC-'+Date.now().toString().slice(-8),date:dateNow(),createdAt:serverTimestamp()});
+    logAction('Ø·Ù„Ø¨ Ø¯ÙØ¹',s.name+' - '+money(amt)); showToast('ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¥ÙŠØµØ§Ù„ØŒ Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©'); await loadData(); renderApp();
+  }catch(err){showToast(err.message,'error'); if(btn)btn.disabled=false;}
+}
+window.rejectPayment=async id=>{
+  const p=cache.payments.find(x=>x.id===id); if(!p||p.status!=='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©') return;
+  const why=prompt('Ø³Ø¨Ø¨ Ø§Ù„Ø±ÙØ¶ØŸ'); if(!why) return;
+  try{ await updateDoc(doc(db,'payments',id),{status:'Ù…Ø±ÙÙˆØ¶',rejectReason:why.trim(),approvedBy:user.email,approvedAt:serverTimestamp()});
+    logAction('Ø±ÙØ¶ Ø¥ÙŠØµØ§Ù„',p.receiptNo+' - '+why); showToast('ØªÙ… Ø§Ù„Ø±ÙØ¶'); await loadData(); renderApp();
+  }catch(err){showToast(err.message,'error');}
+};
+
+window.approvePayment = async function(paymentId, studentUid, amount){
+  if(!confirm('Ø§Ø¹ØªÙ…Ø§Ø¯ Ù‡Ø°Ø§ Ø§Ù„Ø¥ÙŠØµØ§Ù„ØŸ')) return;
+  try {
+    await runTransaction(db, async (tx) => {
+      const pRef = doc(db,'payments',paymentId);
+      const pSnap = await tx.get(pRef);
+      if(!pSnap.exists()) throw new Error('Ø§Ù„Ø¥ÙŠØµØ§Ù„ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯');
+      if(pSnap.data().status !== 'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©') throw new Error('Ø§Ù„Ø¥ÙŠØµØ§Ù„ Ù„ÙŠØ³ Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø© (Ù…Ø¹ØªÙ…Ø¯ Ø£Ùˆ Ù…Ø±ÙÙˆØ¶ Ù…Ø³Ø¨Ù‚Ø§Ù‹)');
+
+      const sRef = doc(db,'students',pSnap.data().studentUid);
+      const sSnap = await tx.get(sRef);
+      if(!sSnap.exists()) throw new Error('Ø§Ù„Ø·Ø§Ù„Ø¨ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯');
+
+      tx.update(pRef, { status:'Ù…Ù‚Ø¨ÙˆÙ„', approvedBy:user.email, approvedAt:serverTimestamp() });
+      tx.update(sRef, { paidAmount: Number(sSnap.data().paidAmount||0) + Number(pSnap.data().amount) });
+    });
+    logAction('Ø§Ø¹ØªÙ…Ø§Ø¯ Ø³Ø¯Ø§Ø¯', money(amount));
+    showToast('ØªÙ… Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯');
+    await loadData(); renderApp();
+  } catch(err){ showToast(err.message, 'error'); }
+};
+
+window.viewScreenshot = function(id){
+  const p = cache.payments.find(x=>x.id===id);
+  if(!p || !p.screenshot) return;
+  $('#screenshotContainer').innerHTML = `<img src="${esc(p.screenshot)}" style="width:100%;border-radius:8px;">`;
+  $('#screenshotModal').classList.add('active');
+};
+
+window.viewPdfFile = async function(id){
+  const l = cache.library.find(x=>x.id===id);
+  if(!l || !l.fileData){ showToast('Ø§Ù„Ù…Ù„Ù ØºÙŠØ± Ù…ØªØ§Ø­', 'error'); return; }
+  try {
+    const blob = await (await fetch(l.fileData)).blob();
+    window.open(URL.createObjectURL(blob), '_blank');
+  } catch { showToast('ØªØ¹Ø°Ø± Ø¹Ø±Ø¶ Ø§Ù„Ù…Ù„Ù', 'error'); }
+};
+
+async function saveLibraryPdfFile(e){
+  e.preventDefault();
+  const form = e.currentTarget;
+  const d = Object.fromEntries(new FormData(form).entries());
+  const fileInput = $('#pdfFileInput');
+  if(!fileInput.files[0]){ showToast('Ø§Ø®ØªØ± Ù…Ù„Ù PDF', 'error'); return; }
+  const file = fileInput.files[0];
+  if(file.size > 700000){ showToast('Ø­Ø¬Ù… PDF ÙƒØ¨ÙŠØ± (Ø£Ù‚Ù„ Ù…Ù† 700KB)', 'error'); return; }
+
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      await addDoc(collection(db,'library'), {
+        course: d.course.trim(), title: d.title.trim(), level: d.level,
+        fileData: ev.target.result, createdAt: serverTimestamp()
+      });
+      logAction('Ø±ÙØ¹ PDF', d.title);
+      showToast('ØªÙ… Ø§Ù„Ø±ÙØ¹');
+      form.reset(); await loadData(); renderApp();
+    } catch(err){ showToast('ÙØ´Ù„: '+err.message, 'error'); }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveAccountsData(e){
+  e.preventDefault();
+  const form = e.currentTarget;
+  const d = Object.fromEntries(new FormData(form).entries());
+  const mMode = form.maintenanceMode.checked;
+  await setDoc(doc(db,'settings','payment_accounts'), { ...d, maintenanceMode: mMode });
+  logAction('ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª', 'ØªÙ… Ø§Ù„ØªØ­Ø¯ÙŠØ«');
+  showToast('ØªÙ… Ø§Ù„Ø­ÙØ¸');
+  await loadData();
+}
+
+async function createStudent(e){
+  e.preventDefault();
+  const form = e.currentTarget;
+  const d = Object.fromEntries(new FormData(form).entries());
+  const btn = form.querySelector('button[type="submit"]');
+  if(btn) btn.disabled = true;
+  if(cache.students.some(s => s.studentId === d.studentId)){
+    showToast('Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ Ù…Ø³Ø¬Ù„ Ù…Ø³Ø¨Ù‚Ø§Ù‹', 'error');
+    if(btn) btn.disabled = false;
+    return;
+  }
+
+  const fileInput = $('#studentPhotoInput');
+  const proceed = async (imgUrl) => {
+    const secApp = initializeApp(firebaseConfig, 'stu-'+Date.now());
+    const secAuth = getAuth(secApp);
+    try {
+      const cred = await createUserWithEmailAndPassword(secAuth, d.email, d.password);
+      await setDoc(doc(db,'users',cred.user.uid), { role:'student', name:d.name, email:d.email, mustChangePassword:true });
+      
+      await setDoc(doc(db,'students',cred.user.uid), {
+        studentId:d.studentId, name:d.name, email:d.email,
+        level:d.level, department:d.department,
+        totalFees:Number(d.totalFees), paidAmount:0,
+        photo: imgUrl
+      });
+
+      logAction('Ø¥Ø¶Ø§ÙØ© Ø·Ø§Ù„Ø¨', d.name);
+      showToast('ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø·Ø§Ù„Ø¨');
+      form.reset(); await loadData(); renderApp();
+    } catch(err){
+      showToast(authError(err), 'error');
+    } finally {
+      if(btn) btn.disabled = false;
+      await signOut(secAuth).catch(()=>{});
+      deleteApp(secApp);
+    }
+  };
+
+  if(fileInput && fileInput.files[0]){
+    const file = fileInput.files[0];
+    if(file.size > 500000){ showToast('Ø­Ø¬Ù… Ø§Ù„ØµÙˆØ±Ø© ÙƒØ¨ÙŠØ± Ø¬Ø¯Ø§Ù‹ (Ø£Ù‚Ù„ Ù…Ù† 500KB)', 'error'); if(btn) btn.disabled=false; return; }
+    const reader = new FileReader();
+    reader.onload = ev => proceed(ev.target.result);
+    reader.readAsDataURL(file);
+  } else {
+    proceed('');
+  }
+}
+
+async function createStaff(e){
+  e.preventDefault();
+  const form = e.currentTarget;
+  const d = Object.fromEntries(new FormData(form).entries());
+  const btn = form.querySelector('button[type="submit"]');
+  if(btn) btn.disabled = true;
+  const secApp = initializeApp(firebaseConfig, 'stf-'+Date.now());
+  const secAuth = getAuth(secApp);
+  try {
+    const cred = await createUserWithEmailAndPassword(secAuth, d.email, d.password);
+    await setDoc(doc(db,'users',cred.user.uid), {
+      role: d.role, name: d.name, email: d.email, createdAt: serverTimestamp()
+    });
+    logAction('Ø¥Ø¶Ø§ÙØ© Ù…Ø³Ø§Ø¹Ø¯', d.name);
+    showToast('ØªÙ… Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯');
+    form.reset(); await loadData(); renderApp();
+  } catch(err){ showToast(authError(err), 'error'); }
+  finally {
+    if(btn) btn.disabled = false;
+    await signOut(secAuth).catch(()=>{});
+    deleteApp(secApp);
+  }
+}
+
+async function saveAttendanceSession(e){
+  e.preventDefault();
+  const form=e.currentTarget,d=Object.fromEntries(new FormData(form).entries());
+  const sessionId=String(Date.now()),expiresAt=Date.now()+Number(d.minutes||15)*60000;
+  try{
+    await setDoc(doc(db,'settings','active_attendance'),{code:String(d.code).trim(),sessionId,createdAt:serverTimestamp()});
+    await setDoc(doc(db,'settings','attendance_public'),{sessionName:d.sessionName.trim(),sessionId,expiresAt});
+    logAction('ÙØªØ­ Ø­Ø¶ÙˆØ±',d.sessionName); showToast('ØªÙ… ÙØªØ­ Ø§Ù„Ø¬Ù„Ø³Ø©'); 
+  }catch(err){showToast(err.message,'error');}
+}
+
+async function verifyStudentAttendance(e){
+  e.preventDefault();
+  const form=e.currentTarget,d=Object.fromEntries(new FormData(form).entries()),box=$('#studentAttMsg');
+  try{
+    const pub=await getDoc(doc(db,'settings','attendance_public'));
+    if(!pub.exists()||Date.now()>pub.data().expiresAt){box.innerHTML=msg('Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¬Ù„Ø³Ø© Ø­Ø¶ÙˆØ± Ù…ÙØªÙˆØ­Ø© Ø­Ø§Ù„ÙŠØ§Ù‹','error');return;}
+    const a=pub.data(),s=cache.students[0];
+    if(cache.attendance.some(x=>x.sessionId===a.sessionId&&x.studentUid===user.uid)){box.innerHTML=msg('Ø³Ø¬Ù„Øª Ø­Ø¶ÙˆØ±Ùƒ Ù…Ø³Ø¨Ù‚Ù‹Ø§','error');return;}
+    await setDoc(doc(db,'attendance',a.sessionId+'_'+user.uid),{studentUid:user.uid,studentName:s.name,studentId:s.studentId,sessionName:a.sessionName,sessionId:a.sessionId,pin:String(d.pinCode).trim(),createdAt:serverTimestamp()});
+    showToast('ØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø­Ø¶ÙˆØ±'); form.reset(); await loadData(); renderApp();
+  }catch(err){box.innerHTML=msg(err.code==='permission-denied'?'ÙƒÙˆØ¯ Ø§Ù„Ø­Ø¶ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­ Ø£Ùˆ Ø§Ù†ØªÙ‡Øª Ø§Ù„Ø¬Ù„Ø³Ø©':err.message,'error');}
+}
+
+async function saveResult(e){
+  e.preventDefault();
+  const form=e.currentTarget, d=Object.fromEntries(new FormData(form).entries());
+  const s=cache.students.find(x=>x.uid===d.studentUid), sc=Number(d.score), cr=Number(d.credits);
+  if(!s||!(sc>=0&&sc<=100)||!(cr>=1&&cr<=6)){ showToast('Ø¨ÙŠØ§Ù†Ø§Øª ØºÙŠØ± ØµØ­ÙŠØ­Ø©','error'); return; }
+  try{
+    await addDoc(collection(db,'results'),{studentUid:s.uid,studentId:s.studentId,studentName:s.name,course:d.course.trim(),year:d.year.trim(),semester:d.semester,credits:cr,score:sc,createdAt:serverTimestamp()});
+    logAction('Ø±ØµØ¯ Ù†ØªÙŠØ¬Ø©',s.name+' - '+d.course); showToast('ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù†ØªÙŠØ¬Ø©'); await loadData(); renderApp();
+  }catch(err){ showToast(authError(err),'error'); }
+}
+
+async function saveExam(e){
+  e.preventDefault();
+  const form = e.currentTarget;
+  const d = Object.fromEntries(new FormData(form).entries());
+  await addDoc(collection(db,'exams'), { ...d, createdAt:serverTimestamp() });
+  logAction('Ø¥Ø¶Ø§ÙØ© Ø§Ù…ØªØ­Ø§Ù†', d.course);
+  showToast('ØªÙ… Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø§Ù…ØªØ­Ø§Ù†');
+  form.reset(); await loadData(); renderApp();
+}
+
+async function saveNews(e){
+  e.preventDefault();
+  const form = e.currentTarget;
+  const d = Object.fromEntries(new FormData(form).entries());
+  await addDoc(collection(db,'news'), { ...d, date:dateNow(), createdAt:serverTimestamp() });
+  logAction('Ù†Ø´Ø± Ø®Ø¨Ø±', d.title);
+  showToast('ØªÙ… Ø§Ù„Ù†Ø´Ø±');
+  form.reset(); await loadData(); renderApp();
+}
+
+window.printReceipt = function(id){
+  const p = cache.payments.find(x=>x.id===id);
+  if(!p) return;
+  const el = $('#printable-receipt');
+  el.innerHTML = `<div style="border:2px solid #174ea6;padding:24px;border-radius:12px;max-width:600px;margin:auto;color:#000;background:#fff">
+    <div style="text-align:center;margin-bottom:10px;font-size:2rem;">ğŸ“</div>
+    <h2 style="text-align:center;margin:0;">Ù…Ø¹Ù‡Ø¯ Ø§Ù„Ø¯Ù„ØªØ§ Ø§Ù„Ø¹Ø§Ù„ÙŠ Ù„Ù„Ø­Ø§Ø³Ø¨Ø§Øª</h2>
+    <p style="text-align:center;color:#555;margin:4px 0 16px;">Ø¥ÙŠØµØ§Ù„ Ø³Ø¯Ø§Ø¯ Ù…ØµØ±ÙˆÙØ§Øª Ø¯Ø±Ø§Ø³ÙŠØ©</p>
+    <table style="width:100%;border-collapse:collapse;color:#000;">
+      <tr><th style="text-align:right;background:#eaf2ff;padding:8px;">Ø±Ù‚Ù… Ø§Ù„Ø¥ÙŠØµØ§Ù„</th><td style="padding:8px;">${esc(p.receiptNo)}</td></tr>
+      <tr><th style="text-align:right;background:#eaf2ff;padding:8px;">Ø§Ù„ØªØ§Ø±ÙŠØ®</th><td style="padding:8px;">${esc(p.date)}</td></tr>
+      <tr><th style="text-align:right;background:#eaf2ff;padding:8px;">Ø§Ù„Ø·Ø§Ù„Ø¨</th><td style="padding:8px;">${esc(p.studentName)} (${esc(p.studentId)})</td></tr>
+      <tr><th style="text-align:right;background:#eaf2ff;padding:8px;">Ø§Ù„Ù…Ø¨Ù„Øº</th><td style="padding:8px;">${money(p.amount)}</td></tr>
+      <tr><th style="text-align:right;background:#eaf2ff;padding:8px;">Ø§Ù„ÙˆØ³ÙŠÙ„Ø©</th><td style="padding:8px;">${esc(p.method)}</td></tr>
+    </table>
+    <div class="receipt-stamp">ØªÙ… Ø§Ù„Ø³Ø¯Ø§Ø¯</div>
+  </div>`;
+  window.print();
+};
+
+window.printFullFinancialStatement = function(){
+  const s = cache.students[0] || {};
+  const totalFees = Number(s.totalFees||0);
+  const approved = cache.payments.filter(p=>p.status==='Ù…Ù‚Ø¨ÙˆÙ„');
+  const paid = approved.reduce((a,p)=>a+Number(p.amount||0),0);
+  const el = $('#printable-receipt');
+  el.innerHTML = `<div style="border:2px solid #174ea6;padding:24px;border-radius:12px;max-width:700px;margin:auto;color:#000;background:#fff">
+    <div style="text-align:center;margin-bottom:10px;font-size:2rem;">ğŸ“</div>
+    <h2 style="text-align:center;margin:0;">Ù…Ø¹Ù‡Ø¯ Ø§Ù„Ø¯Ù„ØªØ§ Ø§Ù„Ø¹Ø§Ù„ÙŠ Ù„Ù„Ø­Ø§Ø³Ø¨Ø§Øª</h2>
+    <p style="text-align:center;color:#555;margin:4px 0 16px;">ÙƒØ´Ù Ø­Ø³Ø§Ø¨ Ù…Ø§Ù„ÙŠ Ù…Ø¹ØªÙ…Ø¯</p>
+    <p><strong>Ø§Ù„Ø·Ø§Ù„Ø¨:</strong> ${esc(s.name||'')} â€” <strong>Ø§Ù„Ø±Ù‚Ù…:</strong> ${esc(s.studentId||'')}</p>
+    <p><strong>Ø§Ù„ÙØ±Ù‚Ø©:</strong> ${esc(s.level||'')} â€” <strong>Ø§Ù„Ù‚Ø³Ù…:</strong> ${esc(s.department||'')}</p>
+    <table style="width:100%;border-collapse:collapse;color:#000;margin-top:12px;">
+      <thead><tr>
+        <th style="background:#eaf2ff;padding:8px;text-align:right;">Ø±Ù‚Ù… Ø§Ù„Ø¥ÙŠØµØ§Ù„</th>
+        <th style="background:#eaf2ff;padding:8px;text-align:right;">Ø§Ù„ØªØ§Ø±ÙŠØ®</th>
+        <th style="background:#eaf2ff;padding:8px;text-align:right;">Ø§Ù„ÙˆØ³ÙŠÙ„Ø©</th>
+        <th style="background:#eaf2ff;padding:8px;text-align:right;">Ø§Ù„Ù…Ø¨Ù„Øº</th>
+      </tr></thead>
+      <tbody>
+        ${approved.map(p=>`<tr>
+          <td style="padding:8px;border-bottom:1px solid #ddd;">${esc(p.receiptNo)}</td>
+          <td style="padding:8px;border-bottom:1px solid #ddd;">${esc(p.date)}</td>
+          <td style="padding:8px;border-bottom:1px solid #ddd;">${esc(p.method)}</td>
+          <td style="padding:8px;border-bottom:1px solid #ddd;">${money(p.amount)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:16px;padding:12px;background:#eaf2ff;border-radius:8px;">
+      <p style="margin:4px 0;"><strong>Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ:</strong> ${money(totalFees)}</p>
+      <p style="margin:4px 0;"><strong>Ø§Ù„Ù…Ø¯ÙÙˆØ¹:</strong> ${money(paid)}</p>
+      <p style="margin:4px 0;"><strong>Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ:</strong> ${money(Math.max(0, totalFees-paid))}</p>
+    </div>
+    <div class="receipt-stamp">ØªÙ… Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯</div>
+  </div>`;
+  window.print();
+};
+
+async function deleteItem(coll, id){
+  if(!confirm('ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø°ÙØŸ')) return;
+  await deleteDoc(doc(db, coll, id));
+  logAction('Ø­Ø°Ù', coll+':'+id);
+  showToast('ØªÙ… Ø§Ù„Ø­Ø°Ù');
+  await loadData(); renderApp();
+}
+
+async function deleteStudent(uid){
+  if(!confirm('Ø­Ø°Ù Ø§Ù„Ø·Ø§Ù„Ø¨ØŸ')) return;
+  await deleteDoc(doc(db,'students',uid));
+  await deleteDoc(doc(db,'users',uid));
+  logAction('Ø­Ø°Ù Ø·Ø§Ù„Ø¨', uid);
+  showToast('ØªÙ… Ø§Ù„Ø­Ø°Ù');
+  await loadData(); renderApp();
+}
+
+window.openEdit = (coll, id, fields) => {
+  const item = coll==='students'
+    ? cache.students.find(x=>x.uid===id)
+    : cache[coll].find(x=>x.id===id);
+  if(!item) return;
+  editCtx = { coll, id, fields };
+  $('#genericEditFields').innerHTML = fields.map(([k,l,t]) =>
+    `<label>${l}</label><input name="${k}" type="${t||'text'}" value="${esc(item[k]??'')}" required style="margin-bottom:8px">`
+  ).join('');
+  $('#genericEditMsg').innerHTML = '';
+  $('#genericEditModal').classList.add('active');
+};
+
+window.closeGenericEdit = () => $('#genericEditModal').classList.remove('active');
+
+window.openEditStudentModal = id => openEdit('students', id, [
+  ['name','Ø§Ù„Ø§Ø³Ù…'],['studentId','Ø§Ù„Ø±Ù‚Ù…'],['level','Ø§Ù„ÙØ±Ù‚Ø©'],['totalFees','Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª','number']
+]);
+window.editResultModal = id => openEdit('results', id, [
+  ['course','Ø§Ù„Ù…Ø§Ø¯Ø©'],['credits','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','number'],['score','Ø§Ù„Ø¯Ø±Ø¬Ø©','number']
+]);
+window.editExamModal = id => openEdit('exams', id, [
+  ['course','Ø§Ù„Ù…Ø§Ø¯Ø©'],['date','Ø§Ù„ØªØ§Ø±ÙŠØ®','date'],['time','Ø§Ù„ÙˆÙ‚Øª','time'],['hall','Ø§Ù„Ù‚Ø§Ø¹Ø©']
+]);
+window.editNewsModal = id => openEdit('news', id, [
+  ['title','Ø§Ù„Ø¹Ù†ÙˆØ§Ù†'],['body','Ø§Ù„ØªÙØ§ØµÙŠÙ„']
+]);
+
+window.simCoursesList = JSON.parse(localStorage.getItem('simCourses') || '[]');
+function saveSim(){ localStorage.setItem('simCourses', JSON.stringify(window.simCoursesList)); }
+
+window.addSimCourse = function(){
+  const name = $('#simCourseName').value.trim();
+  const score = Number($('#simCourseScore').value);
+  const hours = Number($('#simCourseHours').value);
+  
+  if(!name || isNaN(score) || score < 0 || score > 100){
+    showToast('Ø£Ø¯Ø®Ù„ Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø© ÙˆØ¯Ø±Ø¬Ø© ØµØ­ÙŠØ­Ø© Ø¨ÙŠÙ† 0 Ùˆ 100', 'error'); return;
+  }
+  
+  window.simCoursesList.push({ name, score, hours });
+  saveSim();
+  $('#simCourseName').value = ''; 
+  $('#simCourseScore').value = '';
+  renderSimTable();
+};
+
+window.removeSimCourse = function(idx){
+  window.simCoursesList.splice(idx, 1); 
+  saveSim(); 
+  renderSimTable();
+};
+
+window.clearSimCourses = function(){
+  if(!confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ù…Ø³Ø­ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹Ø©ØŸ')) return;
+  window.simCoursesList = []; 
+  saveSim(); 
+  renderSimTable();
+};
+
+function renderSimTable(){
+  const wrap = $('#simTableWrap'); if(!wrap) return;
+  if(window.simCoursesList.length === 0) {
+    wrap.innerHTML = `<div class="notice" style="text-align:center;">Ù„Ù… ØªÙ‚Ù… Ø¨Ø¥Ø¶Ø§ÙØ© Ø£ÙŠ Ù…ÙˆØ§Ø¯ Ù…ØªÙˆÙ‚Ø¹Ø© Ø¨Ø¹Ø¯.</div>`;
+  } else {
+    wrap.innerHTML = table(['Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø¯Ø±Ø¬Ø©','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','Ø§Ù„ØªÙ‚Ø¯ÙŠØ±','Ø§Ù„Ù†Ù‚Ø§Ø·','Ø¥Ø¬Ø±Ø§Ø¡'],
+      window.simCoursesList.map((c,idx)=>`<tr>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td>${c.score}</td>
+        <td>${c.hours} Ø³Ø§Ø¹Ø©</td>
+        <td>${grade(c.score)}</td>
+        <td><b style="color:var(--blue);">${(pts(c.score) * c.hours).toFixed(1)}</b></td>
+        <td><button class="danger" style="padding:4px 8px;font-size:.75rem;" onclick="removeSimCourse(${idx})"><i class="fas fa-trash"></i></button></td>
+      </tr>`).join('')
+    );
+  }
+  updateSimGPA();
+}
+
+function updateSimGPA(){
+  const el = $('#simResultGPA'); 
+  const hoursEl = $('#simHoursText');
+  const barEl = $('#gpaProgressBar');
+  const statusEl = $('#gpaStatusText');
+  if(!el) return;
+
+  let currentPoints = 0;
+  let currentHours = 0;
+  (cache.results || []).forEach(r => {
+    const hrs = Number(r.creditHours || 3);
+    currentPoints += pts(Number(r.score)) * hrs;
+    currentHours += hrs;
+  });
+
+  let simPoints = 0;
+  let simHours = 0;
+  window.simCoursesList.forEach(c => {
+    simPoints += pts(c.score) * c.hours;
+    simHours += c.hours;
+  });
+
+  const totalPoints = currentPoints + simPoints;
+  const totalHours = currentHours + simHours;
+  const newGPA = totalHours > 0 ? (totalPoints / totalHours) : 0;
+  
+  el.innerText = newGPA.toFixed(2) + ' / 4.0';
+  if(hoursEl) hoursEl.innerText = `+${simHours} Ø³Ø§Ø¹Ø© Ø¬Ø¯ÙŠØ¯Ø©`;
+
+  if(barEl) {
+    const percent = (newGPA / 4.0) * 100;
+    barEl.style.width = percent + '%';
+  }
+
+  if(statusEl) {
+    if(newGPA >= 3.7) { statusEl.innerText = 'ğŸŒŸ Ø§Ù…ØªÙŠØ§Ø² (Excellent)'; statusEl.style.color = 'var(--green);'; }
+    else if(newGPA >= 3.0) { statusEl.innerText = 'âœ… Ø¬ÙŠØ¯ Ø¬Ø¯Ø§Ù‹ (Very Good)'; statusEl.style.color = 'var(--blue);'; }
+    else if(newGPA >= 2.0) { statusEl.innerText = 'ğŸ“˜ Ø¬ÙŠØ¯ (Good)'; statusEl.style.color = 'var(--blue2);'; }
+    else if(newGPA >= 1.0) { statusEl.innerText = 'âš ï¸ Ù…Ù‚Ø¨ÙˆÙ„ (Pass)'; statusEl.style.color = '#f39c12'; }
+    else { statusEl.innerText = 'âŒ Ø±Ø§Ø³Ø¨ (Fail)'; statusEl.style.color = 'var(--red);'; }
+  }
+}
+
+window.calculateMonthlyInstallment = function(remainingAmount) {
+  const months = Number(document.getElementById('calcMonths').value) || 1;
+  const monthly = Math.ceil(remainingAmount / months);
+  const valElement = document.getElementById('monthlyInstallmentVal');
+  if(valElement) {
+    valElement.innerText = new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(monthly);
+  }
+};
+
+window.setPaymentFilter = function(s){ paymentFilterStatus = s; renderApp(); };
+window.changeChatStudent = function(uid){ selectedChatStudentUid = uid; startChatListener(); };
+
+function startChatListener(){
+  if(unsubChat) unsubChat();
+  const area = $('#chatMessagesArea'); if(!area) return;
+  const isStaff = ['admin','finance','academic'].includes(role);
+  const targetUid = isStaff ? selectedChatStudentUid : user.uid;
+  if(!targetUid) return;
+
+  const q = query(collection(db,'chats',targetUid,'messages'), orderBy('createdAt','asc'));
+  unsubChat = onSnapshot(q, snap => {
+    area.innerHTML = snap.docs.map(d => {
+      const m = d.data();
+      const isMe = m.senderUid === user.uid;
+      return `<div class="chat-bubble ${isMe?'outgoing':'incoming'}">
+        <div style="font-size:.8rem;font-weight:bold;opacity:.8;">${esc(m.senderName)}</div>
+        <div>${esc(m.body)}</div>
+      </div>`;
+    }).join('') || '<p class="muted" style="text-align:center;margin:auto;">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø±Ø³Ø§Ø¦Ù„.</p>';
+    area.scrollTop = area.scrollHeight;
+  }, err => console.error(err));
+}
+
+async function sendChat(e){
+  e.preventDefault();
+  const form = e.currentTarget;
+  const d = Object.fromEntries(new FormData(form).entries());
+  const isStaff = ['admin','finance','academic'].includes(role);
+  const targetUid = isStaff ? selectedChatStudentUid : user.uid;
+  if(!targetUid || !d.body.trim()) return;
+  try {
+    await addDoc(collection(db,'chats',targetUid,'messages'), {
+      senderUid: user.uid,
+      senderName: profile.name || user.email,
+      body: d.body.trim(),
+      createdAt: serverTimestamp()
+    });
+    form.reset();
+  } catch(err){ showToast(err.message, 'error'); }
+}
 
 
-OOœ™[[İ™J
-KÍL
-NÂŸNÂ‚™[˜İ[ÛˆÚİÑ˜][
-^
-^Âˆ\›Ûİš[›™\’SHÙXİ[ÛˆÛ\ÜÏH˜Ø\™ÙÚ[˜›Ş‚ˆ¶)v.v+ö)ö+È6)öa6ava¶-v*OÚ‰Û\ÙÊ^	Ù\œ›Ü‰Ê_Bˆ]ÛˆÛ˜ÛXÚÏH›ØØ][Û‹œ™[ØY
+/* ---------- ØªØ­Ø³ÙŠÙ†Ø§Øª: ØªØºÙŠÙŠØ± ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø¥Ø¬Ø¨Ø§Ø±ÙŠØŒ Ø®Ù…ÙˆÙ„ØŒ Ø§ØªØµØ§Ù„ØŒ ØªÙ‚ÙˆÙŠÙ… ---------- */
+function showForcePasswordChange(){
+  $('#headerActions').innerHTML='<button class="secondary" onclick="signOut_()">ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬</button>';
+  $('#app').innerHTML=`<section class="card loginbox"><h2><i class="fas fa-key"></i> ØªØºÙŠÙŠØ± ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±</h2>
+    <p class="muted">Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ. Ù„Ø£Ø³Ø¨Ø§Ø¨ Ø£Ù…Ù†ÙŠØ© Ù„Ø§Ø²Ù… ØªØ®ØªØ§Ø± ÙƒÙ„Ù…Ø© Ù…Ø±ÙˆØ± Ø¬Ø¯ÙŠØ¯Ø© Ù‚Ø¨Ù„ Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© (8 Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„).</p>
+    <form id="pwForm"><label>ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø©</label><input id="pw1" type="password" minlength="8" required autocomplete="new-password">
+    <label style="margin-top:10px;">ØªØ£ÙƒÙŠØ¯ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±</label><input id="pw2" type="password" minlength="8" required autocomplete="new-password">
+    <div id="pwMsg" style="margin-top:10px;"></div><button style="width:100%;margin-top:14px;">Ø­ÙØ¸ ÙˆÙ…ØªØ§Ø¨Ø¹Ø©</button></form></section>`;
+  $('#pwForm').onsubmit=async e=>{
+    e.preventDefault(); const a=$('#pw1').value,b=$('#pw2').value,box=$('#pwMsg');
+    if(a!==b){box.innerHTML=msg('ÙƒÙ„Ù…ØªØ§ Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± Ù…ØªØ·Ø§Ø¨Ù‚ØªÙŠÙ†','error');return}
+    try{
+      await updatePassword(user,a);
+      await updateDoc(doc(db,'users',user.uid),{mustChangePassword:false});
+      profile.mustChangePassword=false; showToast('ØªÙ… ØªØºÙŠÙŠØ± ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±'); await loadData(); renderApp();
+    }catch(err){
+      box.innerHTML=msg(err.code==='auth/requires-recent-login'?'Ø§Ù†ØªÙ‡Øª ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„Ø¬Ù„Ø³Ø©ØŒ Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù…Ù† Ø¬Ø¯ÙŠØ¯ Ø«Ù… Ø£Ø¹Ø¯ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©':err.code==='auth/weak-password'?'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø¶Ø¹ÙŠÙØ©':err.message,'error');
+    }
+  };
+}
+window.signOut_=()=>signOut(auth);
 
-Hˆİ[OH›X\™Ú[‹]ÜŒLœİÚYŒL	NÈ¶)v.v)ö+ö*H6)öa6av+v)öb6a6*OØ]Û‚ˆÜÙXİ[Û˜ÂŸB‚˜ÛÛœİØY™HH\Ş[˜È
-˜ŠHOˆÈHÈ™]\›ˆ]ØZ]ÈHØ]Ú
-J^ÈÛÛœÛÛKØ\›ŠJNÈ™]\›ˆ˜ÈHNÂ˜ÛÛœİ›Û™HHÈØÜÎˆ×K^\İÎˆ
+let idleTimer; const IDLE_MS=15*60*1000;
+function resetIdle(){ clearTimeout(idleTimer); if(user) idleTimer=setTimeout(()=>{ showToast('ØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬ Ù„Ø¹Ø¯Ù… Ø§Ù„Ù†Ø´Ø§Ø·','error'); signOut(auth); },IDLE_MS); }
+['click','keydown','touchstart','mousemove'].forEach(ev=>document.addEventListener(ev,resetIdle,{passive:true}));
 
-HOˆ˜[ÙHNÂ‚‹ÊˆKKKKKKKKKH[š]š\™X˜\ÙHKKKKKKKKKH
-‹ÂšYŠZ\Ñš\™X˜\ÙPÛÛ™šYİ\™Y
+function netBanner(){
+  let b=$('#netBanner');
+  if(!b){ b=document.createElement('div'); b.id='netBanner'; b.textContent='Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø¥Ù†ØªØ±Ù†Øª â€” Ù‚Ø¯ Ù„Ø§ ØªÙƒÙˆÙ† Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ø­Ø¯Ù‘Ø«Ø©';
+    b.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;text-align:center;padding:6px;z-index:10001;font-weight:700;display:none'; document.body.appendChild(b); }
+  b.style.display=navigator.onLine?'none':'block';
+}
+addEventListener('online',netBanner); addEventListener('offline',netBanner); netBanner();
 
-J^ÂˆÚİÑ˜][
-	öa6aH6b¶*¶aH6,v*6-Èš\™X˜\ÙH6*6.v+Ëˆ6*¶(ö`ö+È6avaˆ6*¶.v*6)¶*Hš\™X˜\ÙKXÛÛ™šYËšœÉÊNÂŸH[ÙHÂˆHÂˆÛÛœİ\H[š]X[^™P\
-š\™X˜\ÙPÛÛ™šYÊNÂˆ]]HÙ]]]
-\
-NÂˆˆHÙ]š\™\İÜ™J\
-NÂ‚ˆÛ]]İ]PÚ[™ÙY
-]]\Ş[˜ÈHOˆÂˆ\Ù\ˆHNÂˆYŠ]J^Âˆ›Ùš[HH[È›ÛHH[Âˆ™[™\“ÙÚ[Š
-NÂˆ™]\›ÂˆBˆHÂˆÛÛœİÛ˜\H]ØZ]Ù]ØÊØÊ‹	İ\Ù\œÉËKZY
-JNÂˆYŠ\Û˜\™^\İÊ
-J^Âˆ]ØZ]ÚYÛ“İ]
-]]
-NÂˆÚİÑ˜][
-	ö)öa6+v,ö)ö*6a6)È6b¶ava6`È6ava6`H6-va6)ö+vb¶)ö*ˆ6`vbˆ6`¶)ö.v+ö*H6)öa6*6b¶)öa¶)ö*‹‰ÊNÂˆ™]\›ÂˆBˆ›Ùš[HHÛ˜\™]J
-NÂˆ›ÛHH›Ùš[Kœ›ÛNÂˆ]ØZ]ØY]J
-NÂˆYŠÉØYZ[‰Ë	ØXØY[ZXÉ×Kš[˜ÛY\Ê›ÛJJHØXÚKœİY[Ë™š[\ŠO‰Ü\ÜİÛÜ™	È[ˆ
-K™›Ü‘XXÚ
-O\]QØÊØÊ‹	ÜİY[ÉËZY
-KÜ\ÜİÛÜ™™[]QšY[
+window.exportExamsICS=()=>{
+  const s=cache.students[0]||{}, ex=cache.exams.filter(e=>!e.level||e.level===s.level);
+  if(!ex.length){ showToast('Ù„Ø§ ØªÙˆØ¬Ø¯ Ø§Ù…ØªØ­Ø§Ù†Ø§Øª Ù„Ù„ØªØµØ¯ÙŠØ±','error'); return; }
+  const pad=n=>String(n).padStart(2,'0'), q=t=>String(t||'').replace(/([,;\\])/g,'\\$1').replace(/\n/g,'\\n');
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+  const ev=ex.map((e,i)=>{
+    const [y,m,d]=String(e.date).split('-').map(Number), [hh,mm]=String(e.time||'09:00').split(':').map(Number);
+    return ['BEGIN:VEVENT',`UID:delta-exam-${e.id||i}@delta-portal`,`DTSTAMP:${stamp}`,
+      `DTSTART:${y}${pad(m)}${pad(d)}T${pad(hh)}${pad(mm)}00`,`DTEND:${y}${pad(m)}${pad(d)}T${pad((hh+2)%24)}${pad(mm)}00`,
+      `SUMMARY:${q('Ø§Ù…ØªØ­Ø§Ù† '+e.course)}`,`LOCATION:${q(e.hall)}`,'END:VEVENT'].join('\r\n');
+  });
+  const blob=new Blob(['BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Delta//Exams//AR\r\n'+ev.join('\r\n')+'\r\nEND:VCALENDAR'],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='exams.ics'; document.body.appendChild(a); a.click(); a.remove();
+};
 
-_JK˜Ø]Ú
+/* ---------- Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠ + Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø·Ù„Ø§Ø¨ (ØªØ¸Ù„Ù…Ø§Øª ÙˆØ´Ù‡Ø§Ø¯Ø§Øª) ---------- */
+const DAYS=['Ø§Ù„Ø³Ø¨Øª','Ø§Ù„Ø£Ø­Ø¯','Ø§Ù„Ø§Ø«Ù†ÙŠÙ†','Ø§Ù„Ø«Ù„Ø§Ø«Ø§Ø¡','Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡','Ø§Ù„Ø®Ù…ÙŠØ³','Ø§Ù„Ø¬Ù…Ø¹Ø©'];
+const LEVELS=['Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰','Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ©','Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø«Ø§Ù„Ø«Ø©','Ø§Ù„ÙØ±Ù‚Ø© Ø§Ù„Ø±Ø§Ø¨Ø¹Ø©'];
+const REQ_TYPES=['ØªØ¸Ù„Ù… Ù…Ù† Ù†ØªÙŠØ¬Ø©','Ø´Ù‡Ø§Ø¯Ø© Ù‚ÙŠØ¯','Ø¥ÙØ§Ø¯Ø© Ø§Ù„ØªØ­Ø§Ù‚','ÙƒØ´Ù Ø¯Ø±Ø¬Ø§Øª Ø±Ø³Ù…ÙŠ','Ø£Ø®Ø±Ù‰'];
+async function loadExtra(){
+  const staff=['admin','finance','academic'].includes(role);
+  const sc=await safe(getDocs(collection(db,'schedule')),none);
+  cache.schedule=sc.docs.map(d=>({id:d.id,...d.data()}));
+  const rq=await safe(getDocs(staff?collection(db,'requests'):query(collection(db,'requests'),where('studentUid','==',user.uid))),none);
+  cache.requests=rq.docs.map(d=>({id:d.id,...d.data()}));
+  const cs=await safe(getDocs(collection(db,'courses')),none); cache.courses=cs.docs.map(d=>({id:d.id,...d.data()}));
+  const rg=await safe(getDoc(doc(db,'settings','registration')),none); cache.regSettings=rg.exists()?rg.data():{};
+  const rr=await safe(getDocs(staff?collection(db,'registrations'):query(collection(db,'registrations'),where('studentUid','==',user.uid))),none); cache.registrations=rr.docs.map(d=>({id:d.id,...d.data()}));
+}
+function reqBadge(){const n=(cache.requests||[]).filter(r=>r.status==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©').length;return n?` <span style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:99px;font-size:.75rem;">${n}</span>`:'';}
+function reqPill(t){const c=t==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©'?['#fef3c7','#92400e']:t==='Ù…Ø±ÙÙˆØ¶'?['#fee2e2','#991b1b']:['#d1fae5','#065f46'];return `<span class="pill" style="background:${c[0]};color:${c[1]};">${esc(t)}</span>`;}
+function extraViews(html){
+  const staff=role==='admin'||role==='academic', st=cache.students[0]||{};
+  if(activeTab==='schedule'&&staff){
+    const lv=LEVELS.map(l=>`<option>${l}</option>`).join(''),dy=DAYS.map(d=>`<option>${d}</option>`).join('');
+    const rows=(cache.schedule||[]).slice().sort((a,b)=>String(a.level).localeCompare(b.level)||DAYS.indexOf(a.day)-DAYS.indexOf(b.day)||String(a.start).localeCompare(String(b.start)))
+      .map(x=>`<tr><td>${esc(x.level)}</td><td>${esc(x.day)}</td><td>${esc(x.start)} - ${esc(x.end)}</td><td>${esc(x.course)}</td><td>${esc(x.hall)}</td><td>${esc(x.instructor||'â€”')}</td><td><button class="danger" data-delete="schedule" data-id="${x.id}"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+    return `<section class="card"><h2><i class="fas fa-calendar-week" style="color:var(--blue)"></i> Ø¥Ø¶Ø§ÙØ© Ù…Ø­Ø§Ø¶Ø±Ø© Ù„Ù„Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠ</h2>
+      <form id="scheduleForm" class="fields"><div><label>Ø§Ù„ÙØ±Ù‚Ø©</label><select name="level">${lv}</select></div><div><label>Ø§Ù„ÙŠÙˆÙ…</label><select name="day">${dy}</select></div>
+      <div><label>Ù…Ù†</label><input name="start" type="time" required></div><div><label>Ø¥Ù„Ù‰</label><input name="end" type="time" required></div>
+      <div><label>Ø§Ù„Ù…Ø§Ø¯Ø©</label><input name="course" required></div><div><label>Ø§Ù„Ù‚Ø§Ø¹Ø©</label><input name="hall" required></div>
+      <div><label>Ø§Ù„Ù…Ø­Ø§Ø¶Ø±</label><input name="instructor"></div><button style="margin-top:10px;">Ø¥Ø¶Ø§ÙØ©</button></form></section>
+      <section class="card"><h3>Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ø­Ø§Ù„ÙŠ</h3>${table(['Ø§Ù„ÙØ±Ù‚Ø©','Ø§Ù„ÙŠÙˆÙ…','Ø§Ù„ÙˆÙ‚Øª','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ù‚Ø§Ø¹Ø©','Ø§Ù„Ù…Ø­Ø§Ø¶Ø±','Ø¥Ø¬Ø±Ø§Ø¡'],rows)}</section>`;
+  }
+  if(activeTab==='myschedule'&&role==='student'){
+    const mine=(cache.schedule||[]).filter(x=>x.level===st.level);
+    const cards=DAYS.map(d=>{const it=mine.filter(x=>x.day===d).sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+      return it.length?`<section class="card"><h3>${d}</h3>${table(['Ø§Ù„ÙˆÙ‚Øª','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ù‚Ø§Ø¹Ø©','Ø§Ù„Ù…Ø­Ø§Ø¶Ø±'],it.map(x=>`<tr><td>${esc(x.start)} - ${esc(x.end)}</td><td><b>${esc(x.course)}</b></td><td>${esc(x.hall)}</td><td>${esc(x.instructor||'â€”')}</td></tr>`).join(''))}</section>`:'';}).join('');
+    return `<h2>Ø¬Ø¯ÙˆÙ„ Ù…Ø­Ø§Ø¶Ø±Ø§ØªÙŠ â€” ${esc(st.level||'')}</h2>`+(cards||'<section class="card muted">Ù„Ù… ÙŠÙØ¹Ù„Ù† Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ø¨Ø¹Ø¯.</section>');
+  }
+  if(activeTab==='requests'&&staff){
+    const rows=(cache.requests||[]).slice().sort((a,b)=>(a.status==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©'?0:1)-(b.status==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©'?0:1))
+      .map(r=>`<tr><td><b>${esc(r.studentName)}</b><br><small class="muted">${esc(r.studentId)}</small></td><td>${esc(r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}</td><td>${esc(r.reply||'â€”')}</td>
+      <td>${r.status==='Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©'?`<div class="actions"><button style="background:var(--green);padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','ØªÙ… Ø§Ù„Ù‚Ø¨ÙˆÙ„')">Ù‚Ø¨ÙˆÙ„</button><button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','Ø¬Ø§Ù‡Ø² Ù„Ù„Ø§Ø³ØªÙ„Ø§Ù…')">Ø¬Ø§Ù‡Ø²</button><button class="danger" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','Ù…Ø±ÙÙˆØ¶')">Ø±ÙØ¶</button></div>`:'â€”'}</td></tr>`).join('');
+    return `<section class="card"><h2><i class="fas fa-inbox" style="color:var(--blue)"></i> Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø·Ù„Ø§Ø¨ (ØªØ¸Ù„Ù…Ø§Øª ÙˆØ´Ù‡Ø§Ø¯Ø§Øª)</h2>${table(['Ø§Ù„Ø·Ø§Ù„Ø¨','Ø§Ù„Ù†ÙˆØ¹','Ø§Ù„ØªÙØ§ØµÙŠÙ„','Ø§Ù„Ø­Ø§Ù„Ø©','Ø§Ù„Ø±Ø¯','Ø¥Ø¬Ø±Ø§Ø¡'],rows)}</section>`;
+  }
+  if(activeTab==='myrequests'&&role==='student'){
+    const rows=(cache.requests||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0))
+      .map(r=>`<tr><td>${esc(r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}</td><td>${esc(r.reply||'â€”')}</td></tr>`).join('');
+    return `<section class="card"><h2><i class="fas fa-file-signature" style="color:var(--blue)"></i> ØªÙ‚Ø¯ÙŠÙ… Ø·Ù„Ø¨ Ø¬Ø¯ÙŠØ¯</h2>
+      <form id="requestForm"><label>Ù†ÙˆØ¹ Ø§Ù„Ø·Ù„Ø¨</label><select name="type" style="margin-bottom:10px;">${REQ_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
+      <label>Ø§Ù„ØªÙØ§ØµÙŠÙ„ (Ù„Ù„ØªØ¸Ù„Ù…: Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø© ÙˆØ³Ø¨Ø¨ Ø§Ù„ØªØ¸Ù„Ù…)</label><textarea name="details" rows="3" maxlength="1000" required style="margin-bottom:10px;"></textarea><button>Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø·Ù„Ø¨</button></form></section>
+      <section class="card"><h3>Ø·Ù„Ø¨Ø§ØªÙŠ Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©</h3>${table(['Ø§Ù„Ù†ÙˆØ¹','Ø§Ù„ØªÙØ§ØµÙŠÙ„','Ø§Ù„Ø­Ø§Ù„Ø©','Ø±Ø¯ Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©'],rows)}</section>`;
+  }
+  const rv=resultsViews(staff,st); if(rv!==null) return rv;
+  const cv=courseViews(staff,st); if(cv!==null) return cv;
+  return html;
+}
+async function addSchedule(e){
+  e.preventDefault(); const f=e.currentTarget,d=Object.fromEntries(new FormData(f).entries());
+  try{ await addDoc(collection(db,'schedule'),{level:d.level,day:d.day,start:d.start,end:d.end,course:d.course.trim(),hall:d.hall.trim(),instructor:(d.instructor||'').trim(),createdAt:serverTimestamp()});
+    logAction('Ø¥Ø¶Ø§ÙØ© Ù…Ø­Ø§Ø¶Ø±Ø©',d.course); showToast('ØªÙ…Øª Ø§Ù„Ø¥Ø¶Ø§ÙØ©'); await loadData(); renderApp();
+  }catch(err){ showToast(authError(err),'error'); }
+}
+async function sendRequest(e){
+  e.preventDefault(); const f=e.currentTarget,d=Object.fromEntries(new FormData(f).entries()),s=cache.students[0];
+  if(!s) return;
+  try{ await addDoc(collection(db,'requests'),{studentUid:user.uid,studentId:s.studentId,studentName:s.name,type:d.type,details:d.details.trim(),status:'Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©',reply:'',createdAt:serverTimestamp()});
+    showToast('ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø·Ù„Ø¨Ùƒ'); await loadData(); renderApp();
+  }catch(err){ showToast(authError(err),'error'); }
+}
+window.setRequestStatus=async(id,status)=>{
+  const r=cache.requests.find(x=>x.id===id); if(!r) return;
+  const reply=prompt('Ù…Ù„Ø§Ø­Ø¸Ø© Ù„Ù„Ø·Ø§Ù„Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ):',''); if(reply===null) return;
+  try{ await updateDoc(doc(db,'requests',id),{status,reply:reply.trim(),handledBy:user.email,handledAt:serverTimestamp()});
+    logAction('Ù…Ø¹Ø§Ù„Ø¬Ø© Ø·Ù„Ø¨',`${r.type} - ${r.studentName} - ${status}`); showToast('ØªÙ… Ø§Ù„ØªØ­Ø¯ÙŠØ«'); await loadData(); renderApp();
+  }catch(err){ showToast(authError(err),'error'); }
+};
 
+/* ---------- Ù†ØªØ§Ø¦Ø¬ Ø¨ÙØµÙˆÙ„ ÙˆØ³Ø§Ø¹Ø§Øª Ù…Ø¹ØªÙ…Ø¯Ø© + Ø±ÙØ¹ Excel + ÙƒØ´Ù Ø¯Ø±Ø¬Ø§Øª ---------- */
+const SEMS=['Ø§Ù„ÙØµÙ„ Ø§Ù„Ø£ÙˆÙ„','Ø§Ù„ÙØµÙ„ Ø§Ù„Ø«Ø§Ù†ÙŠ','Ø§Ù„ÙØµÙ„ Ø§Ù„ØµÙŠÙÙŠ'];
+const gp=sc=>sc>=90?4:sc>=85?3.7:sc>=80?3.3:sc>=75?3:sc>=70?2.7:sc>=65?2.4:sc>=60?2:sc>=50?1:0;
+function calcGpa(list){let q=0,c=0;list.forEach(r=>{const cr=Number(r.credits)||3;q+=gp(Number(r.score))*cr;c+=cr});return {gpa:c?q/c:0,credits:c};}
+function groupSem(list){const g={};list.forEach(r=>{const k=(r.year||'â€”')+'|'+(r.semester||'ØºÙŠØ± Ù…Ø­Ø¯Ø¯');(g[k]=g[k]||[]).push(r)});return Object.keys(g).sort().map(k=>({year:k.split('|')[0],semester:k.split('|')[1],items:g[k]}));}
+function acYear(){const d=new Date(),y=d.getMonth()>=8?d.getFullYear():d.getFullYear()-1;return `${y}/${y+1}`;}
+let gradesQueue=[];
+function gradesView(){
+  const ok=gradesQueue.filter(r=>!r.err).length;
+  if(!gradesQueue.length) return '';
+  return `<p>ØªÙ…Øª Ù‚Ø±Ø§Ø¡Ø© ${gradesQueue.length} ØµÙ: <b class="ok" style="color:var(--green)">${ok} ØµØ§Ù„Ø­</b> â€” <b style="color:var(--red)">${gradesQueue.length-ok} Ø¨Ù‡ Ø£Ø®Ø·Ø§Ø¡</b></p>`+
+   table(['ØµÙ','Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø³Ù†Ø©/Ø§Ù„ÙØµÙ„','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','Ø§Ù„Ø¯Ø±Ø¬Ø©','Ø§Ù„Ø­Ø§Ù„Ø©'],gradesQueue.map(r=>`<tr><td>${r.n}</td><td>${esc(r.sid)}</td><td>${esc(r.course)}</td><td>${esc(r.year)} ${esc(r.semester)}</td><td>${r.credits}</td><td>${r.score}</td><td style="color:${r.err?'var(--red)':'var(--green)'}">${esc(r.err||'Ø¬Ø§Ù‡Ø²')}</td></tr>`).join(''))+
+   `<p>${ok?`<button onclick="applyGrades()">Ø§Ø¹ØªÙ…Ø§Ø¯ ${ok} Ø¯Ø±Ø¬Ø©</button> `:''}<button class="secondary" onclick="gradesQueue=[];$('#gradesPreview').innerHTML=''">Ø¥Ù„ØºØ§Ø¡</button></p>`;
+}
+window.previewGradesExcel=inp=>{
+  const f=inp.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=e=>{ try{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''}).slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
+    const seen=new Set();
+    gradesQueue=rows.map((r,i)=>{
+      const o={n:i+2,sid:String(r[0]).trim(),course:String(r[1]).trim(),year:String(r[2]).trim(),semester:String(r[3]).trim(),credits:Number(r[4]),score:Number(r[5]),raw:String(r[5]).trim()};
+      o.stu=cache.students.find(x=>String(x.studentId)===o.sid);
+      if(!o.stu) o.err='Ø±Ù‚Ù… Ø¬Ø§Ù…Ø¹ÙŠ ØºÙŠØ± Ù…Ø³Ø¬Ù„';
+      else if(!o.course||!o.year) o.err='Ø§Ù„Ù…Ø§Ø¯Ø© Ø£Ùˆ Ø§Ù„Ø³Ù†Ø© ÙØ§Ø±ØºØ©';
+      else if(!SEMS.includes(o.semester)) o.err='Ø§Ù„ÙØµÙ„ ØºÙŠØ± ØµØ­ÙŠØ­';
+      else if(!(o.credits>=1&&o.credits<=6)) o.err='Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ù…Ù† 1 Ø¥Ù„Ù‰ 6';
+      else if(o.raw===''||!(o.score>=0&&o.score<=100)) o.err='Ø§Ù„Ø¯Ø±Ø¬Ø© Ù…Ù† 0 Ø¥Ù„Ù‰ 100';
+      else{ const k=[o.sid,o.course,o.year,o.semester].join('|'); if(seen.has(k)) o.err='Ù…ÙƒØ±Ø± ÙÙŠ Ø§Ù„Ù…Ù„Ù'; seen.add(k); }
+      return o; });
+    $('#gradesPreview').innerHTML=gradesView();
+  }catch(err){ showToast('ØªØ¹Ø°Ø± Ù‚Ø±Ø§Ø¡Ø© Ø§Ù„Ù…Ù„Ù','error'); } inp.value=''; };
+  rd.readAsArrayBuffer(f);
+};
+window.applyGrades=async()=>{
+  let add=0,upd=0,fail=0;
+  for(const r of gradesQueue.filter(x=>!x.err)){
+    const ex=cache.results.find(x=>x.studentUid===r.stu.uid&&x.course===r.course&&x.year===r.year&&x.semester===r.semester);
+    try{
+      if(ex){ await updateDoc(doc(db,'results',ex.id),{score:r.score,credits:r.credits}); upd++; }
+      else{ await addDoc(collection(db,'results'),{studentUid:r.stu.uid,studentId:r.stu.studentId,studentName:r.stu.name,course:r.course,year:r.year,semester:r.semester,credits:r.credits,score:r.score,createdAt:serverTimestamp()}); add++; }
+    }catch(err){ fail++; }
+  }
+  logAction('Ø±ÙØ¹ Ø¯Ø±Ø¬Ø§Øª Excel',`Ø¥Ø¶Ø§ÙØ© ${add} / ØªØ­Ø¯ÙŠØ« ${upd}`); gradesQueue=[];
+  showToast(`ØªÙ…: Ø¥Ø¶Ø§ÙØ© ${add} ÙˆØªØ­Ø¯ÙŠØ« ${upd}${fail?` (ÙØ´Ù„ ${fail})`:''}`); await loadData(); renderApp();
+};
+window.printTranscript=()=>{
+  const s=cache.students[0]||{}, all=cache.results, tot=calcGpa(all);
+  let el=$('#printable-receipt'); if(!el){ el=document.createElement('div'); el.id='printable-receipt'; document.body.appendChild(el); }
+  const blocks=groupSem(all).map(g=>{const c=calcGpa(g.items);
+    return `<h4 style="margin:14px 0 4px">${esc(g.year)} â€” ${esc(g.semester)}</h4><table style="width:100%;min-width:0;border-collapse:collapse" border="1" cellpadding="5"><tr><th>Ø§Ù„Ù…Ø§Ø¯Ø©</th><th>Ø§Ù„Ø³Ø§Ø¹Ø§Øª</th><th>Ø§Ù„Ø¯Ø±Ø¬Ø©</th><th>Ø§Ù„ØªÙ‚Ø¯ÙŠØ±</th><th>Ø§Ù„Ù†Ù‚Ø§Ø·</th></tr>${g.items.map(r=>`<tr><td>${esc(r.course)}</td><td>${Number(r.credits)||3}</td><td>${Number(r.score)}</td><td>${grade(Number(r.score))}</td><td>${gp(Number(r.score)).toFixed(1)}</td></tr>`).join('')}</table><p>Ù…Ø¹Ø¯Ù„ Ø§Ù„ÙØµÙ„: <b>${c.gpa.toFixed(2)}</b> â€” Ø³Ø§Ø¹Ø§Øª: ${c.credits}</p>`;}).join('');
+  el.innerHTML=`<div style="color:#000;background:#fff;padding:24px;font-family:Cairo,Tahoma,sans-serif;max-width:760px;margin:auto"><h2 style="text-align:center;color:#174ea6;margin:0">Ù…Ø¹Ù‡Ø¯ Ø§Ù„Ø¯Ù„ØªØ§ Ø§Ù„Ø¹Ø§Ù„ÙŠ Ù„Ù„Ø­Ø§Ø³Ø¨Ø§Øª</h2><h3 style="text-align:center">ÙƒØ´Ù Ø¯Ø±Ø¬Ø§Øª</h3><p>Ø§Ù„Ø§Ø³Ù…: <b>${esc(s.name)}</b> â€” Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ: <b>${esc(s.studentId)}</b><br>Ø§Ù„ÙØ±Ù‚Ø©: ${esc(s.level)} â€” Ø§Ù„Ù‚Ø³Ù…: ${esc(s.department)}</p>${blocks||'<p>Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬.</p>'}<h3>Ø§Ù„Ù…Ø¹Ø¯Ù„ Ø§Ù„ØªØ±Ø§ÙƒÙ…ÙŠ: ${tot.gpa.toFixed(2)} / 4.0 â€” Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø³Ø§Ø¹Ø§Øª: ${tot.credits}</h3><p style="font-size:.8rem;color:#555">Ù†Ø³Ø®Ø© Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ© Ù„Ù„Ø§Ø·Ù„Ø§Ø¹ ØµØ§Ø¯Ø±Ø© Ø¨ØªØ§Ø±ÙŠØ® ${new Date().toLocaleDateString('en-CA')}ØŒ ÙˆÙ„ÙŠØ³Øª ÙƒØ´ÙØ§Ù‹ Ø±Ø³Ù…ÙŠØ§Ù‹ Ø¨Ø¯ÙˆÙ† Ø®ØªÙ… Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø´Ø¤ÙˆÙ† Ø§Ù„Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠØ©.</p></div>`;
+  window.print();
+};
+function resultsViews(staff,st){
+  if(activeTab==='results'&&staff){
+    const rows=cache.results.slice().sort((a,b)=>String(b.year||'').localeCompare(String(a.year||''))).map(r=>{const s=cache.students.find(x=>x.uid===r.studentUid);
+      return `<tr><td>${esc(s?.name||r.studentName||'â€”')}</td><td>${esc(r.course)}</td><td>${esc(r.year||'â€”')} ${esc(r.semester||'')}</td><td>${r.credits??'â€”'}</td><td>${Number(r.score)}</td><td>${grade(Number(r.score))}</td><td><div class="actions"><button class="secondary" onclick="editResultModal('${r.id}')"><i class="fas fa-edit"></i></button><button class="danger" data-delete="results" data-id="${r.id}"><i class="fas fa-trash"></i></button></div></td></tr>`;}).join('');
+    return `<section class="card"><h2>Ø±ØµØ¯ Ø§Ù„Ù†ØªØ§Ø¦Ø¬</h2><form id="resultForm" class="fields">
+      <div><label>Ø§Ù„Ø·Ø§Ù„Ø¨</label><select name="studentUid" required>${cache.students.map(s=>`<option value="${s.uid}">${esc(s.studentId)} â€” ${esc(s.name)}</option>`).join('')}</select></div>
+      <div><label>Ø§Ù„Ù…Ø§Ø¯Ø©</label><input name="course" required></div>
+      <div><label>Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ©</label><input name="year" value="${acYear()}" required></div>
+      <div><label>Ø§Ù„ÙØµÙ„</label><select name="semester">${SEMS.map(x=>`<option>${x}</option>`).join('')}</select></div>
+      <div><label>Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ù…Ø¹ØªÙ…Ø¯Ø©</label><input name="credits" type="number" min="1" max="6" value="3" required></div>
+      <div><label>Ø§Ù„Ø¯Ø±Ø¬Ø©</label><input name="score" type="number" min="0" max="100" required></div>
+      <button ${cache.students.length?'':'disabled'} style="margin-top:10px;">Ø­ÙØ¸</button></form></section>
+      <section class="card"><h3><i class="fas fa-file-excel"></i> Ø±ÙØ¹ Ø¯Ø±Ø¬Ø§Øª Ù…Ù† Excel</h3><p class="muted">Ø§Ù„ØµÙ Ø§Ù„Ø£ÙˆÙ„ Ø¹Ù†Ø§ÙˆÙŠÙ†ØŒ ÙˆØ§Ù„Ø£Ø¹Ù…Ø¯Ø© Ø¨Ø§Ù„ØªØ±ØªÙŠØ¨: Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ | Ø§Ù„Ù…Ø§Ø¯Ø© | Ø§Ù„Ø³Ù†Ø© (2025/2026) | Ø§Ù„ÙØµÙ„ (Ø§Ù„ÙØµÙ„ Ø§Ù„Ø£ÙˆÙ„/Ø§Ù„ÙØµÙ„ Ø§Ù„Ø«Ø§Ù†ÙŠ/Ø§Ù„ÙØµÙ„ Ø§Ù„ØµÙŠÙÙŠ) | Ø§Ù„Ø³Ø§Ø¹Ø§Øª | Ø§Ù„Ø¯Ø±Ø¬Ø©</p>
+      <input type="file" accept=".xlsx,.xls,.csv" onchange="previewGradesExcel(this)"><div id="gradesPreview" style="margin-top:10px;">${gradesView()}</div></section>
+      <section class="card"><h3>Ø§Ù„Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ù…Ø³Ø¬Ù„Ø©</h3>${table(['Ø§Ù„Ø·Ø§Ù„Ø¨','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„ÙØµÙ„','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','Ø§Ù„Ø¯Ø±Ø¬Ø©','Ø§Ù„ØªÙ‚Ø¯ÙŠØ±','Ø¥Ø¬Ø±Ø§Ø¡'],rows)}</section>`;
+  }
+  if(activeTab==='myresults'&&role==='student'){
+    const all=cache.results, tot=calcGpa(all), earned=all.filter(r=>Number(r.score)>=50).reduce((a,r)=>a+(Number(r.credits)||3),0);
+    const sems=groupSem(all).map(g=>{const c=calcGpa(g.items);
+      return `<section class="card"><div class="headrow"><h3>${esc(g.year)} â€” ${esc(g.semester)}</h3><span class="pill">Ù…Ø¹Ø¯Ù„ Ø§Ù„ÙØµÙ„ ${c.gpa.toFixed(2)}</span></div>${table(['Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','Ø§Ù„Ø¯Ø±Ø¬Ø©','Ø§Ù„ØªÙ‚Ø¯ÙŠØ±','Ø§Ù„Ù†Ù‚Ø§Ø·'],g.items.map(r=>`<tr><td>${esc(r.course)}</td><td>${Number(r.credits)||3}</td><td>${Number(r.score)} / 100</td><td>${grade(Number(r.score))}</td><td>${gp(Number(r.score)).toFixed(1)}</td></tr>`).join(''))}</section>`;}).join('');
+    return `<div class="headrow"><h2>Ù†ØªØ§Ø¦Ø¬ÙŠ</h2><button style="background:var(--green);" onclick="printTranscript()"><i class="fas fa-file-pdf"></i> ÙƒØ´Ù Ø§Ù„Ø¯Ø±Ø¬Ø§Øª PDF</button></div>
+      <div class="grid">${stat('Ø§Ù„Ù…Ø¹Ø¯Ù„ Ø§Ù„ØªØ±Ø§ÙƒÙ…ÙŠ',tot.gpa.toFixed(2)+' / 4.0')}${stat('Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ù…Ø³Ø¬Ù„Ø©',tot.credits)}${stat('Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ù…ÙƒØªØ³Ø¨Ø©',earned)}</div>`+
+      (sems||'<section class="card muted">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬.</section>')+(all.some(r=>!r.credits)?'<p class="muted">Ø§Ù„Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ø¨Ø¯ÙˆÙ† Ø³Ø§Ø¹Ø§Øª ØªÙØ­ØªØ³Ø¨ 3 Ø³Ø§Ø¹Ø§Øª.</p>':'');
+  }
+  return null;
+}
 
-OOßJJNÂˆYŠ›Ùš[K›]\İÚ[™ÙT\ÜİÛÜ™
-^ÈÚİÑ›Ü˜ÙT\ÜİÛÜ™Ú[™ÙJ
-NÈ™]\›ÈBˆÛÛœİ˜[YXœÈHÙ]˜[YXœÑ›Ü”›ÛJ›ÛJNÂˆYŠ]˜[YXœËš[˜ÛY\ÊXİ]™UXŠJHXİ]™UXˆH˜[YXœÖÌNÂˆ™[™\\
-
-NÂˆHØ]Ú
-JHÂˆÚİÑ˜][
-	ö*¶.v,6,H6*¶+vavb¶a6*6b¶)öa¶)ö*ˆ6)öa6+v,ö)ö*ˆ	ÊÙK›Y\ÜØYÙJNÂˆBˆJNÂˆHØ]Ú
-JHÂˆÚİÑ˜][
-	ö+¶-ö(È6`vbˆ6*¶aöb¶)¶*Hš\™X˜\ÙNˆ	ÊÙK›Y\ÜØYÙJNÂˆBŸB‚‹ÊˆKKKKKKKKKHĞHKKKKKKKKKH
-‹ÂšYŠ	ÜÙ\šXÙUÛÜšÙ\‰È[ˆ˜]šYØ]ÜŠ^ÂˆÚ[™İË˜Y]™[\İ[™\Š	ÛØY	Ë
-
-HOˆÂˆ˜]šYØ]Ü‹œÙ\šXÙUÛÜšÙ\‹œ™YÚ\İ\Š	Ë‹ÜİËšœÉÊK˜Ø]Ú
-
-
-OOßJNÂˆJNÂŸB‚‹ÊˆKKKKKKKKKH[YHKKKKKKKKKH
-‹ÂŠ[˜İ[Ûˆ[š][YJ
-^ÂˆÛÛœİİ\ˆH™]È]J
-K™Ù]İ\œÊ
-NÂˆÛÛœİ\ÓšYÚHÚ[™İË›X]ÚYYXJ	Ê™Y™\œËXÛÛÜ‹\ØÚ[YNˆ\šÊIÊK›X]Ú\ÎÂˆÛÛœİØ]™YHØØ[İÜ˜YÙK™Ù]][J	İ[YIÊNÂˆYŠØ]™Y
-HØİ[Y[˜›ÙK™]\Ù][YHHØ]™YÂˆ[ÙHYŠ\ÓšYÚ
-^ÈØİ[Y[˜›ÙK™]\Ù][YHH	Ù\šÉÎÈBŸJJ
-NÂ‚Ú[™İËÙÙÛQ\šÓ[ÙHH[˜İ[ÛŠ
-^ÂˆÛÛœİİ\ˆHØİ[Y[˜›ÙK™]\Ù][YNÂˆÛÛœİ™^Hİ\ˆOOH	Ù\šÉÈÈ	ÛYÚ	Èˆ	Ù\šÉÎÂˆYŠ™^OOH	Ù\šÉÊHØİ[Y[˜›ÙK™]\Ù][YHH	Ù\šÉÎÂˆ[ÙH[]HØİ[Y[˜›ÙK™]\Ù][YNÂˆØØ[İÜ˜YÙKœÙ]][J	İ[YIËØİ[Y[˜›ÙK™]\Ù][YH	ÛYÚ	ÊNÂˆÛÛœİˆH	
-	Èİ[YP•^	ÊNÈYŠŠH‹^ÛÛ[H™^OOIÙ\šÉÈÈ	ö`v)ö*¶+IÈˆ	ö+ö)ö`öa‰ÎÂŸNÂ‚Ú[™İËÙÙÛRYÚÛÛ˜\İH[˜İ[ÛŠ
-^ÂˆÛÛœİİ\ˆHØİ[Y[˜›ÙK™]\Ù][YNÂˆÛÛœİ™^Hİ\ˆOOH	ÚYÚXÛÛ˜\İ	ÈÈ	ÛYÚ	Èˆ	ÚYÚXÛÛ˜\İ	ÎÂˆYŠ™^OOH	ÚYÚXÛÛ˜\İ	ÊHØİ[Y[˜›ÙK™]\Ù][YHH	ÚYÚXÛÛ˜\İ	ÎÂˆ[ÙH[]HØİ[Y[˜›ÙK™]\Ù][YNÂˆØØ[İÜ˜YÙKœÙ]][J	İ[YIËØİ[Y[˜›ÙK™]\Ù][YH	ÛYÚ	ÊNÂŸNÂ‚‹ÊˆKKKKKKKKKH\›Z\ÜÚ[ÛœÈKKKKKKKKKH
-‹Â™[˜İ[ÛˆÙ]˜[YXœÑ›Ü”›ÛJŠ^ÂˆYŠOOIØYZ[‰ÊH™]\›ˆÉÙ\Ú›Ø\™	Ë	ÜİY[ÉË	Ü™\İ[ÉË	Ù^[\ÉË	ÛXœ˜\IË	Ø][™[˜ÙIË	ÜØÚY[IË	Ü™\]Y\İÉË	ØÛİ\œÙ\ÉË	Û™]ÜÉË	Ü^[Y[ÉË	ØXØÛİ[ÉË	ÜİY™‰Ë	ÛÙÜÉË	ØÚ]	×NÂˆYŠOOIÙš[˜[˜ÙIÊH™]\›ˆÉÙ\Ú›Ø\™	Ë	Ü^[Y[ÉË	ØXØÛİ[ÉË	ÛÙÜÉË	ØÚ]	×NÂˆYŠOOIØXØY[ZXÉÊH™]\›ˆÉÙ\Ú›Ø\™	Ë	ÜİY[ÉË	Ü™\İ[ÉË	Ù^[\ÉË	ÛXœ˜\IË	Ø][™[˜ÙIË	ÜØÚY[IË	Ü™\]Y\İÉË	ØÛİ\œÙ\ÉË	Û™]ÜÉË	ØÚ]	×NÂˆ™]\›ˆÉÚÛYIË	ÙÜ\Ú[][]Ü‰Ë	Û^[Xœ˜\IË	Û^X][™[˜ÙIË	Û^\™\İ[ÉË	Û^Y^[\ÉË	Û^\ØÚY[IË	Û^\™YÚ\İ˜][Û‰Ë	Û^\™\]Y\İÉË	Û^[™]ÜÉË	ØÚ]	×NÂŸB‚‹ÊˆKKKKKKKKKHÙÚ[ˆKKKKKKKKKH
-‹Â™[˜İ[Ûˆ™[™\“ÙÚ[Š
-^Âˆ	
-	ÈÚXY\Xİ[ÛœÉÊKš[›™\’SH	ÉÎÂˆ\›Ûİš[›™\’SHÙXİ[ÛˆÛ\ÜÏH˜Ø\™ÙÚ[˜›Ş‚ˆ¶*¶,ö+6b¶a6)öa6+ö+¶b6aÚ‚ˆÛ\ÜÏH›]]Y¶)ö,ö*¶+¶+öaH6)öa6*6,vb¶+È6)öa6)va6`ö*¶,vb6a¶bˆ6b6`öa6av*H6)öa6av,vb6,KÜ‚ˆ›Ü›HYH›ÙÚ[‘›Ü›H‚ˆX™[¶)öa6*6,vb¶+È6)öa6)va6`ö*¶,vb6a¶bÛX™[‚ˆ[œ]YH™[XZ[ˆ\OH™[XZ[ˆ™\]Z\™Y]]ØÛÛ\]OH\Ù\›˜[YHˆXÙZÛ\HœİY[^[\K˜ÛÛH‚ˆX™[İ[OH›X\™Ú[‹]ÜŒLÈ¶`öa6av*H6)öa6av,vb6,OÛX™[‚ˆ[œ]YHœ\ÜİÛÜ™ˆ\OHœ\ÜİÛÜ™ˆ™\]Z\™Y]]ØÛÛ\]OH˜İ\œ™[\\ÜİÛÜ™‚ˆ]ˆYH›ÙÚ[‘\œ›Üˆˆİ[OH›X\™Ú[‹]ÜŒLÈÙ]‚ˆ]Ûˆ\OHœİX›Z]ˆİ[OHÚYŒL	NÛX\™Ú[‹]ÜŒMÈ¶+ö+¶b6a6(¶avaØ]Û‚ˆ]ˆİ[OH^X[YÛ˜Ù[\ÛX\™Ú[‹]ÜŒLœÈ‚ˆH™YHˆÈˆÛ˜ÛXÚÏH™›Ü™Ûİ\ÜİÛÜ™
-
-NÜ™]\›ˆ˜[ÙNÈˆİ[OH™›Û\Ú^™N‹\™[NØÛÛÜ˜\ŠKX›YJNİ^YXÛÜ˜][Û[™\›[™NÈ¶a¶,öb¶*ˆ6`öa6av*H6)öa6av,vb6,v'ÏØO‚ˆÙ]‚ˆÙ›Ü›O‚ˆÜÙXİ[Û˜Â‚ˆ	
-	ÈÛÙÚ[‘›Ü›IÊK›ÛœİX›Z]H\Ş[˜ÈHOˆÂˆKœ™]™[Y˜][
-
-NÂˆÛÛœİˆHK˜İ\œ™[\™Ù]œ]Y\TÙ[XİÜŠ	Ø]Û–İ\OHœİX›Z]—IÊNÂˆYŠŠH‹™\ØX›YHYNÂˆ	
-	ÈÛÙÚ[‘\œ›Ü‰ÊKš[›™\’SH	ÉÎÂˆHÂˆ]ØZ]ÚYÛ’[•Ú][XZ[[™\ÜİÛÜ™
-]]	
-	ÈÙ[XZ[	ÊK˜[YKš[J
-K	
-	ÈÜ\ÜİÛÜ™	ÊK˜[YJNÂˆHØ]Ú
-\œŠHÂˆ	
-	ÈÛÙÚ[‘\œ›Ü‰ÊKš[›™\’SH\ÙÊ]]\œ›ÜŠ\œŠK	Ù\œ›Ü‰ÊNÂˆHš[˜[HÂˆYŠŠH‹™\ØX›YH˜[ÙNÂˆBˆNÂŸB‚Ú[™İË™›Ü™Ûİ\ÜİÛÜ™H\Ş[˜È[˜İ[ÛŠ
-^ÂˆÛÛœİ[XZ[H›Û\
-	ö(ö+ö+¶a6*6,vb¶+ö`È6)öa6)va6`ö*¶,vb6a¶b‰ÊNÂˆYŠY[XZ[
-H™]\›ÂˆHÂˆ]ØZ]Ù[™\ÜİÛÜ™™\Ù][XZ[
-]][XZ[š[J
-JNÂˆÚİÕØ\İ
-	ö*¶aH6)v,v,ö)öa6,v)ö*6-È6)öa6)ö,ö*¶.v)ö+ö*H6)va6bH6*6,vb¶+ö`Ë‰ÊNÂˆHØ]Ú
-\œŠ^ÈÚİÕØ\İ
-]]\œ›ÜŠ\œŠK	Ù\œ›Ü‰ÊNÈBŸNÂ‚™[˜İ[Ûˆ]]\œ›ÜŠJ^Âˆ™]\›ˆ
-Âˆ	Ø]]Ú[˜[YXÜ™Y[X[	Î‰ö)öa6*6,vb¶+È6(öb6`öa6av*H6)öa6av,vb6,H6.¶b¶,H6-v+vb¶+v*K‰Ëˆ	Ø]]İÛË[X[K\™\]Y\İÉÎ‰öav+v)öb6a6)ö*ˆ6`ö*öb¶,v*v#6)öa¶*¶.6,H6`¶a6b¶a6bö)Ë‰Ëˆ	Ø]]Û™]ÛÜšË\™\]Y\İY˜Z[Y	Î‰ö*¶+v`¶`ˆ6avaˆ6)ö*¶-v)öa6)öa6)va¶*¶,va¶*‹‰Ëˆ	Ø]]Ú[˜[YY[XZ[	Î‰ö-vb¶.¶*H6)öa6*6,vb¶+È6.¶b¶,H6-v+vb¶+v*K‰Ëˆ	Ø]]Ù[XZ[X[™XYKZ[‹]\ÙIÎ‰ö)öa6*6,vb¶+È6av,ö*¶+¶+öaH6av,ö*6`¶bö)Ë‰Ëˆ	Ø]]İÙXZË\\ÜİÛÜ™	Î‰ö`öa6av*H6)öa6av,vb6,H6-¶.vb¶`v*H
-ˆ6(ö+v,v`H6.va6bH6)öa6(ö`¶a
-K‰Ëˆ	Ü\›Z\ÜÚ[Û‹Y[šYY	Î‰öa6)È6*¶ava6`È6-va6)ö+vb¶*H6aö,6aÈ6)öa6.vava6b¶*K‰ÂˆJVÙK˜ÛÙWHK›Y\ÜØYÙH	ö+v+ö*È6+¶-ö(Ë‰ÎÂŸB‚‹ÊˆKKKKKKKKKH]HØY\ˆKKKKKKKKKH
-‹Â˜\Ş[˜È[˜İ[ÛˆØY]J
-^Âˆ]ØZ]ØY^˜J
-NÂˆÛÛœİ™]ÜÔHØY™JÙ]ØÜÊÛÛXİ[ÛŠ‹	Û™]ÜÉÊJK›Û™JNÂˆÛÛœİ^[\ÔHØY™JÙ]ØÜÊÛÛXİ[ÛŠ‹	Ù^[\ÉÊJK›Û™JNÂˆÛÛœİX”HØY™JÙ]ØÜÊÛÛXİ[ÛŠ‹	ÛXœ˜\IÊJK›Û™JNÂˆÛÛœİ]HØY™JÙ]ØÜÊÛÛXİ[ÛŠ‹	Ø][™[˜ÙIÊJK›Û™JNÂ‚ˆHÂˆÛÛœİÙ]Û˜\H]ØZ]Ù]ØÊØÊ‹	ÜÙ][™ÜÉË	Ü^[Y[ØXØÛİ[ÉÊJNÂˆØXÚKœÙ][™ÜÈHÙ]Û˜\™^\İÊ
-BˆÈÙ]Û˜\™]J
-BˆˆÈ›ÙY›Û™N‰ÉË[œİ\^N‰ÉË˜]ÜPÛÙN‰ÉË˜[šĞXØÛİ[‰ÉËXZ[[˜[˜ÙS[ÙN™˜[ÙHNÂˆHØ]ÚÈØXÚKœÙ][™ÜÈHßNÈB‚ˆÛÛœİ\ÔİY™•\Ù\ˆHÉØYZ[‰Ë	Ùš[˜[˜ÙIË	ØXØY[ZXÉ×Kš[˜ÛY\Ê›ÛJNÂ‚ˆYŠ\ÔİY™•\Ù\Š^ÂˆÛÛœİÜÜËœË\ËXœË]ËœËËËİ”Û˜\HH]ØZ]›ÛZ\ÙK˜[
-ÂˆØY™JÙ]ØÜÊÛÛXİ[ÛŠ‹	ÜİY[ÉÊJK›Û™JKˆ™]ÜÔ^[\ÔX”]ˆØY™JÙ]ØÜÊÛÛXİ[ÛŠ‹	Ü™\İ[ÉÊJK›Û™JKˆØY™JÙ]ØÜÊÛÛXİ[ÛŠ‹	Ü^[Y[ÉÊJK›Û™JKˆØY™JÙ]ØÜÊ]Y\JÛÛXİ[ÛŠ‹	Ø]Y]ÛÙÜÉÊKÜ™\J	ØÜ™X]Y]	Ë	Ù\ØÉÊJJK›Û™JKˆØY™JÙ]ØÜÊ]Y\JÛÛXİ[ÛŠ‹	İ\Ù\œÉÊKÚ\™J	Ü›ÛIË	Ú[‰ËÉØYZ[‰Ë	Ùš[˜[˜ÙIË	ØXØY[ZXÉ×JJJK›Û™JBˆJNÂˆØXÚKœİY[ÈHÜË™ØÜË›X\
-OŠİZY™šY‹‹™™]J
-_JJNÂˆØXÚKœ™\İ[ÈHœË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚKœ^[Y[ÈHË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK›™]ÜÈHœË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK™^[\ÈH\Ë™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK›Xœ˜\HHXœË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK˜][™[˜ÙHH]Ë™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK›ÙÜÈHË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚKœİY™ˆHİ”Û˜\™ØÜË›X\
-OŠİZY™šY‹‹™™]J
-_JJNÂˆH[ÙHÂˆÛÛœİÜÜËœË\ËXœË]ËœË×HH]ØZ]›ÛZ\ÙK˜[
-ÂˆØY™JÙ]ØÊØÊ‹	ÜİY[ÉË\Ù\‹ZY
-JKÈ^\İÎŠ
-OO™˜[ÙHJKˆ™]ÜÔ^[\ÔX”ˆØY™JÙ]ØÜÊ]Y\JÛÛXİ[ÛŠ‹	Ø][™[˜ÙIÊKÚ\™J	ÜİY[ZY	Ë	ÏOIË\Ù\‹ZY
-JJK›Û™JKˆØY™JÙ]ØÜÊ]Y\JÛÛXİ[ÛŠ‹	Ü™\İ[ÉÊKÚ\™J	ÜİY[ZY	Ë	ÏOIË\Ù\‹ZY
-JJK›Û™JKˆØY™JÙ]ØÜÊ]Y\JÛÛXİ[ÛŠ‹	Ü^[Y[ÉÊKÚ\™J	ÜİY[ZY	Ë	ÏOIË\Ù\‹ZY
-JJK›Û™JBˆJNÂˆØXÚKœİY[ÈHÜË™^\İÊ
-HÈŞİZYœÜËšY‹‹œÜË™]J
-_WHˆ×NÂˆØXÚKœ™\İ[ÈHœË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚKœ^[Y[ÈHË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK›™]ÜÈHœË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK™^[\ÈH\Ë™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK›Xœ˜\HHXœË™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆØXÚK˜][™[˜ÙHH]Ë™ØÜË›X\
-OŠÚY™šY‹‹™™]J
-_JJNÂˆBŸB‚‹ÊˆKKKKKKKKKH˜]ˆKKKKKKKKKH
-‹Â™[˜İ[Ûˆ˜]Š
-^ÂˆÛÛœİ[™[™ĞÛİ[HØXÚKœ^[Y[Ë™š[\ŠOœœİ]\ÏOOIö`¶b¶+È6)öa6av,v)ö+6.v*IÊK›[™İÂˆÛÛœİ˜YÙHH[™[™ĞÛİ[ŒÈÜ[ˆİ[OH˜˜XÚÙÜ›İ[™ˆØÌÎL˜ØÛÛÜˆÙ™™ÜY[™ÎŒ\œØ›Ü™\‹\˜Y]\ÎN\Ù›Û\Ú^™N‹Í\™[NÈ‰Ü[™[™ĞÛİ[OÜÜ[˜ˆ	ÉÎÂˆ]][\ÈH×NÂˆYŠ›ÛOOOIØYZ[‰ÊH][\ÈHÂˆÉÙ\Ú›Ø\™	Ë	ö)öa6,v)¶b¶,öb¶*I×KÉÜİY[ÉË	ö)öa6-öa6)ö*	×KÉÜ™\İ[ÉË	ö)öa6a¶*¶)ö)¶+	×KˆÉÙ^[\ÉË	ö)öa6)öav*¶+v)öa¶)ö*‰×KÉÛXœ˜\IË	ö)öa6av`ö*¶*6*I×KÉØ][™[˜ÙIË	ö)öa6+v-¶b6,I×KˆÉÜØÚY[IË	ö)öa6+6+öb6a	×KÉÜ™\]Y\İÉË6)öa6-öa6*6)ö*‰Ü™\P˜YÙJ
-_XKÉØÛİ\œÙ\ÉË	ö)öa6avb6)ö+È6b6)öa6*¶,ö+6b¶a	×KÉÛ™]ÜÉË	ö)öa6(ö+¶*6)ö,I×KÉÜ^[Y[ÉË6)öa6av+ö`vb6.v)ö*‰Ø˜YÙ_XKÉØXØÛİ[ÉË	ö)öa6+v,ö)ö*6)ö*‰×KˆÉÜİY™‰Ë	ö)öa6av,ö)ö.v+öb¶a‰×KÉÛÙÜÉË	ö,ö+6a6)öa6(öav)öa‰×KÉØÚ]	Ë	ö-6)6b6aˆ6)öa6-öa6)ö*	×BˆNÂˆ[ÙHYŠ›ÛOOOIÙš[˜[˜ÙIÊH][\ÈHÂˆÉÙ\Ú›Ø\™	Ë	ö)öa6,v)¶b¶,öb¶*I×KÉÜ^[Y[ÉË6)öa6av+ö`vb6.v)ö*‰Ø˜YÙ_XKˆÉØXØÛİ[ÉË	ö)öa6+v,ö)ö*6)ö*‰×KÉÛÙÜÉË	ö,ö+6a6)öa6(öav)öa‰×KÉØÚ]	Ë	ö-6)6b6aˆ6)öa6-öa6)ö*	×BˆNÂˆ[ÙHYŠ›ÛOOOIØXØY[ZXÉÊH][\ÈHÂˆÉÙ\Ú›Ø\™	Ë	ö)öa6,v)¶b¶,öb¶*I×KÉÜİY[ÉË	ö)öa6-öa6)ö*	×KÉÜ™\İ[ÉË	ö)öa6a¶*¶)ö)¶+	×KˆÉÙ^[\ÉË	ö)öa6)öav*¶+v)öa¶)ö*‰×KÉÛXœ˜\IË	ö)öa6av`ö*¶*6*I×KÉØ][™[˜ÙIË	ö)öa6+v-¶b6,I×KˆÉÜØÚY[IË	ö)öa6+6+öb6a	×KÉÜ™\]Y\İÉË6)öa6-öa6*6)ö*‰Ü™\P˜YÙJ
-_XKÉØÛİ\œÙ\ÉË	ö)öa6avb6)ö+È6b6)öa6*¶,ö+6b¶a	×KÉÛ™]ÜÉË	ö)öa6(ö+¶*6)ö,I×KÉØÚ]	Ë	ö-6)6b6aˆ6)öa6-öa6)ö*	×BˆNÂˆ[ÙH][\ÈHÂˆÉÚÛYIË	öava6`vbˆ6b6)öa6av-v,vb6`v)ö*‰×KÉÙÜ\Ú[][]Ü‰Ë	öav+v)ö`öbˆÔI×KˆÉÛ^[Xœ˜\IË	ö)öa6av`ö*¶*6*H‰×KÉÛ^X][™[˜ÙIË	ö,ö+6a6)öa6+v-¶b6,I×KˆÉÛ^\™\İ[ÉË	öa¶*¶b¶+6*¶b‰×KÉÛ^Y^[\ÉË	ö)öa6)öav*¶+v)öa¶)ö*‰×KˆÉÛ^\ØÚY[IË	ö+6+öb6a6b‰×KÉÛ^\™YÚ\İ˜][Û‰Ë	ö*¶,ö+6b¶a6)öa6avb6)ö+É×KÉÛ^\™\]Y\İÉË	ö-öa6*6)ö*¶b‰×KÉÛ^[™]ÜÉË	ö)öa6(ö+¶*6)ö,I×KÉØÚ]	Ë	ö)öa6*¶b6)ö-va	×BˆNÂˆYŠZ][\ËœÛÛYJOOšVÌOOOXXİ]™UXŠJ^ÂˆXİ]™UXˆH][\ÖÌVÌNÂˆØØ[İÜ˜YÙKœÙ]][J	ØXİ]™UX‰ËXİ]™UXŠNÂˆBˆ™]\›ˆ˜]ˆÛ\ÜÏHXœÈ‰Ú][\Ë›X\
-
-ÚYX™[JOO˜]ÛˆÛ\ÜÏH‰ØXİ]™UXOOZYÉØXİ]™IÎ‰ÉßHˆ]K]XH‰ÚYH‰ÛX™[OØ]Û˜
-Kš›Ú[Š	ÉÊ_OÛ˜]˜ÂŸB‚™[˜İ[Ûˆ™[™\\
-
-^ÂˆÛÛœİH›Ùš[HßNÂˆÛÛœİ›ÛSX™[H›ÛOOOIØYZ[‰ÏÉÊİ\\ˆYZ[ŠIÎœ›ÛOOOIÙš[˜[˜ÙIÏÉÊ6av)öa6bŠIÎœ›ÛOOOIØXØY[ZXÉÏÉÊ6(ö`ö)ö+öb¶avbŠIÎ‰ÉÎÂˆ	
-	ÈÚXY\Xİ[ÛœÉÊKš[›™\’SHˆÜ[ˆİ[OH™›Û\Ú^™N‹\™[NÈ‰Ù\ØÊ›˜[Y_\Ù\‹™[XZ[
-_H	Ü›ÛSX™[OÜÜ[‚ˆ]ÛˆÛ\ÜÏHœÙXÛÛ™\HˆYH›ÙÛİ]ˆİ[OH›X\™Ú[‹\šYÚŒLÜY[™ÎœLÙ›Û\Ú^™N‹™[NÈ¶+¶,vb6+Ø]Û˜Âˆ	
-	ÈÛÙÛİ]	ÊK›Û˜ÛXÚÈH\Ş[˜È
-
-HOˆÂˆYŠ[œİXÚ]
-HÈ[œİXÚ]
-
-NÈ[œİXÚ][[ÈBˆØØ[İÜ˜YÙKœ™[[İ™R][J	ØXİ]™UX‰ÊNÂˆ]ØZ]ÚYÛ“İ]
-]]
-NÂˆNÂˆˆÛÛœİˆH	
-	Èİ[YP•^	ÊNÂˆYŠŠH‹^ÛÛ[HØİ[Y[˜›ÙK™]\Ù][YHOOH	Ù\šÉÈÈ	ö`v)ö*¶+IÈˆ	ö+ö)ö`öa‰ÎÂ‚ˆ\›Ûİš[›™\’SH˜]Š
-H
-È]ˆYHšY]ÈÙ]˜ÂˆØİ[Y[œ]Y\TÙ[XİÜ[
-	ÖÙ]K]X—IÊK™›Ü‘XXÚ
-ˆOˆ‹›Û˜ÛXÚÈH
-
-HOˆÂˆYŠ[œİXÚ]
-^È[œİXÚ]
-
-NÈ[œİXÚ][[ÈBˆXİ]™UXˆH‹™]\Ù]XÂˆØØ[İÜ˜YÙKœÙ]][J	ØXİ]™UX‰ËXİ]™UXŠNÂˆ™[™\\
-
-NÂˆJNÂˆ™[™\•šY]Ê
-NÂŸB‚™[˜İ[Ûˆİ]
-X™[˜[
-^È™]\›ˆ]ˆÛ\ÜÏHœİ]Ü[‰ÛX™[OÜÜ[‰İ˜[OØÙ]˜ÈB›]›Ù\OLÂ™[˜İ[ÛˆX›JXY\œË›İÜÊ^ÂˆÛÛœİQÑOLKYIİ‰ÊÊ
-Êİ›Ù\JNÂˆÛÛœİ\Ï\›İÜÏÔİš[™Ê›İÜÊKœÜ]
-ÊÏO–×Ï—JKÊK™š[\ŠOš[J
-JN–×NÂˆÛÛœİšYÏ\\Ë›[™İ”QÑNÂˆÛÛœİ›ÙOH\›İÜÏØÛÛÜ[H‰ÚXY\œË›[™İHˆÛ\ÜÏH›]]Y¶a6)È6*¶b6+6+È6*6b¶)öa¶)ö*İİ˜ˆ˜šYÏÜ\Ë›X\
-
-ÊOOšÏTQÑOÜœ™\XÙJ×‹Ë	Ïˆ]KY^˜OHŒHˆİ[OH™\Ü^N››Û™H‰ÊNœ
-Kš›Ú[Š	ÉÊNœ›İÜÎÂˆÛÛœİÛÛÏ\\Ë›[™İŒLØ[œ]\OHœÙX\˜ÚˆXÙZÛ\H¶*6+v*È6`vbˆ6)öa6+6+öb6a‹‹ˆˆÛš[œ]H›š[\Š	ÉÚYIË\ËŸotç»h‘éì¶»§q«^w˜ÛY\ÊËœÙ[Y\İ\ŠJHË™\œIö)öa6`v-va6.¶b¶,H6-v+vb¶+IÎÂˆ[ÙHYŠJË˜Ü™Y]ÏLI‰›Ë˜Ü™Y]ÏMŠJHË™\œIö)öa6,ö)ö.v)ö*ˆ6avaˆH6)va6bH‰ÎÂˆ[ÙHYŠËœ˜]ÏOOIÉßJËœØÛÜ™OL	‰›ËœØÛÜ™OLL
-JHË™\œIö)öa6+ö,v+6*H6avaˆ6)va6bHL	ÎÂˆ[Ù^ÈÛÛœİÏVÛËœÚYË˜Ûİ\œÙKËYX\‹ËœÙ[Y\İ\—Kš›Ú[Š	ß	ÊNÈYŠÙY[‹š\ÊÊJHË™\œIöav`ö,v,H6`vbˆ6)öa6ava6`IÎÈÙY[‹˜Y
-ÊNÈBˆ™]\›ˆÎÈJNÂˆ	
-	ÈÙÜ˜Y\Ô™]šY]ÉÊKš[›™\’SYÜ˜Y\ÕšY]Ê
-NÂˆXØ]Ú
-\œŠ^ÈÚİÕØ\İ
-	ö*¶.v,6,H6`¶,v)ö(v*H6)öa6ava6`IË	Ù\œ›Ü‰ÊNÈH[œ˜[YOIÉÎÈNÂˆ™œ™XY\Ğ\œ˜^PY™™\ŠŠNÂŸNÂÚ[™İË˜\QÜ˜Y\ÏX\Ş[˜Ê
-OOÂˆ]YL\L˜Z[LÂˆ›ÜŠÛÛœİˆÙˆÜ˜Y\Ô]Y]YK™š[\ŠOˆ^™\œŠJ^ÂˆÛÛœİ^XØXÚKœ™\İ[Ë™š[™
-OœİY[ZYOO\‹œİKZY	‰˜Ûİ\œÙOOO\‹˜Ûİ\œÙI‰YX\OO\‹YX\‰‰œÙ[Y\İ\OO\‹œÙ[Y\İ\ŠNÂˆ^ÂˆYŠ^
-^È]ØZ]\]QØÊØÊ‹	Ü™\İ[ÉË^šY
-KÜØÛÜ™Nœ‹œØÛÜ™KÜ™Y]Îœ‹˜Ü™Y]ßJNÈ\
-ÊÎÈBˆ[Ù^È]ØZ]YØÊÛÛXİ[ÛŠ‹	Ü™\İ[ÉÊKÜİY[ZYœ‹œİKZYİY[Yœ‹œİKœİY[YİY[˜[YNœ‹œİK›˜[YKÛİ\œÙNœ‹˜Ûİ\œÙKYX\œ‹YX\‹Ù[Y\İ\œ‹œÙ[Y\İ\‹Ü™Y]Îœ‹˜Ü™Y]ËØÛÜ™Nœ‹œØÛÜ™KÜ™X]Y]œÙ\™\•[Y\İ[\
-
-_JNÈY
-ÊÎÈBˆXØ]Ú
-\œŠ^È˜Z[
-ÊÎÈBˆBˆÙĞXİ[ÛŠ	ö,v`v.H6+ö,v+6)ö*ˆ^Ù[	Ë6)v-¶)ö`v*H	ØYHÈ6*¶+v+öb¶*È	İ\X
-NÈÜ˜Y\Ô]Y]YOV×NÂˆÚİÕØ\İ
-6*¶aNˆ6)v-¶)ö`v*H	ØYH6b6*¶+v+öb¶*È	İ\IÙ˜Z[Ø
-6`v-6a	Ù˜Z[JX‰ÉßX
-NÈ]ØZ]ØY]J
-NÈ™[™\\
-
-NÂŸNÂÚ[™İËœš[˜[œØÜš\J
-OOÂˆÛÛœİÏXØXÚKœİY[ÖÌ_ßK[XØXÚKœ™\İ[ËİXØ[ÑÜJ[
-NÂˆ][I
-	ÈÜš[X›K\™XÙZ\	ÊNÈYŠY[
-^È[YØİ[Y[˜Ü™X]Q[[Y[
-	Ù]‰ÊNÈ[šYIÜš[X›K\™XÙZ\	ÎÈØİ[Y[˜›ÙK˜\[™Ú[
-[
-NÈBˆÛÛœİ›ØÚÜÏYÜ›İ\Ù[J[
-K›X\
-ÏOØÛÛœİÏXØ[ÑÜJËš][\ÊNÂˆ™]\›ˆİ[OH›X\™Ú[ŒM‰Ù\ØÊËYX\Š_H8 %	Ù\ØÊËœÙ[Y\İ\Š_OÚX›Hİ[OHÚYŒL	NÛZ[‹]ÚYŒØ›Ü™\‹XÛÛ\ÙN˜ÛÛ\ÙHˆ›Ü™\HŒHˆÙ[Y[™ÏHH¶)öa6av)ö+ö*Oİ¶)öa6,ö)ö.v)ö*İ¶)öa6+ö,v+6*Oİ¶)öa6*¶`¶+öb¶,Oİ¶)öa6a¶`¶)ö-Ïİİ‰ÙËš][\Ë›X\
-O˜‰Ù\ØÊ‹˜Ûİ\œÙJ_Oİ‰Ó[X™\Š‹˜Ü™Y]Ê_ßOİ‰Ó[X™\Š‹œØÛÜ™J_Oİ‰ÙÜ˜YJ[X™\Š‹œØÛÜ™JJ_Oİ‰ÙÜ
-[X™\Š‹œØÛÜ™JJKÑš^Y
-J_Oİİ˜
-Kš›Ú[Š	ÉÊ_OİX›O¶av.v+öa6)öa6`v-vaˆ‰ØË™ÜKÑš^Y
-Š_OØˆ8 %6,ö)ö.v)ö*ˆ	ØË˜Ü™Y]ßOÜ˜ßJKš›Ú[Š	ÉÊNÂˆ[š[›™\’SX]ˆİ[OH˜ÛÛÜˆÌØ˜XÚÙÜ›İ[™ˆÙ™™ÜY[™ÎŒÙ›ÛY˜[Z[NØZ\›ËZÛXKØ[œË\Ù\šYÛX^]ÚYÍŒÛX\™Ú[˜]]Èˆİ[OH^X[YÛ˜Ù[\ØÛÛÜˆÌMÍXMÛX\™Ú[Œ¶av.vaö+È6)öa6+öa6*¶)È6)öa6.v)öa6bˆ6a6a6+v)ö,ö*6)ö*ÚÈİ[OH^X[YÛ˜Ù[\ˆ¶`ö-6`H6+ö,v+6)ö*ÚÏ¶)öa6)ö,öaNˆ‰Ù\ØÊË›˜[YJ_OØˆ8 %6)öa6,v`¶aH6)öa6+6)öav.vbˆ‰Ù\ØÊËœİY[Y
-_OØœ¶)öa6`v,v`¶*Nˆ	Ù\ØÊË›]™[
-_H8 %6)öa6`¶,öaNˆ	Ù\ØÊË™\\Y[
-_OÜ‰Ø›ØÚÜß	Ï¶a6)È6*¶b6+6+È6a¶*¶)ö)¶+Ü‰ßOÏ¶)öa6av.v+öa6)öa6*¶,v)ö`öavbˆ	İİ™ÜKÑš^Y
-Š_HÈŒ8 %6)v+6av)öa6bˆ6)öa6,ö)ö.v)ö*ˆ	İİ˜Ü™Y]ßOÚÏİ[OH™›Û\Ú^™N‹™[NØÛÛÜˆÍMMH¶a¶,ö+¶*H6)va6`ö*¶,vb6a¶b¶*H6a6a6)ö-öa6)ö.H6-v)ö+ö,v*H6*6*¶)ö,vb¶+ˆ	Û™]È]J
-KÓØØ[Q]Tİš[™Ê	Ù[‹PĞIÊ_v#6b6a6b¶,ö*ˆ6`ö-6`v)öbÈ6,v,öavb¶)öbÈ6*6+öb6aˆ6+¶*¶aH6)v+ö)ö,v*H6)öa6-6)6b6aˆ6)öa6(ö`ö)ö+öb¶avb¶*KÜÙ]˜ÂˆÚ[™İËœš[
-
-NÂŸNÂ™[˜İ[Ûˆ™\İ[ÕšY]ÜÊİY™‹İ
-^ÂˆYŠXİ]™UXOOIÜ™\İ[ÉÉ‰œİY™Š^ÂˆÛÛœİ›İÜÏXØXÚKœ™\İ[ËœÛXÙJ
-KœÛÜ
-
-KŠOO”İš[™Ê‹YX\Ÿ	ÉÊK›ØØ[PÛÛ\\™Jİš[™ÊKYX\Ÿ	ÉÊJJK›X\
-OØÛÛœİÏXØXÚKœİY[Ë™š[™
-OZYOO\‹œİY[ZY
-NÂˆ™]\›ˆ‰Ù\ØÊÏË›˜[Y_‹œİY[˜[Y_	ø %	Ê_Oİ‰Ù\ØÊ‹˜Ûİ\œÙJ_Oİ‰Ù\ØÊ‹YX\Ÿ	ø %	Ê_H	Ù\ØÊ‹œÙ[Y\İ\Ÿ	ÉÊ_Oİ‰Ü‹˜Ü™Y]ÏÏÉø %	ßOİ‰Ó[X™\Š‹œØÛÜ™J_Oİ‰ÙÜ˜YJ[X™\Š‹œØÛÜ™JJ_Oİ]ˆÛ\ÜÏH˜Xİ[ÛœÈ]ÛˆÛ\ÜÏHœÙXÛÛ™\HˆÛ˜ÛXÚÏH™Y]™\İ[[Ù[
-	ÉÜ‹šYIÊHHÛ\ÜÏH™˜\È˜KYY]ÚOØ]Û]ÛˆÛ\ÜÏH™[™Ù\ˆˆ]KY[]OHœ™\İ[Èˆ]KZYH‰Ü‹šYHHÛ\ÜÏH™˜\È˜K]˜\ÚÚOØ]ÛÙ]İİ˜ßJKš›Ú[Š	ÉÊNÂˆ™]\›ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™¶,v-v+È6)öa6a¶*¶)ö)¶+Ú›Ü›HYHœ™\İ[›Ü›HˆÛ\ÜÏH™šY[È‚ˆ]X™[¶)öa6-ö)öa6*ÛX™[Ù[Xİ˜[YOHœİY[ZYˆ™\]Z\™Y‰ØØXÚKœİY[Ë›X\
-ÏO˜Ü[Ûˆ˜[YOH‰ÜËZYH‰Ù\ØÊËœİY[Y
-_H8 %	Ù\ØÊË›˜[YJ_OÛÜ[Û˜
-Kš›Ú[Š	ÉÊ_OÜÙ[XİÙ]‚ˆ]X™[¶)öa6av)ö+ö*OÛX™[[œ]˜[YOH˜Ûİ\œÙHˆ™\]Z\™YÙ]‚ˆ]X™[¶)öa6,öa¶*H6)öa6+ö,v)ö,öb¶*OÛX™[[œ]˜[YOHYX\ˆˆ˜[YOH‰ØXÖYX\Š
-_Hˆ™\]Z\™YÙ]‚ˆ]X™[¶)öa6`v-vaÛX™[Ù[Xİ˜[YOHœÙ[Y\İ\ˆ‰ÔÑSTË›X\
-O˜Ü[Û‰ŞOÛÜ[Û˜
-Kš›Ú[Š	ÉÊ_OÜÙ[XİÙ]‚ˆ]X™[¶)öa6,ö)ö.v)ö*ˆ6)öa6av.v*¶av+ö*OÛX™[[œ]˜[YOH˜Ü™Y]Èˆ\OH›[X™\ˆˆZ[HŒHˆX^Hˆˆ˜[YOHŒÈˆ™\]Z\™YÙ]‚ˆ]X™[¶)öa6+ö,v+6*OÛX™[[œ]˜[YOHœØÛÜ™Hˆ\OH›[X™\ˆˆZ[HŒˆX^HŒLˆ™\]Z\™YÙ]‚ˆ]Ûˆ	ØØXÚKœİY[Ë›[™İÉÉÎ‰Ù\ØX›Y	ßHİ[OH›X\™Ú[‹]ÜŒLÈ¶+v`v.Ø]ÛÙ›Ü›OÜÙXİ[Û‚ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™ÏHÛ\ÜÏH™˜\È˜KYš[KY^Ù[ÚOˆ6,v`v.H6+ö,v+6)ö*ˆ6avaˆ^Ù[ÚÏÛ\ÜÏH›]]Y¶)öa6-v`H6)öa6(öb6a6.va¶)öb6b¶a¶#6b6)öa6(ö.vav+ö*H6*6)öa6*¶,v*¶b¶*ˆ6)öa6,v`¶aH6)öa6+6)öav.vbˆ6)öa6av)ö+ö*H6)öa6,öa¶*H
-ŒKÌŒŠH6)öa6`v-va
-6)öa6`v-va6)öa6(öb6aö)öa6`v-va6)öa6*ö)öa¶b‹ö)öa6`v-va6)öa6-vb¶`vbŠH6)öa6,ö)ö.v)ö*ˆ6)öa6+ö,v+6*OÜ‚ˆ[œ]\OH™š[HˆXØÙ\H‹ŞË˜ÜİˆˆÛ˜Ú[™ÙOHœ™]šY]ÑÜ˜Y\Ñ^Ù[
-\ÊH]ˆYH™Ü˜Y\Ô™]šY]Èˆİ[OH›X\™Ú[‹]ÜŒLÈ‰ÙÜ˜Y\ÕšY]Ê
-_OÙ]ÜÙXİ[Û‚ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™Ï¶)öa6a¶*¶)ö)¶+6)öa6av,ö+6a6*OÚÏ‰İX›JÉö)öa6-ö)öa6*	Ë	ö)öa6av)ö+ö*IË	ö)öa6`v-va	Ë	ö)öa6,ö)ö.v)ö*‰Ë	ö)öa6+ö,v+6*IË	ö)öa6*¶`¶+öb¶,IË	ö)v+6,v)ö(I×K›İÜÊ_OÜÙXİ[Û˜ÂˆBˆYŠXİ]™UXOOIÛ^\™\İ[ÉÉ‰œ›ÛOOOIÜİY[	Ê^ÂˆÛÛœİ[XØXÚKœ™\İ[ËİXØ[ÑÜJ[
-KX\›™YX[™š[\ŠO“[X™\Š‹œØÛÜ™JOML
-Kœ™YXÙJ
-KŠOO˜JÊ[X™\Š‹˜Ü™Y]Ê_ÊK
-NÂˆÛÛœİÙ[\ÏYÜ›İ\Ù[J[
-K›X\
-ÏOØÛÛœİÏXØ[ÑÜJËš][\ÊNÂˆ™]\›ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™]ˆÛ\ÜÏHšXY›İÈÏ‰Ù\ØÊËYX\Š_H8 %	Ù\ØÊËœÙ[Y\İ\Š_OÚÏÜ[ˆÛ\ÜÏHœ[¶av.v+öa6)öa6`v-va	ØË™ÜKÑš^Y
-Š_OÜÜ[Ù]‰İX›JÉö)öa6av)ö+ö*IË	ö)öa6,ö)ö.v)ö*‰Ë	ö)öa6+ö,v+6*IË	ö)öa6*¶`¶+öb¶,IË	ö)öa6a¶`¶)ö-É×KËš][\Ë›X\
-O˜‰Ù\ØÊ‹˜Ûİ\œÙJ_Oİ‰Ó[X™\Š‹˜Ü™Y]Ê_ßOİ‰Ó[X™\Š‹œØÛÜ™J_HÈLİ‰ÙÜ˜YJ[X™\Š‹œØÛÜ™JJ_Oİ‰ÙÜ
-[X™\Š‹œØÛÜ™JJKÑš^Y
-J_Oİİ˜
-Kš›Ú[Š	ÉÊJ_OÜÙXİ[Û˜ßJKš›Ú[Š	ÉÊNÂˆ™]\›ˆ]ˆÛ\ÜÏHšXY›İÈ¶a¶*¶)ö)¶+6bÚ]Ûˆİ[OH˜˜XÚÙÜ›İ[™˜\ŠKYÜ™Y[ŠNÈˆÛ˜ÛXÚÏHœš[˜[œØÜš\
-
-HHÛ\ÜÏH™˜\È˜KYš[K\ˆÚOˆ6`ö-6`H6)öa6+ö,v+6)ö*ˆØ]ÛÙ]‚ˆ]ˆÛ\ÜÏH™ÜšY‰Üİ]
-	ö)öa6av.v+öa6)öa6*¶,v)ö`öavb‰Ëİ™ÜKÑš^Y
-ŠJÉÈÈŒ	Ê_IÜİ]
-	ö)öa6,ö)ö.v)ö*ˆ6)öa6av,ö+6a6*IËİ˜Ü™Y]Ê_IÜİ]
-	ö)öa6,ö)ö.v)ö*ˆ6)öa6av`ö*¶,ö*6*IËX\›™Y
-_OÙ]˜
-Âˆ
-Ù[\ß	ÏÙXİ[ÛˆÛ\ÜÏH˜Ø\™]]Y¶a6)È6*¶b6+6+È6a¶*¶)ö)¶+ÜÙXİ[Û‰ÊJÊ[œÛÛYJOˆ\‹˜Ü™Y]ÊOÉÏÛ\ÜÏH›]]Y¶)öa6a¶*¶)ö)¶+6)öa6`¶+öb¶av*H6*6+öb6aˆ6,ö)ö.v)ö*ˆ6*¶cö+v*¶,ö*È6,ö)ö.v)ö*‹Ü‰Î‰ÉÊNÂˆBˆ™]\›ˆ[ÂŸB‚‹ÊˆKKKKKKKKKH6)öa6avb6)ö+È6b6*¶,ö+6b¶a6)öa6-öa6)ö*KKKKKKKKKH
-‹Â™[˜İ[Ûˆ™YÔİ]J
-^ØÛÛœİXØXÚKœ™YÔÙ][™ÜßßNÜ™]\›ˆÛÜ[ˆH\‹›Ü[‹YX\œ‹YX\ŸXÖYX\Š
-KÙ[Y\İ\œ‹œÙ[Y\İ\ŸÑSTÖÌKX^“[X™\Š‹›X^Ü™Y]Ê_NNßB˜ÛÛœİÜ[”[[ÏO›ÏÉÏÜ[ˆÛ\ÜÏHœ[ˆİ[OH˜˜XÚÙÜ›İ[™ˆÙY˜YMNØÛÛÜˆÌYÈ¶av`v*¶b6+OÜÜ[‰Î‰ÏÜ[ˆÛ\ÜÏHœ[ˆİ[OH˜˜XÚÙÜ›İ[™ˆÙ™YL™LØÛÛÜˆÎNLXŒXÈ¶av.¶a6`ÜÜ[‰ÎÂ™[˜İ[ÛˆÛİ\œÙUšY]ÜÊİY™‹İ
-^ÂˆÛÛœİœÏ\™YÔİ]J
-K™YÜÏXØXÚKœ™YÚ\İ˜][Ûœß×KÜœÏXØXÚK˜Ûİ\œÙ\ß×NÂˆYŠXİ]™UXOOIØÛİ\œÙ\ÉÉ‰œİY™Š^ÂˆÛÛœİÛZYOœ™YÜË™š[\ŠO˜Ûİ\œÙRYOOZY	‰YX\OO\œËYX\‰‰œÙ[Y\İ\OO\œËœÙ[Y\İ\ŠK›[™İÂˆÛÛœİ›İÜÏXÜœËœÛXÙJ
-KœÛÜ
-
-KŠOO”İš[™ÊK›]™[
-K›ØØ[PÛÛ\\™J‹›]™[
-_İš[™ÊK˜ÛÙJK›ØØ[PÛÛ\\™J‹˜ÛÙJJK›X\
-ÏO˜ÛÙO‰Ù\ØÊË˜ÛÙJ_OØÛÙOİ‰Ù\ØÊË›˜[YJ_Oİ‰Ù\ØÊË›]™[
-_Oİ‰Ù\ØÊËœÙ[Y\İ\Š_Oİ‰ØË˜Ü™Y]ßOİ‰ØÛ
-ËšY
-_Oİ]ÛˆÛ\ÜÏH™[™Ù\ˆˆ]KY[]OH˜Ûİ\œÙ\Èˆ]KZYH‰ØËšYHHÛ\ÜÏH™˜\È˜K]˜\ÚÚOØ]Ûİİ˜
-Kš›Ú[Š	ÉÊNÂˆ™]\›ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™¶)öa6*¶,ö+6b¶a6+v)öa6b¶)öbÎˆ	ÛÜ[”[
-œË›Ü[Š_OÚ›Ü›HYHœ™YÔÙ][™ÜÑ›Ü›HˆÛ\ÜÏH™šY[È‚ˆ]X™[¶)öa6,öa¶*H6)öa6+ö,v)ö,öb¶*OÛX™[[œ]˜[YOHYX\ˆˆ˜[YOH‰Ù\ØÊœËYX\Š_Hˆ™\]Z\™YÙ]‚ˆ]X™[¶)öa6`v-vaÛX™[Ù[Xİ˜[YOHœÙ[Y\İ\ˆ‰ÔÑSTË›X\
-O˜Ü[Ûˆ	ŞOO\œËœÙ[Y\İ\ÉÜÙ[XİY	Î‰ÉßO‰ŞOÛÜ[Û˜
-Kš›Ú[Š	ÉÊ_OÜÙ[XİÙ]‚ˆ]X™[¶)öa6+v+È6)öa6(ö`¶-vbH6a6a6,ö)ö.v)ö*ÛX™[[œ]˜[YOH›X^Ü™Y]Èˆ\OH›[X™\ˆˆZ[HŒHˆX^HŒÌˆ˜[YOH‰ÜœË›X^Hˆ™\]Z\™YÙ]‚ˆ]X™[[œ]\OH˜ÚXÚØ›Şˆ˜[YOH›Ü[ˆˆ	ÜœË›Ü[ÉØÚXÚÙY	Î‰ÉßHİ[OHÚY˜]]Èˆ6`v*¶+H6)öa6*¶,ö+6b¶a6a6a6-öa6)ö*ÛX™[Ù]‚ˆ]Ûˆİ[OH›X\™Ú[‹]ÜŒLÈ¶+v`v.6)öa6)v.v+ö)ö+ö)ö*Ø]ÛÙ›Ü›OÜÙXİ[Û‚ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™Ï¶)v-¶)ö`v*H6av)ö+ö*OÚÏ›Ü›HYH˜Ûİ\œÙQ›Ü›HˆÛ\ÜÏH™šY[È‚ˆ]X™[¶)öa6`öb6+ÏÛX™[[œ]˜[YOH˜ÛÙHˆ™\]Z\™YÙ]]X™[¶)ö,öaH6)öa6av)ö+ö*OÛX™[[œ]˜[YOH›˜[YHˆ™\]Z\™YÙ]‚ˆ]X™[¶)öa6,ö)ö.v)ö*ÛX™[[œ]˜[YOH˜Ü™Y]Èˆ\OH›[X™\ˆˆZ[HŒHˆX^Hˆˆ˜[YOHŒÈˆ™\]Z\™YÙ]‚ˆ]X™[¶)öa6`v,v`¶*OÛX™[Ù[Xİ˜[YOH›]™[‰ÓU‘SË›X\
-O˜Ü[Û‰ŞOÛÜ[Û˜
-Kš›Ú[Š	ÉÊ_OÜÙ[XİÙ]‚ˆ]X™[¶)öa6`v-vaÛX™[Ù[Xİ˜[YOHœÙ[Y\İ\ˆ‰ÔÑSTË›X\
-O˜Ü[Û‰ŞOÛÜ[Û˜
-Kš›Ú[Š	ÉÊ_OÜÙ[XİÙ]‚ˆ]Ûˆİ[OH›X\™Ú[‹]ÜŒLÈ¶)v-¶)ö`v*OØ]ÛÙ›Ü›OÜÙXİ[Û‚ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™]ˆÛ\ÜÏHšXY›İÈÏ¶)öa6avb6)ö+È
-6)öa6av,ö+6a6b6aˆ6`vbˆ	Ù\ØÊœËYX\Š_H	Ù\ØÊœËœÙ[Y\İ\Š_JOÚÏ]ÛˆÛ\ÜÏHœÙXÛÛ™\HˆÛ˜ÛXÚÏH™^Ü™YĞÔÕŠ
-HHÛ\ÜÏH™˜\È˜KYš[KY^Ù[ÚOˆ6*¶-v+öb¶,H6)öa6*¶,ö+6b¶a6)ö*Ø]ÛÙ]‰İX›JÉö)öa6`öb6+ÉË	ö)öa6av)ö+ö*IË	ö)öa6`v,v`¶*IË	ö)öa6`v-va	Ë	ö)öa6,ö)ö.v)ö*‰Ë	ö)öa6av,ö+6a6b6a‰Ë	ö)v+6,v)ö(I×K›İÜÊ_OÜÙXİ[Û˜ÂˆBˆYŠXİ]™UXOOIÛ^\™YÚ\İ˜][Û‰É‰œ›ÛOOOIÜİY[	Ê^ÂˆÛÛœİZ[™O\™YÜË™š[\ŠOYX\OO\œËYX\‰‰œÙ[Y\İ\OO\œËœÙ[Y\İ\ŠK\ÙY[Z[™Kœ™YXÙJ
-K
-OO˜JÓ[X™\Š˜Ü™Y]ß
-K
-NÂˆÛÛœİ\ÜÙY[™]ÈÙ]
-
-ØXÚKœ™\İ[ß×JK™š[\ŠO“[X™\Š‹œØÛÜ™JOML
-K›X\
-O”İš[™Ê‹˜Ûİ\œÙJKš[J
-KÓİÙ\Ø\ÙJ
-JJNÂˆÛÛœİ]˜Z[XÜœË™š[\ŠÏO˜Ë›]™[OO\İ›]™[	‰˜ËœÙ[Y\İ\OO\œËœÙ[Y\İ\‰‰ˆ[Z[™KœÛÛYJO˜Ûİ\œÙRYOOXËšY
-JNÂˆÛÛœİ›İÜĞOX]˜Z[›X\
-ÏOØÛÛœİÛ™O\\ÜÙYš\Êİš[™ÊË›˜[YJKš[J
-KÓİÙ\Ø\ÙJ
-JNÜ™]\›ˆÛÙO‰Ù\ØÊË˜ÛÙJ_OØÛÙOİ‰Ù\ØÊË›˜[YJ_Oİ‰ØË˜Ü™Y]ßOİ‰ÙÛ™OÉÏÜ[ˆÛ\ÜÏH›]]Y¶a¶)ö+6+H6`vb¶aö)ÏÜÜ[‰ÎœœË›Ü[Ø]Ûˆİ[OHœY[™Î\LÙ›Û\Ú^™N‹™[NÈˆÛ˜ÛXÚÏHœ™YÚ\İ\Ûİ\œÙJ	ÉØËšYIÊH¶*¶,ö+6b¶aØ]Û˜‰ø %	ßOİİ˜ßJKš›Ú[Š	ÉÊNÂˆÛÛœİ›İÜÓO[Z[™K›X\
-O˜ÛÙO‰Ù\ØÊ˜Ûİ\œÙPÛÙJ_OØÛÙOİ‰Ù\ØÊ˜Ûİ\œÙS˜[YJ_Oİ‰Ş˜Ü™Y]ßOİ‰ÜœË›Ü[Ø]ÛˆÛ\ÜÏH™[™Ù\ˆˆİ[OHœY[™Î\LÙ›Û\Ú^™N‹™[NÈˆÛ˜ÛXÚÏH™›ÜÛİ\œÙJ	ÉŞšYIÊH¶)va6.¶)ö(OØ]Û˜‰ø %	ßOİİ˜
-Kš›Ú[Š	ÉÊNÂˆ™]\›ˆ¶*¶,ö+6b¶a6)öa6avb6)ö+È8 %	Ù\ØÊœËYX\Š_H	Ù\ØÊœËœÙ[Y\İ\Š_H	ÛÜ[”[
-œË›Ü[Š_OÚ‰ÜœË›Ü[ÉÉÎ›\ÙÊ	ö)öa6*¶,ö+6b¶a6av.¶a6`ˆ6+v)öa6b¶)öbË‰Ë	Ù\œ›Ü‰Ê_Bˆ]ˆÛ\ÜÏH™ÜšY‰Üİ]
-	ö,ö)ö.v)ö*¶bˆ6)öa6av,ö+6a6*IË\ÙY
-ÉÈÈ	ÊÜœË›X^
-_IÜİ]
-	ö.v+ö+È6)öa6avb6)ö+ÉËZ[™K›[™İ
-_OÙ]‚ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™Ï¶avb6)ö+öbˆ6)öa6av,ö+6a6*OÚÏ‰İX›JÉö)öa6`öb6+ÉË	ö)öa6av)ö+ö*IË	ö)öa6,ö)ö.v)ö*‰Ë	ö)v+6,v)ö(I×K›İÜÓJ_OÜÙXİ[Û‚ˆÙXİ[ÛˆÛ\ÜÏH˜Ø\™Ï¶)öa6avb6)ö+È6)öa6av*¶)ö+v*H6a6`v,v`¶*¶`È
-	Ù\ØÊİ›]™[	ÉÊ_JOÚÏ‰İX›JÉö)öa6`öb6+ÉË	ö)öa6av)ö+ö*IË	ö)öa6,ö)ö.v)ö*‰Ë	ö)v+6,v)ö(I×K›İÜĞJ_OÜÙXİ[Û˜ÂˆBˆ™]\›ˆ[ÂŸB˜\Ş[˜È[˜İ[ÛˆØ]™T™YÔÙ][™ÜÊJ^ÂˆKœ™]™[Y˜][
-
-NÈÛÛœİYK˜İ\œ™[\™Ù]SØš™Xİ™œ›ÛQ[šY\Ê™]È›Ü›Q]JŠK™[šY\Ê
-JNÂˆ^È]ØZ]Ù]ØÊØÊ‹	ÜÙ][™ÜÉË	Ü™YÚ\İ˜][Û‰ÊKÛÜ[ˆHY‹›Ü[‹˜ÚXÚÙYYX\™YX\‹š[J
-KÙ[Y\İ\™œÙ[Y\İ\‹X^Ü™Y]Î“[X™\Š›X^Ü™Y]Ê_JNÂˆÙĞXİ[ÛŠ	ö)v.v+ö)ö+ö)ö*ˆ6)öa6*¶,ö+6b¶a	Ë	ÙYX\ŸH	ÙœÙ[Y\İ\ŸH	Ù‹›Ü[‹˜ÚXÚÙYÉöav`v*¶b6+IÎ‰öav.¶a6`‰ßX
-NÈÚİÕØ\İ
-	ö*¶aH6)öa6+v`v.	ÊNÈ]ØZ]ØY]J
-NÈ™[™\\
-
-NÂˆXØ]Ú
-\œŠ^ÈÚİÕØ\İ
-]]\œ›ÜŠ\œŠK	Ù\œ›Ü‰ÊNÈBŸB˜\Ş[˜È[˜İ[ÛˆYÛİ\œÙJJ^ÂˆKœ™]™[Y˜][
-
-NÈÛÛœİSØš™Xİ™œ›ÛQ[šY\Ê™]È›Ü›Q]JK˜İ\œ™[\™Ù]
-K™[šY\Ê
-JKÜS[X™\Š˜Ü™Y]ÊNÂˆYŠJÜLI‰˜ÜMŠJ^ÈÚİÕØ\İ
-	ö)öa6,ö)ö.v)ö*ˆ6avaˆH6)va6bH‰Ë	Ù\œ›Ü‰ÊNÈ™]\›ÈBˆYŠ
-ØXÚK˜Ûİ\œÙ\ß×JKœÛÛYJÏO”İš[™ÊË˜ÛÙJKÓİÙ\Ø\ÙJ
-OOOY˜ÛÙKš[J
-KÓİÙ\Ø\ÙJ
-I‰˜Ë›]™[OOY›]™[	‰˜ËœÙ[Y\İ\OOYœÙ[Y\İ\ŠJ^ÈÚİÕØ\İ
-	ö)öa6`öb6+È6av-¶)ö`H6avaˆ6`¶*6a6a6a¶`v,È6)öa6`v,v`¶*H6b6)öa6`v-va	Ë	Ù\œ›Ü‰ÊNÈ™]\›ÈBˆ^È]ØZ]YØÊÛÛXİ[ÛŠ‹	ØÛİ\œÙ\ÉÊKØÛÙN™˜ÛÙKš[J
-K˜[YN™›˜[YKš[J
-KÜ™Y]Î˜Ü‹]™[™›]™[Ù[Y\İ\™œÙ[Y\İ\‹Ü™X]Y]œÙ\™\•[Y\İ[\
-
-_JNÂˆÙĞXİ[ÛŠ	ö)v-¶)ö`v*H6av)ö+ö*IË›˜[YJNÈÚİÕØ\İ
-	ö*¶av*ˆ6)öa6)v-¶)ö`v*IÊNÈ]ØZ]ØY]J
-NÈ™[™\\
-
-NÂˆXØ]Ú
-\œŠ^ÈÚİÕØ\İ
-]]\œ›ÜŠ\œŠK	Ù\œ›Ü‰ÊNÈBŸBÚ[™İËœ™YÚ\İ\Ûİ\œÙOX\Ş[˜ÈÚYOÂˆÛÛœİœÏ\™YÔİ]J
-KİXØXÚKœİY[ÖÌKÏJØXÚK˜Ûİ\œÙ\ß×JK™š[™
-OšYOOXÚY
-NÈYŠ\İXÊH™]\›ÂˆYŠ\œË›Ü[Š^ÈÚİÕØ\İ
-	ö)öa6*¶,ö+6b¶a6av.¶a6`‰Ë	Ù\œ›Ü‰ÊNÈ™]\›ÈBˆYŠË›]™[OO\İ›]™[ËœÙ[Y\İ\ˆOO\œËœÙ[Y\İ\Š^ÈÚİÕØ\İ
-	ö)öa6av)ö+ö*H6.¶b¶,H6av*¶)ö+v*H6a6`ÉË	Ù\œ›Ü‰ÊNÈ™]\›ÈBˆÛÛœİ\ÙYXØXÚKœ™YÚ\İ˜][ÛœË™š[\ŠOYX\OO\œËYX\‰‰œÙ[Y\İ\OO\œËœÙ[Y\İ\ŠKœ™YXÙJ
-K
-OO˜JÓ[X™\Š˜Ü™Y]ß
-K
-NÂˆYŠ\ÙY
-Ó[X™\ŠË˜Ü™Y]ÊOœœË›X^
-^ÈÚİÕØ\İ
-6*¶+6)öb6,ˆ6)öa6+v+È6)öa6(ö`¶-vbH6a6a6,ö)ö.v)ö*ˆ
-	ÜœË›X^JX	Ù\œ›Ü‰ÊNÈ™]\›ÈBˆÛÛœİYX	İ\Ù\‹ZYWÉØÚYWÉÜœËYX\‹œ™\XÙJ×ËÙË	ÉÊ_WÉÔÑSTËš[™^ÙŠœËœÙ[Y\İ\Š_XÂˆ^È]ØZ]Ù]ØÊØÊ‹	Ü™YÚ\İ˜][ÛœÉËY
-KÜİY[ZY\Ù\‹ZYİY[YœİœİY[YİY[˜[YNœİ›˜[YKÛİ\œÙRY˜ÚYÛİ\œÙPÛÙN˜Ë˜ÛÙKÛİ\œÙS˜[YN˜Ë›˜[YKÜ™Y]Î“[X™\ŠË˜Ü™Y]ÊKYX\œœËYX\‹Ù[Y\İ\œœËœÙ[Y\İ\‹Ü™X]Y]œÙ\™\•[Y\İ[\
-
-_JNÂˆÚİÕØ\İ
-	ö*¶aH6)öa6*¶,ö+6b¶a	ÊNÈ]ØZ]ØY]J
-NÈ™[™\\
-
-NÂˆXØ]Ú
-\œŠ^ÈÚİÕØ\İ
-]]\œ›ÜŠ\œŠK	Ù\œ›Ü‰ÊNÈBŸNÂÚ[™İË™›ÜÛİ\œÙOX\Ş[˜ÈYOÂˆYŠXÛÛ™š\›J	ö)va6.¶)ö(H6*¶,ö+6b¶a6)öa6av)ö+ö*v'ÉÊJH™]\›Âˆ^È]ØZ][]QØÊØÊ‹	Ü™YÚ\İ˜][ÛœÉËY
-JNÈÚİÕØ\İ
-	ö*¶aH6)öa6)va6.¶)ö(IÊNÈ]ØZ]ØY]J
-NÈ™[™\\
-
-NÈXØ]Ú
-\œŠ^ÈÚİÕØ\İ
-]]\œ›ÜŠ\œŠK	Ù\œ›Ü‰ÊNÈBŸNÂÚ[™İË™^Ü™YĞÔÕJ
-OOÂˆÛÛœİœÏ\™YÔİ]J
-KO]O˜‰Ôİš[™ÊÏÉÉÊKœ™\XÙJÈ‹ÙË	Èˆ‰ÊKœ™\XÙJ×ŠÏJ×PJKË‰ÉHŠ_H˜ÂˆÛÛœİ›İÜÏVÖÉö)öa6,v`¶aH6)öa6+6)öav.vb‰Ë	ö)öa6)ö,öaIË	ö`öb6+È6)öa6av)ö+ö*IË	ö)öa6av)ö+ö*IË	ö)öa6,ö)ö.v)ö*‰Ë	ö)öa6,öa¶*IË	ö)öa6`v-va	×WK˜ÛÛ˜Ø]
-
-ØXÚKœ™YÚ\İ˜][Ûœß×JK™š[\ŠOYX\OO\œËYX\‰‰œÙ[Y\İ\OO\œËœÙ[Y\İ\ŠK›X\
-O–ŞœİY[YœİY[˜[YK˜Ûİ\œÙPÛÙK˜Ûİ\œÙS˜[YK˜Ü™Y]ËYX\‹œÙ[Y\İ\—JJNÂˆÛÛœİ›Ø[™]È›ØŠÈ—Y™Y™ˆŠÜ›İÜË›X\
-Oœ‹›X\
-JKš›Ú[Š	Ë	ÊJKš›Ú[Š	×‰ÊWKİ\N‰İ^ØÜİØÚ\œÙ]]]‹NÉßJNÂˆÛÛœİOYØİ[Y[˜Ü™X]Q[[Y[
-	ØIÊNÈKš™YUT“˜Ü™X]SØš™XİT“
-›ØŠNÈK™İÛ›ØYIö*¶,ö+6b¶a6)ö*—ö)öa6avb6)ö+Ë˜Üİ‰ÎÈØİ[Y[˜›ÙK˜\[™Ú[
-JNÈK˜ÛXÚÊ
-NÈKœ™[[İ™J
-NÂŸNÂ
+/* ---------- Ø§Ù„Ù…ÙˆØ§Ø¯ ÙˆØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø·Ù„Ø§Ø¨ ---------- */
+function regState(){const r=cache.regSettings||{};return {open:!!r.open,year:r.year||acYear(),semester:r.semester||SEMS[0],max:Number(r.maxCredits)||18};}
+const openPill=o=>o?'<span class="pill" style="background:#d1fae5;color:#065f46;">Ù…ÙØªÙˆØ­</span>':'<span class="pill" style="background:#fee2e2;color:#991b1b;">Ù…ØºÙ„Ù‚</span>';
+function courseViews(staff,st){
+  const rs=regState(), regs=cache.registrations||[], crs=cache.courses||[];
+  if(activeTab==='courses'&&staff){
+    const cnt=id=>regs.filter(x=>x.courseId===id&&x.year===rs.year&&x.semester===rs.semester).length;
+    const rows=crs.slice().sort((a,b)=>String(a.level).localeCompare(b.level)||String(a.code).localeCompare(b.code)).map(c=>`<tr><td><code>${esc(c.code)}</code></td><td>${esc(c.name)}</td><td>${esc(c.level)}</td><td>${esc(c.semester)}</td><td>${c.credits}</td><td>${cnt(c.id)}</td><td><button class="danger" data-delete="courses" data-id="${c.id}"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+    return `<section class="card"><h2>Ø§Ù„ØªØ³Ø¬ÙŠÙ„ Ø­Ø§Ù„ÙŠØ§Ù‹: ${openPill(rs.open)}</h2><form id="regSettingsForm" class="fields">
+      <div><label>Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ©</label><input name="year" value="${esc(rs.year)}" required></div>
+      <div><label>Ø§Ù„ÙØµÙ„</label><select name="semester">${SEMS.map(x=>`<option ${x===rs.semester?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ Ù„Ù„Ø³Ø§Ø¹Ø§Øª</label><input name="maxCredits" type="number" min="1" max="30" value="${rs.max}" required></div>
+      <div><label><input type="checkbox" name="open" ${rs.open?'checked':''} style="width:auto"> ÙØªØ­ Ø§Ù„ØªØ³Ø¬ÙŠÙ„ Ù„Ù„Ø·Ù„Ø§Ø¨</label></div>
+      <button style="margin-top:10px;">Ø­ÙØ¸ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª</button></form></section>
+      <section class="card"><h3>Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø©</h3><form id="courseForm" class="fields">
+      <div><label>Ø§Ù„ÙƒÙˆØ¯</label><input name="code" required></div><div><label>Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø©</label><input name="name" required></div>
+      <div><label>Ø§Ù„Ø³Ø§Ø¹Ø§Øª</label><input name="credits" type="number" min="1" max="6" value="3" required></div>
+      <div><label>Ø§Ù„ÙØ±Ù‚Ø©</label><select name="level">${LEVELS.map(x=>`<option>${x}</option>`).join('')}</select></div>
+      <div><label>Ø§Ù„ÙØµÙ„</label><select name="semester">${SEMS.map(x=>`<option>${x}</option>`).join('')}</select></div>
+      <button style="margin-top:10px;">Ø¥Ø¶Ø§ÙØ©</button></form></section>
+      <section class="card"><div class="headrow"><h3>Ø§Ù„Ù…ÙˆØ§Ø¯ (Ø§Ù„Ù…Ø³Ø¬Ù„ÙˆÙ† ÙÙŠ ${esc(rs.year)} ${esc(rs.semester)})</h3><button class="secondary" onclick="exportRegCSV()"><i class="fas fa-file-excel"></i> ØªØµØ¯ÙŠØ± Ø§Ù„ØªØ³Ø¬ÙŠÙ„Ø§Øª</button></div>${table(['Ø§Ù„ÙƒÙˆØ¯','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„ÙØ±Ù‚Ø©','Ø§Ù„ÙØµÙ„','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','Ø§Ù„Ù…Ø³Ø¬Ù„ÙˆÙ†','Ø¥Ø¬Ø±Ø§Ø¡'],rows)}</section>`;
+  }
+  if(activeTab==='myregistration'&&role==='student'){
+    const mine=regs.filter(x=>x.year===rs.year&&x.semester===rs.semester), used=mine.reduce((a,x)=>a+Number(x.credits||0),0);
+    const passed=new Set((cache.results||[]).filter(r=>Number(r.score)>=50).map(r=>String(r.course).trim().toLowerCase()));
+    const avail=crs.filter(c=>c.level===st.level&&c.semester===rs.semester&&!mine.some(x=>x.courseId===c.id));
+    const rowsA=avail.map(c=>{const done=passed.has(String(c.name).trim().toLowerCase());return `<tr><td><code>${esc(c.code)}</code></td><td>${esc(c.name)}</td><td>${c.credits}</td><td>${done?'<span class="muted">Ù†Ø§Ø¬Ø­ ÙÙŠÙ‡Ø§</span>':rs.open?`<button style="padding:5px 10px;font-size:.8rem;" onclick="registerCourse('${c.id}')">ØªØ³Ø¬ÙŠÙ„</button>`:'â€”'}</td></tr>`;}).join('');
+    const rowsM=mine.map(x=>`<tr><td><code>${esc(x.courseCode)}</code></td><td>${esc(x.courseName)}</td><td>${x.credits}</td><td>${rs.open?`<button class="danger" style="padding:5px 10px;font-size:.8rem;" onclick="dropCourse('${x.id}')">Ø¥Ù„ØºØ§Ø¡</button>`:'â€”'}</td></tr>`).join('');
+    return `<h2>ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ù…ÙˆØ§Ø¯ â€” ${esc(rs.year)} ${esc(rs.semester)} ${openPill(rs.open)}</h2>${rs.open?'':msg('Ø§Ù„ØªØ³Ø¬ÙŠÙ„ Ù…ØºÙ„Ù‚ Ø­Ø§Ù„ÙŠØ§Ù‹.','error')}
+      <div class="grid">${stat('Ø³Ø§Ø¹Ø§ØªÙŠ Ø§Ù„Ù…Ø³Ø¬Ù„Ø©',used+' / '+rs.max)}${stat('Ø¹Ø¯Ø¯ Ø§Ù„Ù…ÙˆØ§Ø¯',mine.length)}</div>
+      <section class="card"><h3>Ù…ÙˆØ§Ø¯ÙŠ Ø§Ù„Ù…Ø³Ø¬Ù„Ø©</h3>${table(['Ø§Ù„ÙƒÙˆØ¯','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','Ø¥Ø¬Ø±Ø§Ø¡'],rowsM)}</section>
+      <section class="card"><h3>Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ù…ØªØ§Ø­Ø© Ù„ÙØ±Ù‚ØªÙƒ (${esc(st.level||'')})</h3>${table(['Ø§Ù„ÙƒÙˆØ¯','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','Ø¥Ø¬Ø±Ø§Ø¡'],rowsA)}</section>`;
+  }
+  return null;
+}
+async function saveRegSettings(e){
+  e.preventDefault(); const f=e.currentTarget,d=Object.fromEntries(new FormData(f).entries());
+  try{ await setDoc(doc(db,'settings','registration'),{open:!!f.open.checked,year:d.year.trim(),semester:d.semester,maxCredits:Number(d.maxCredits)});
+    logAction('Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„ØªØ³Ø¬ÙŠÙ„',`${d.year} ${d.semester} ${f.open.checked?'Ù…ÙØªÙˆØ­':'Ù…ØºÙ„Ù‚'}`); showToast('ØªÙ… Ø§Ù„Ø­ÙØ¸'); await loadData(); renderApp();
+  }catch(err){ showToast(authError(err),'error'); }
+}
+async function addCourse(e){
+  e.preventDefault(); const d=Object.fromEntries(new FormData(e.currentTarget).entries()), cr=Number(d.credits);
+  if(!(cr>=1&&cr<=6)){ showToast('Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ù…Ù† 1 Ø¥Ù„Ù‰ 6','error'); return; }
+  if((cache.courses||[]).some(c=>String(c.code).toLowerCase()===d.code.trim().toLowerCase()&&c.level===d.level&&c.semester===d.semester)){ showToast('Ø§Ù„ÙƒÙˆØ¯ Ù…Ø¶Ø§Ù Ù…Ù† Ù‚Ø¨Ù„ Ù„Ù†ÙØ³ Ø§Ù„ÙØ±Ù‚Ø© ÙˆØ§Ù„ÙØµÙ„','error'); return; }
+  try{ await addDoc(collection(db,'courses'),{code:d.code.trim(),name:d.name.trim(),credits:cr,level:d.level,semester:d.semester,createdAt:serverTimestamp()});
+    logAction('Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø©',d.name); showToast('ØªÙ…Øª Ø§Ù„Ø¥Ø¶Ø§ÙØ©'); await loadData(); renderApp();
+  }catch(err){ showToast(authError(err),'error'); }
+}
+window.registerCourse=async cid=>{
+  const rs=regState(), st=cache.students[0], c=(cache.courses||[]).find(x=>x.id===cid); if(!st||!c) return;
+  if(!rs.open){ showToast('Ø§Ù„ØªØ³Ø¬ÙŠÙ„ Ù…ØºÙ„Ù‚','error'); return; }
+  if(c.level!==st.level||c.semester!==rs.semester){ showToast('Ø§Ù„Ù…Ø§Ø¯Ø© ØºÙŠØ± Ù…ØªØ§Ø­Ø© Ù„Ùƒ','error'); return; }
+  const used=cache.registrations.filter(x=>x.year===rs.year&&x.semester===rs.semester).reduce((a,x)=>a+Number(x.credits||0),0);
+  if(used+Number(c.credits)>rs.max){ showToast(`ØªØ¬Ø§ÙˆØ² Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ Ù„Ù„Ø³Ø§Ø¹Ø§Øª (${rs.max})`,'error'); return; }
+  const id=`${user.uid}_${cid}_${rs.year.replace(/\W/g,'')}_${SEMS.indexOf(rs.semester)}`;
+  try{ await setDoc(doc(db,'registrations',id),{studentUid:user.uid,studentId:st.studentId,studentName:st.name,courseId:cid,courseCode:c.code,courseName:c.name,credits:Number(c.credits),year:rs.year,semester:rs.semester,createdAt:serverTimestamp()});
+    showToast('ØªÙ… Ø§Ù„ØªØ³Ø¬ÙŠÙ„'); await loadData(); renderApp();
+  }catch(err){ showToast(authError(err),'error'); }
+};
+window.dropCourse=async id=>{
+  if(!confirm('Ø¥Ù„ØºØ§Ø¡ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ù…Ø§Ø¯Ø©ØŸ')) return;
+  try{ await deleteDoc(doc(db,'registrations',id)); showToast('ØªÙ… Ø§Ù„Ø¥Ù„ØºØ§Ø¡'); await loadData(); renderApp(); }catch(err){ showToast(authError(err),'error'); }
+};
+window.exportRegCSV=()=>{
+  const rs=regState(), q=v=>`"${String(v??'').replace(/"/g,'""').replace(/^([=+\-@])/,"'$1")}"`;
+  const rows=[['Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ','Ø§Ù„Ø§Ø³Ù…','ÙƒÙˆØ¯ Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ù…Ø§Ø¯Ø©','Ø§Ù„Ø³Ø§Ø¹Ø§Øª','Ø§Ù„Ø³Ù†Ø©','Ø§Ù„ÙØµÙ„']].concat((cache.registrations||[]).filter(x=>x.year===rs.year&&x.semester===rs.semester).map(x=>[x.studentId,x.studentName,x.courseCode,x.courseName,x.credits,x.year,x.semester]));
+  const blob=new Blob(["\ufeff"+rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ØªØ³Ø¬ÙŠÙ„Ø§Øª_Ø§Ù„Ù…ÙˆØ§Ø¯.csv'; document.body.appendChild(a); a.click(); a.remove();
+};
