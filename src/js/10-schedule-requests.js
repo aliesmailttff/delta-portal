@@ -1,7 +1,7 @@
 /* ---------- الجدول الأسبوعي + طلبات الطلاب (تظلمات وشهادات) ---------- */
 const DAYS=['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
 const LEVELS=['الفرقة الأولى','الفرقة الثانية','الفرقة الثالثة','الفرقة الرابعة'];
-const REQ_TYPES=['تظلم من نتيجة','شهادة قيد','إفادة التحاق','كشف درجات رسمي','أخرى'];
+const REQ_TYPES=['تظلم من نتيجة','شهادة قيد','إفادة التحاق','كشف درجات رسمي','استفسار مالي','أخرى'];
 async function loadExtra(){
   const staff=['admin','finance','academic'].includes(role);
   const sc=await safe(getDocs(collection(db,'schedule')),none);
@@ -13,7 +13,7 @@ async function loadExtra(){
   const rr=await safe(getDocs(staff?collection(db,'registrations'):query(collection(db,'registrations'),where('studentUid','==',user.uid))),none); cache.registrations=rr.docs.map(d=>({id:d.id,...d.data()}));
 }
 function reqBadge(){const n=(cache.requests||[]).filter(r=>r.status==='قيد المراجعة').length;return n?` <span style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:99px;font-size:.75rem;">${n}</span>`:'';}
-function reqPill(t){const c=t==='قيد المراجعة'?['#fef3c7','#92400e']:t==='مرفوض'?['#fee2e2','#991b1b']:['#d1fae5','#065f46'];return `<span class="pill" style="background:${c[0]};color:${c[1]};">${esc(t)}</span>`;}
+function reqPill(t){const c=t==='قيد المراجعة'||t==='قيد التنفيذ'?['#fef3c7','#92400e']:t==='مرفوض'?['#fee2e2','#991b1b']:['#d1fae5','#065f46'];return `<span class="pill" style="background:${c[0]};color:${c[1]};">${esc(t)}</span>`;}
 function extraViews(html){
   const staff=role==='admin'||role==='academic', st=cache.students[0]||{};
   if(activeTab==='schedule'&&staff){
@@ -35,17 +35,17 @@ function extraViews(html){
   }
   if(activeTab==='requests'&&staff){
     const rows=(cache.requests||[]).slice().sort((a,b)=>(a.status==='قيد المراجعة'?0:1)-(b.status==='قيد المراجعة'?0:1))
-      .map(r=>`<tr><td><b>${esc(r.studentName)}</b><br><small class="muted">${esc(r.studentId)}</small></td><td>${esc(r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}</td><td>${esc(r.reply||'—')}</td>
-      <td>${r.status==='قيد المراجعة'?`<div class="actions"><button style="background:var(--green);padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','تم القبول')">قبول</button><button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','جاهز للاستلام')">جاهز</button><button class="danger" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','مرفوض')">رفض</button></div>`:'—'}</td></tr>`).join('');
-    return `<section class="card"><h2><i class="fas fa-inbox" style="color:var(--blue)"></i> طلبات الطلاب (تظلمات وشهادات)</h2>${table(['الطالب','النوع','التفاصيل','الحالة','الرد','إجراء'],rows)}</section>`;
+      .map(r=>`<tr><td><code>${esc(r.trackingNo||'REQ-'+r.id.toUpperCase())}</code></td><td><b>${esc(r.studentName)}</b><br><small class="muted">${esc(r.studentId)}</small></td><td>${esc(r.customType||r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}</td><td>${esc(r.reply||'—')}</td>
+      <td>${['مرفوض','جاهز للاستلام','تم القبول'].includes(r.status)?'—':`<div class="actions"><button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','قيد التنفيذ')">قيد التنفيذ</button><button style="background:var(--green);padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','تم القبول')">قبول</button><button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','جاهز للاستلام')">جاهز</button><button class="danger" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','مرفوض')">رفض</button></div>`}</td></tr>`).join('');
+    return `<section class="card"><h2><i class="fas fa-inbox" style="color:var(--blue)"></i> الطلبات الإلكترونية</h2>${table(['رقم المتابعة','الطالب','النوع','التفاصيل','الحالة','الرد','إجراء'],rows)}</section>`;
   }
   if(activeTab==='myrequests'&&role==='student'){
     const rows=(cache.requests||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0))
-      .map(r=>`<tr><td>${esc(r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}</td><td>${esc(r.reply||'—')}</td></tr>`).join('');
+      .map(r=>`<tr><td><code>${esc(r.trackingNo||'REQ-'+r.id.toUpperCase())}</code></td><td>${esc(r.customType||r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}</td><td>${esc(r.reply||'—')}</td><td>${r.handledAt?.toDate?r.handledAt.toDate().toLocaleDateString('ar-EG'):'—'}</td></tr>`).join('');
     return `<section class="card"><h2><i class="fas fa-file-signature" style="color:var(--blue)"></i> تقديم طلب جديد</h2>
       <form id="requestForm"><label>نوع الطلب</label><select name="type" style="margin-bottom:10px;">${REQ_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
       <label>التفاصيل (للتظلم: اسم المادة وسبب التظلم)</label><textarea name="details" rows="3" maxlength="1000" required style="margin-bottom:10px;"></textarea><button>إرسال الطلب</button></form></section>
-      <section class="card"><h3>طلباتي السابقة</h3>${table(['النوع','التفاصيل','الحالة','رد الإدارة'],rows)}</section>`;
+      <section class="card"><h3>طلباتي السابقة</h3>${table(['رقم المتابعة','النوع','التفاصيل','الحالة','رد الإدارة','تاريخ التحديث'],rows)}</section>`;
   }
   const rv=resultsViews(staff,st); if(rv!==null) return rv;
   const cv=courseViews(staff,st); if(cv!==null) return cv;
@@ -60,8 +60,9 @@ async function addSchedule(e){
 async function sendRequest(e){
   e.preventDefault(); const f=e.currentTarget,d=Object.fromEntries(new FormData(f).entries()),s=cache.students[0];
   if(!s) return;
-  try{ await addDoc(collection(db,'requests'),{studentUid:user.uid,studentId:s.studentId,studentName:s.name,type:d.type,details:d.details.trim(),status:'قيد المراجعة',reply:'',createdAt:serverTimestamp()});
-    showToast('تم إرسال طلبك'); await loadData(); renderApp();
+  try{ const requestRef=doc(collection(db,'requests')),trackingNo='REQ-'+requestRef.id.toUpperCase(),customType=d.type==='استفسار مالي'?d.type:'';
+    await setDoc(requestRef,{trackingNo,studentUid:user.uid,studentId:s.studentId,studentName:s.name,type:customType?'أخرى':d.type,customType,details:d.details.trim(),status:'قيد المراجعة',reply:'',createdAt:serverTimestamp()});
+    showToast(`تم إرسال الطلب — رقم المتابعة: ${trackingNo}`); await loadData(); renderApp();
   }catch(err){ showToast(authError(err),'error'); }
 }
 window.setRequestStatus=async(id,status)=>{
