@@ -57,6 +57,7 @@ function bindForms(){
   $('#newsForm')?.addEventListener('submit', saveNews);
   $('#studentPaymentForm')?.addEventListener('submit', triggerPaymentOtp);
   $('#chatForm')?.addEventListener('submit', sendChat);
+  $('#chatAssignmentForm')?.addEventListener('submit', saveChatAssignment);
 
   // تم إصلاح وربط معالج التعديل العام هنا بنجاح:
   $('#genericEditForm')?.addEventListener('submit', async e => {

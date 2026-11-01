@@ -23,7 +23,8 @@ window.filterAdminChatStudents=function(value){
   const box=$('#adminChatStudentResults'); if(!box) return;
   const q=String(value||'').trim().toLocaleLowerCase();
   if(!q){box.innerHTML='اكتب اسم الطالب أو رقمه للبحث عن المحادثة.';return;}
-  const matches=cache.students.filter(s=>String(s.name||'').toLocaleLowerCase().includes(q)||String(s.studentId||'').toLocaleLowerCase().includes(q)).slice(0,30);
+  const allowedChats=new Set((cache.chats||[]).map(chat=>chat.id));
+  const matches=cache.students.filter(s=>(role==='admin'||allowedChats.has(s.uid))&&(String(s.name||'').toLocaleLowerCase().includes(q)||String(s.studentId||'').toLocaleLowerCase().includes(q))).slice(0,30);
   if(!matches.length){box.innerHTML='<p class="muted">لا يوجد طالب مطابق.</p>';return;}
   box.innerHTML=matches.map(s=>`<button type="button" class="chat-student-result ${s.uid===selectedChatStudentUid?'active':''}" data-chat-student="${esc(s.uid)}"><strong>${esc(s.name)}</strong><span>${esc(s.studentId||'')}</span></button>`).join('');
   box.querySelectorAll('[data-chat-student]').forEach(button=>button.addEventListener('click',()=>window.changeChatStudent(button.dataset.chatStudent)));
@@ -122,8 +123,10 @@ async function refreshAttendanceQrCode(){
 window.closeAttendanceSession=async function(){
   if(!['admin','academic'].includes(role)||!cache.activeAttendance) return;
   try{
-    await updateDoc(doc(db,'settings','attendance_public'),{expiresAt:Date.now()});
-    cache.activeAttendance={...cache.activeAttendance,expiresAt:Date.now()};
+    const closedAt=Date.now(),sessionId=cache.activeAttendance.sessionId;
+    const sessions=(cache.activeAttendance.sessions||[]).map(s=>s.sessionId===sessionId?{...s,status:'completed',expiresAt:closedAt,closedAt}:s);
+    await updateDoc(doc(db,'settings','attendance_public'),{expiresAt:closedAt,sessions});
+    cache.activeAttendance={...cache.activeAttendance,expiresAt:closedAt,sessions};
     stopAttendanceQrRefresh();
     logAction('إيقاف حضور',cache.activeAttendance.sessionName||'');
     showToast('تم إيقاف جلسة الحضور');

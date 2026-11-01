@@ -87,6 +87,9 @@ async function loadData(){
   const examsP = safe(getDocs(collection(db,'exams')), none);
   const libP   = safe(getDocs(collection(db,'library')), none);
   const attP   = safe(getDocs(collection(db,'attendance')), none);
+  const noticeP = role==='student'
+    ? safe(getDocs(query(collection(db,'notifications'),where('studentUid','==',user.uid))),none)
+    : Promise.resolve(none);
 
   try {
     const setSnap = await getDoc(doc(db,'settings','payment_accounts'));
@@ -101,13 +104,20 @@ async function loadData(){
   const isStaffUser = ['admin','finance','academic'].includes(role);
 
   if(isStaffUser){
-    const [ss, ns, es, libs, atts, rs, ps, ls, stfSnap] = await Promise.all([
+    const chatsP=role==='admin'
+      ? safe(getDocs(collection(db,'chats')),none)
+      : Promise.all([
+          safe(getDocs(query(collection(db,'chats'),where('assignedDepartment','==',role),where('assignedTo','==',''))),none),
+          safe(getDocs(query(collection(db,'chats'),where('assignedTo','==',user.uid))),none)
+        ]).then(snaps=>({docs:snaps.flatMap(s=>s.docs)}));
+    const [ss, ns, es, libs, atts, rs, ps, ls, stfSnap, chats] = await Promise.all([
       safe(getDocs(collection(db,'students')), none),
       newsP, examsP, libP, attP,
       safe(getDocs(collection(db,'results')), none),
       safe(getDocs(collection(db,'payments')), none),
       safe(getDocs(query(collection(db,'audit_logs'), orderBy('createdAt','desc'))), none),
-      safe(getDocs(query(collection(db,'users'), where('role','in',['admin','finance','academic']))), none)
+      safe(getDocs(query(collection(db,'users'), where('role','in',['admin','finance','academic']))), none),
+      chatsP
     ]);
     cache.students   = ss.docs.map(d=>({uid:d.id, ...d.data()}));
     cache.results    = rs.docs.map(d=>({id:d.id, ...d.data()}));
@@ -118,13 +128,15 @@ async function loadData(){
     cache.attendance = atts.docs.map(d=>({id:d.id, ...d.data()}));
     cache.logs       = ls.docs.map(d=>({id:d.id, ...d.data()}));
     cache.staff      = stfSnap.docs.map(d=>({uid:d.id, ...d.data()}));
+    cache.chats      = chats.docs.map(d=>({id:d.id,...d.data()}));
   } else {
-    const [ss, ns, es, libs, atts, rs, ps] = await Promise.all([
+    const [ss, ns, es, libs, atts, rs, ps, noticeSnap] = await Promise.all([
       safe(getDoc(doc(db,'students',user.uid)), { exists:()=>false }),
       newsP, examsP, libP,
       safe(getDocs(query(collection(db,'attendance'), where('studentUid','==',user.uid))), none),
       safe(getDocs(query(collection(db,'results'), where('studentUid','==',user.uid))), none),
-      safe(getDocs(query(collection(db,'payments'), where('studentUid','==',user.uid))), none)
+      safe(getDocs(query(collection(db,'payments'), where('studentUid','==',user.uid))), none),
+      noticeP
     ]);
     cache.students   = ss.exists() ? [{uid:ss.id, ...ss.data()}] : [];
     cache.results    = rs.docs.map(d=>({id:d.id, ...d.data()}));
@@ -133,6 +145,7 @@ async function loadData(){
     cache.exams      = es.docs.map(d=>({id:d.id, ...d.data()}));
     cache.library    = libs.docs.map(d=>({id:d.id, ...d.data()}));
     cache.attendance = atts.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.notifications = noticeSnap.docs.map(d=>({id:d.id,...d.data()}));
   }
 }
 
@@ -149,7 +162,7 @@ function getNavItems(){
   ];
   else if(role==='finance') items = [
     ['dashboard','الرئيسية'],['payments',`المدفوعات${badge}`],
-    ['accounts','الحسابات'],['logs','سجل الأمان'],['chat','شؤون الطلاب']
+    ['accounts','الحسابات'],['requests',`الطلبات${reqBadge()}`],['logs','سجل الأمان'],['chat','شؤون الطلاب']
   ];
   else if(role==='academic') items = [
     ['dashboard','الرئيسية'],['students','الطلاب'],['results','النتائج'],
@@ -160,7 +173,7 @@ function getNavItems(){
     ['home','الرئيسية'],['gpasimulator','محاكي GPA'],
     ['mylibrary','المكتبة PDF'],['myattendance','سجل الحضور'],
     ['myresults','نتيجتي'],['myexams','الامتحانات'],
-    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['chat','التواصل'],['security','الأمان']
+    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['notifications',`التنبيهات${(cache.notifications||[]).filter(n=>!n.read).length?` <span class="nav-badge">${(cache.notifications||[]).filter(n=>!n.read).length}</span>`:''}`],['chat','التواصل'],['security','الأمان']
   ];
   if(role==='admin') items.push(['security','الأمان']);
   if(role==='finance'||role==='academic') items.push(['security','الأمان']);
@@ -173,7 +186,7 @@ function getNavItems(){
 }
 
 function navIcon(id){
-  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper',security:'fa-lock'};
+  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper',notifications:'fa-bell',security:'fa-lock'};
   return icons[id]||'fa-circle';
 }
 

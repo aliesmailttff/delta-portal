@@ -32,7 +32,7 @@ beforeEach(async () => {
     await w('payments/p1', { studentUid: 'stu1', amount: 1000, status: PEND, receiptNo: 'R1' });
     await w('results/r1', { studentUid: 'stu1', course: 'x', score: 80 });
     await w('results/r2', { studentUid: 'stu2', course: 'x', score: 70 });
-    await w('requests/q1', { studentUid: 'stu1', type: 'شهادة قيد', details: 'x', status: PEND });
+    await w('requests/q1', { studentUid: 'stu1', type: 'شهادة قيد', customType: '', assignedDepartment: 'academic', workflowStage: 'مراجعة القسم', details: 'x', status: PEND });
   });
 });
 
@@ -156,13 +156,13 @@ test('results: الطالب يقرأ نتائجه فقط، والأكاديمي 
   await assertFails(updateDoc(doc(db('fin1'), 'results/r1'), { score: 90 }));
 });
 
-const req = (o = {}) => ({ studentUid: 'stu1', type: 'شهادة قيد', details: 'x', status: PEND, ...o });
+const req = (o = {}) => ({ studentUid: 'stu1', type: 'شهادة قيد', customType: '', assignedDepartment: 'academic', workflowStage: 'مراجعة القسم', details: 'x', status: PEND, ...o });
 test('requests: إنشاء الطالب ومعالجة الأكاديمي', async () => {
   await assertSucceeds(addDoc(collection(db('stu1'), 'requests'), req()));
   await assertFails(addDoc(collection(db('stu1'), 'requests'), req({ type: 'نوع غريب' })));
   await assertFails(addDoc(collection(db('stu1'), 'requests'), req({ status: 'تم القبول' })));
   await assertFails(addDoc(collection(db('stu1'), 'requests'), req({ studentUid: 'stu2' })));
-  await assertSucceeds(updateDoc(doc(db('acad1'), 'requests/q1'), { status: 'تم القبول', reply: 'تم' }));
+  await assertSucceeds(updateDoc(doc(db('acad1'), 'requests/q1'), { status: 'بانتظار اعتماد الإدارة', workflowStage: 'اعتماد المدير', reply: 'تم' }));
   await assertFails(updateDoc(doc(db('acad1'), 'requests/q1'), { details: 'غيّرت' }));
   await assertFails(updateDoc(doc(db('stu1'), 'requests/q1'), { status: 'تم القبول' }));
   await assertFails(getDoc(doc(db('stu2'), 'requests/q1')));

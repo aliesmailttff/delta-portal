@@ -19,6 +19,13 @@
       11-results-gpa      النتائج، المعدل، رفع Excel، كشف الدرجات
       12-courses-registration المواد وتسجيلها
       13-admin-tools          الاستيراد، الصيانة، البحث، المحادثة، وQR
+      14-student-dashboard    لوحة متابعة الطالب والتنبيهات المختصرة
+      15-attendance-summary   ملخص الحضور وتصدير التقرير
+      16-upgrades             التصدير وإدارة صلاحيات المساعدين
+      17-workflows            إشعارات الطالب وتوجيه المحادثات
+    functions/                إشعارات التحديثات، تذكير الرسوم، وتنبيه الغياب
+    firestore.rules           صلاحيات الأقسام والطلبات والجدول والإشعارات
+    firestore.indexes.json    فهرس استعلامات توجيه المحادثات
     build.mjs             يجمّع src/js في public/js/app.js
     tests/                اختبارات قواعد Firestore
 

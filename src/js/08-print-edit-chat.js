@@ -236,6 +236,12 @@ async function sendChat(e){
   const targetUid = isStaff ? selectedChatStudentUid : user.uid;
   if(!targetUid || !d.body.trim()) return;
   try {
+    const chatRef=doc(db,'chats',targetUid),chatSnap=await getDoc(chatRef);
+    if(chatSnap.exists()) await updateDoc(chatRef,{lastMessage:d.body.trim().slice(0,160),updatedAt:serverTimestamp()});
+    else {
+      const student=cache.students.find(s=>s.uid===targetUid)||cache.students[0]||{};
+      await setDoc(chatRef,{studentUid:targetUid,studentName:student.name||profile.name||'',assignedDepartment:isStaff?(role==='admin'?'academic':role):(d.department||'academic'),assignedTo:isStaff&&role!=='admin'?user.uid:'',assignedName:isStaff&&role!=='admin'?(profile.name||user.email):'',lastMessage:d.body.trim().slice(0,160),updatedAt:serverTimestamp()});
+    }
     await addDoc(collection(db,'chats',targetUid,'messages'), {
       senderUid: user.uid,
       senderName: profile.name || user.email,

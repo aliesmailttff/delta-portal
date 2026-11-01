@@ -19,7 +19,7 @@ const appRoot = $('#app');
 let auth, db, functions, user=null, profile=null, role=null;
 let activeTab = localStorage.getItem('activeTab') || 'dashboard';
 let cache = { students:[], news:[], exams:[], results:[], payments:[], settings:{},
-              siteStatus:{}, activeAttendance:null, logs:[], staff:[], library:[], attendance:[] };
+              siteStatus:{}, activeAttendance:null, logs:[], staff:[], library:[], attendance:[], notifications:[], chats:[] };
 let pendingPaymentData = null;
 let paymentFilterStatus = 'all';
 let selectedChatStudentUid = null;
@@ -151,9 +151,9 @@ window.toggleHighContrast = function(){
 /* ---------- Permissions ---------- */
 function getValidTabsForRole(r){
   let tabs=r==='admin'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','payments','accounts','staff','logs','chat','security']
-    :r==='finance'?['dashboard','payments','accounts','logs','chat','security']
+    :r==='finance'?['dashboard','payments','accounts','logs','chat','requests','security']
     :r==='academic'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','chat','security']
-    :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','chat','security'];
+    :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','notifications','chat','security'];
   if(r!=='admin'&&Array.isArray(profile?.permissions)) tabs=tabs.filter(id=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   return tabs;
 }
@@ -247,6 +247,9 @@ async function loadData(){
   const examsP = safe(getDocs(collection(db,'exams')), none);
   const libP   = safe(getDocs(collection(db,'library')), none);
   const attP   = safe(getDocs(collection(db,'attendance')), none);
+  const noticeP = role==='student'
+    ? safe(getDocs(query(collection(db,'notifications'),where('studentUid','==',user.uid))),none)
+    : Promise.resolve(none);
 
   try {
     const setSnap = await getDoc(doc(db,'settings','payment_accounts'));
@@ -261,13 +264,20 @@ async function loadData(){
   const isStaffUser = ['admin','finance','academic'].includes(role);
 
   if(isStaffUser){
-    const [ss, ns, es, libs, atts, rs, ps, ls, stfSnap] = await Promise.all([
+    const chatsP=role==='admin'
+      ? safe(getDocs(collection(db,'chats')),none)
+      : Promise.all([
+          safe(getDocs(query(collection(db,'chats'),where('assignedDepartment','==',role),where('assignedTo','==',''))),none),
+          safe(getDocs(query(collection(db,'chats'),where('assignedTo','==',user.uid))),none)
+        ]).then(snaps=>({docs:snaps.flatMap(s=>s.docs)}));
+    const [ss, ns, es, libs, atts, rs, ps, ls, stfSnap, chats] = await Promise.all([
       safe(getDocs(collection(db,'students')), none),
       newsP, examsP, libP, attP,
       safe(getDocs(collection(db,'results')), none),
       safe(getDocs(collection(db,'payments')), none),
       safe(getDocs(query(collection(db,'audit_logs'), orderBy('createdAt','desc'))), none),
-      safe(getDocs(query(collection(db,'users'), where('role','in',['admin','finance','academic']))), none)
+      safe(getDocs(query(collection(db,'users'), where('role','in',['admin','finance','academic']))), none),
+      chatsP
     ]);
     cache.students   = ss.docs.map(d=>({uid:d.id, ...d.data()}));
     cache.results    = rs.docs.map(d=>({id:d.id, ...d.data()}));
@@ -278,13 +288,15 @@ async function loadData(){
     cache.attendance = atts.docs.map(d=>({id:d.id, ...d.data()}));
     cache.logs       = ls.docs.map(d=>({id:d.id, ...d.data()}));
     cache.staff      = stfSnap.docs.map(d=>({uid:d.id, ...d.data()}));
+    cache.chats      = chats.docs.map(d=>({id:d.id,...d.data()}));
   } else {
-    const [ss, ns, es, libs, atts, rs, ps] = await Promise.all([
+    const [ss, ns, es, libs, atts, rs, ps, noticeSnap] = await Promise.all([
       safe(getDoc(doc(db,'students',user.uid)), { exists:()=>false }),
       newsP, examsP, libP,
       safe(getDocs(query(collection(db,'attendance'), where('studentUid','==',user.uid))), none),
       safe(getDocs(query(collection(db,'results'), where('studentUid','==',user.uid))), none),
-      safe(getDocs(query(collection(db,'payments'), where('studentUid','==',user.uid))), none)
+      safe(getDocs(query(collection(db,'payments'), where('studentUid','==',user.uid))), none),
+      noticeP
     ]);
     cache.students   = ss.exists() ? [{uid:ss.id, ...ss.data()}] : [];
     cache.results    = rs.docs.map(d=>({id:d.id, ...d.data()}));
@@ -293,6 +305,7 @@ async function loadData(){
     cache.exams      = es.docs.map(d=>({id:d.id, ...d.data()}));
     cache.library    = libs.docs.map(d=>({id:d.id, ...d.data()}));
     cache.attendance = atts.docs.map(d=>({id:d.id, ...d.data()}));
+    cache.notifications = noticeSnap.docs.map(d=>({id:d.id,...d.data()}));
   }
 }
 
@@ -309,7 +322,7 @@ function getNavItems(){
   ];
   else if(role==='finance') items = [
     ['dashboard','الرئيسية'],['payments',`المدفوعات${badge}`],
-    ['accounts','الحسابات'],['logs','سجل الأمان'],['chat','شؤون الطلاب']
+    ['accounts','الحسابات'],['requests',`الطلبات${reqBadge()}`],['logs','سجل الأمان'],['chat','شؤون الطلاب']
   ];
   else if(role==='academic') items = [
     ['dashboard','الرئيسية'],['students','الطلاب'],['results','النتائج'],
@@ -320,7 +333,7 @@ function getNavItems(){
     ['home','الرئيسية'],['gpasimulator','محاكي GPA'],
     ['mylibrary','المكتبة PDF'],['myattendance','سجل الحضور'],
     ['myresults','نتيجتي'],['myexams','الامتحانات'],
-    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['chat','التواصل'],['security','الأمان']
+    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['notifications',`التنبيهات${(cache.notifications||[]).filter(n=>!n.read).length?` <span class="nav-badge">${(cache.notifications||[]).filter(n=>!n.read).length}</span>`:''}`],['chat','التواصل'],['security','الأمان']
   ];
   if(role==='admin') items.push(['security','الأمان']);
   if(role==='finance'||role==='academic') items.push(['security','الأمان']);
@@ -333,7 +346,7 @@ function getNavItems(){
 }
 
 function navIcon(id){
-  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper',security:'fa-lock'};
+  const icons={dashboard:'fa-tachometer-alt',students:'fa-users',results:'fa-chart-bar',exams:'fa-calendar-check',library:'fa-book-open',attendance:'fa-clipboard-check',schedule:'fa-calendar-alt',requests:'fa-inbox',courses:'fa-book',news:'fa-bullhorn',payments:'fa-wallet',accounts:'fa-university',staff:'fa-user-cog',logs:'fa-shield-alt',chat:'fa-comments',home:'fa-home',gpasimulator:'fa-calculator',mylibrary:'fa-file-pdf',myattendance:'fa-clipboard-list',myresults:'fa-chart-line',myexams:'fa-calendar-check',myschedule:'fa-calendar-alt',myregistration:'fa-edit',myrequests:'fa-paper-plane',mynews:'fa-newspaper',notifications:'fa-bell',security:'fa-lock'};
   return icons[id]||'fa-circle';
 }
 
@@ -402,7 +415,11 @@ function renderView(){
   const isStaff = ['admin','finance','academic'].includes(role);
   let html = '';
 
-  if(activeTab==='security'){
+  if(activeTab==='notifications'&&role==='student'){
+    const notices=(cache.notifications||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    html=`<section class="card"><div class="headrow"><div><span class="section-kicker">التحديثات والمتابعة</span><h2><i class="fas fa-bell" style="color:var(--blue)"></i> تنبيهاتي</h2></div><button type="button" class="secondary" onclick="markAllNotificationsRead()">تعليم الكل كمقروء</button></div>${notices.length?`<div class="workflow-notice-list">${notices.map(n=>`<button type="button" class="workflow-notice ${n.read?'':'unread'}" onclick="openNotification('${esc(n.id)}','${esc(n.targetTab||'home')}')"><strong>${esc(n.title||'تنبيه')}</strong><span>${esc(n.message||'')}</span><small>${n.createdAt?.toDate?n.createdAt.toDate().toLocaleString('ar-EG'):'وصل حديثًا'}</small></button>`).join('')}</div>`:'<p class="muted">لا توجد تنبيهات حتى الآن.</p>'}</section>`;
+  }
+  else if(activeTab==='security'){
     html = `<section class="card"><h2><i class="fas fa-shield-halved" style="color:var(--blue)"></i> أمان الحساب</h2><p class="muted">آخر دخول مسجل: ${esc(user?.metadata?.lastSignInTime?new Date(user.metadata.lastSignInTime).toLocaleString('ar-EG'):'غير متاح')}</p><form id="ownPasswordForm" class="fields" style="max-width:640px"><div><label>كلمة المرور الحالية</label><input type="password" name="currentPassword" autocomplete="current-password" required></div><div><label>كلمة المرور الجديدة</label><input type="password" name="newPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><div><label>تأكيد كلمة المرور الجديدة</label><input type="password" name="confirmPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><button type="submit">تغيير كلمة المرور وإنهاء الجلسات الأخرى</button></form><div id="ownPasswordMsg" style="margin-top:10px"></div><p class="muted small">يتطلب التغيير تأكيد كلمة المرور الحالية. بعد نجاحه ستنتهي الجلسات القديمة، وسيُطلب منك تسجيل الدخول مجددًا.</p></section>`;
   }
   else if(activeTab==='dashboard' && isStaff){
@@ -974,6 +991,7 @@ function renderView(){
   else if(activeTab==='chat'){
     if(isStaff){
       const activeStu = cache.students.find(s=>s.uid===selectedChatStudentUid);
+      const chatMeta=cache.chats.find(c=>c.id===selectedChatStudentUid)||{};
       html = `<section class="card">
         <h2><i class="fas fa-comments" style="color:var(--blue);"></i> محادثات الطلاب</h2>
         <div class="fields" style="margin-bottom:15px;">
@@ -981,7 +999,7 @@ function renderView(){
         </div>
         <div id="adminChatStudentResults" class="chat-student-results">اكتب اسم الطالب أو رقمه للبحث عن المحادثة.</div>
         <div class="chatbox-container">
-          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
+          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<form id="chatAssignmentForm" class="chat-assignment-form"><label>القسم <select name="assignedDepartment"><option value="academic" ${chatMeta.assignedDepartment==='academic'?'selected':''}>أكاديمي</option><option value="finance" ${chatMeta.assignedDepartment==='finance'?'selected':''}>مالي</option><option value="admin" ${chatMeta.assignedDepartment==='admin'?'selected':''}>الإدارة</option></select></label><label>المسؤول <select name="assignedTo"><option value="">غير معيّن</option>${cache.staff.filter(st=>['finance','academic'].includes(st.role)).map(st=>`<option value="${esc(st.uid)}" ${chatMeta.assignedTo===st.uid?'selected':''}>${esc(st.name||st.email)} — ${st.role==='finance'?'مالي':'أكاديمي'}</option>`).join('')}</select></label><button type="submit" class="secondary">حفظ التوجيه</button></form>`:''}${activeStu&&role==='admin'?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
           <div id="chatMessagesArea" class="chat-messages-area"></div>
           <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
             <input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
@@ -995,8 +1013,8 @@ function renderView(){
         <div class="chatbox-container">
           <div style="background:var(--pale);padding:10px 15px;font-weight:bold;border-bottom:1px solid var(--line);">محادثة رسمية</div>
           <div id="chatMessagesArea" class="chat-messages-area"></div>
-          <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
-            <input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
+          <form id="chatForm" style="display:flex;flex-wrap:wrap;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
+            <select name="department" aria-label="إرسال الرسالة إلى"><option value="academic">الشؤون الأكاديمية</option><option value="finance">الشؤون المالية</option></select><input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
             <button style="background:var(--green);"><i class="fas fa-paper-plane"></i></button>
           </form>
         </div>
@@ -1281,6 +1299,7 @@ function bindForms(){
   $('#newsForm')?.addEventListener('submit', saveNews);
   $('#studentPaymentForm')?.addEventListener('submit', triggerPaymentOtp);
   $('#chatForm')?.addEventListener('submit', sendChat);
+  $('#chatAssignmentForm')?.addEventListener('submit', saveChatAssignment);
 
   // تم إصلاح وربط معالج التعديل العام هنا بنجاح:
   $('#genericEditForm')?.addEventListener('submit', async e => {
@@ -1801,6 +1820,12 @@ async function sendChat(e){
   const targetUid = isStaff ? selectedChatStudentUid : user.uid;
   if(!targetUid || !d.body.trim()) return;
   try {
+    const chatRef=doc(db,'chats',targetUid),chatSnap=await getDoc(chatRef);
+    if(chatSnap.exists()) await updateDoc(chatRef,{lastMessage:d.body.trim().slice(0,160),updatedAt:serverTimestamp()});
+    else {
+      const student=cache.students.find(s=>s.uid===targetUid)||cache.students[0]||{};
+      await setDoc(chatRef,{studentUid:targetUid,studentName:student.name||profile.name||'',assignedDepartment:isStaff?(role==='admin'?'academic':role):(d.department||'academic'),assignedTo:isStaff&&role!=='admin'?user.uid:'',assignedName:isStaff&&role!=='admin'?(profile.name||user.email):'',lastMessage:d.body.trim().slice(0,160),updatedAt:serverTimestamp()});
+    }
     await addDoc(collection(db,'chats',targetUid,'messages'), {
       senderUid: user.uid,
       senderName: profile.name || user.email,
@@ -1867,9 +1892,13 @@ const LEVELS=['الفرقة الأولى','الفرقة الثانية','الف�
 const REQ_TYPES=['تظلم من نتيجة','شهادة قيد','إفادة التحاق','كشف درجات رسمي','استفسار مالي','أخرى'];
 async function loadExtra(){
   const staff=['admin','finance','academic'].includes(role);
-  const sc=await safe(getDocs(collection(db,'schedule')),none);
+  const sc=await safe(getDocs(role==='student'?query(collection(db,'schedule'),where('status','==','منشور')):collection(db,'schedule')),none);
   cache.schedule=sc.docs.map(d=>({id:d.id,...d.data()}));
-  const rq=await safe(getDocs(staff?collection(db,'requests'):query(collection(db,'requests'),where('studentUid','==',user.uid))),none);
+  const requestQuery=role==='admin'?collection(db,'requests')
+    :role==='finance'?query(collection(db,'requests'),where('assignedDepartment','==','finance'))
+    :role==='academic'?query(collection(db,'requests'),where('assignedDepartment','==','academic'))
+    :query(collection(db,'requests'),where('studentUid','==',user.uid));
+  const rq=await safe(getDocs(requestQuery),none);
   cache.requests=rq.docs.map(d=>({id:d.id,...d.data()}));
   const cs=await safe(getDocs(collection(db,'courses')),none); cache.courses=cs.docs.map(d=>({id:d.id,...d.data()}));
   const rg=await safe(getDoc(doc(db,'settings','registration')),none); cache.regSettings=rg.exists()?rg.data():{};
@@ -1882,29 +1911,28 @@ function extraViews(html){
   if(activeTab==='schedule'&&staff){
     const lv=LEVELS.map(l=>`<option>${l}</option>`).join(''),dy=DAYS.map(d=>`<option>${d}</option>`).join('');
     const rows=(cache.schedule||[]).slice().sort((a,b)=>String(a.level).localeCompare(b.level)||DAYS.indexOf(a.day)-DAYS.indexOf(b.day)||String(a.start).localeCompare(String(b.start)))
-      .map(x=>`<tr><td>${esc(x.level)}</td><td>${esc(x.day)}</td><td>${esc(x.start)} - ${esc(x.end)}</td><td>${esc(x.course)}</td><td>${esc(x.hall)}</td><td>${esc(x.instructor||'—')}</td><td><button class="danger" data-delete="schedule" data-id="${x.id}"><i class="fas fa-trash"></i></button></td></tr>`).join('');
-    return `<section class="card"><h2><i class="fas fa-calendar-week" style="color:var(--blue)"></i> إضافة محاضرة للجدول الأسبوعي</h2>
+      .map(x=>`<tr><td>${esc(x.level)}</td><td>${esc(x.day)}</td><td>${esc(x.start)} - ${esc(x.end)}</td><td>${esc(x.course)}</td><td>${esc(x.hall)}</td><td>${esc(x.instructor||'—')}</td><td>${reqPill(x.status||'قديم')}</td><td>${x.status!=='منشور'&&role==='admin'?`<button type="button" onclick="approveSchedule('${x.id}')">${x.status==='بانتظار الاعتماد'?'اعتماد ونشر':'نشر الجدول القديم'}</button>`:''} <button class="danger" data-delete="schedule" data-id="${x.id}"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+    return `<section class="card"><h2><i class="fas fa-calendar-week" style="color:var(--blue)"></i> إضافة محاضرة للجدول الأسبوعي</h2><p class="muted">المحاضرات التي يضيفها المساعد الأكاديمي تنتظر اعتماد المدير قبل ظهورها للطلاب.</p>
       <form id="scheduleForm" class="fields"><div><label>الفرقة</label><select name="level">${lv}</select></div><div><label>اليوم</label><select name="day">${dy}</select></div>
       <div><label>من</label><input name="start" type="time" required></div><div><label>إلى</label><input name="end" type="time" required></div>
       <div><label>المادة</label><input name="course" required></div><div><label>القاعة</label><input name="hall" required></div>
       <div><label>المحاضر</label><input name="instructor"></div><button style="margin-top:10px;">إضافة</button></form></section>
-      <section class="card"><h3>الجدول الحالي</h3>${table(['الفرقة','اليوم','الوقت','المادة','القاعة','المحاضر','إجراء'],rows)}</section>`;
+      <section class="card"><h3>الجدول الحالي وطلبات النشر</h3>${table(['الفرقة','اليوم','الوقت','المادة','القاعة','المحاضر','الحالة','إجراء'],rows)}</section>`;
   }
   if(activeTab==='myschedule'&&role==='student'){
-    const mine=(cache.schedule||[]).filter(x=>x.level===st.level);
+    const mine=(cache.schedule||[]).filter(x=>x.level===st.level&&(!x.status||x.status==='منشور'));
     const cards=DAYS.map(d=>{const it=mine.filter(x=>x.day===d).sort((a,b)=>String(a.start).localeCompare(String(b.start)));
       return it.length?`<section class="card"><h3>${d}</h3>${table(['الوقت','المادة','القاعة','المحاضر'],it.map(x=>`<tr><td>${esc(x.start)} - ${esc(x.end)}</td><td><b>${esc(x.course)}</b></td><td>${esc(x.hall)}</td><td>${esc(x.instructor||'—')}</td></tr>`).join(''))}</section>`:'';}).join('');
     return `<h2>جدول محاضراتي — ${esc(st.level||'')}</h2>`+(cards||'<section class="card muted">لم يُعلن الجدول بعد.</section>');
   }
-  if(activeTab==='requests'&&staff){
+  if(activeTab==='requests'&&['admin','academic','finance'].includes(role)){
     const rows=(cache.requests||[]).slice().sort((a,b)=>(a.status==='قيد المراجعة'?0:1)-(b.status==='قيد المراجعة'?0:1))
-      .map(r=>`<tr><td><code>${esc(r.trackingNo||'REQ-'+r.id.toUpperCase())}</code></td><td><b>${esc(r.studentName)}</b><br><small class="muted">${esc(r.studentId)}</small></td><td>${esc(r.customType||r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}</td><td>${esc(r.reply||'—')}</td>
-      <td>${['مرفوض','جاهز للاستلام','تم القبول'].includes(r.status)?'—':`<div class="actions"><button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','قيد التنفيذ')">قيد التنفيذ</button><button style="background:var(--green);padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','تم القبول')">قبول</button><button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','جاهز للاستلام')">جاهز</button><button class="danger" style="padding:5px 10px;font-size:.8rem;" onclick="setRequestStatus('${r.id}','مرفوض')">رفض</button></div>`}</td></tr>`).join('');
-    return `<section class="card"><h2><i class="fas fa-inbox" style="color:var(--blue)"></i> الطلبات الإلكترونية</h2>${table(['رقم المتابعة','الطالب','النوع','التفاصيل','الحالة','الرد','إجراء'],rows)}</section>`;
+      .map(r=>{const actions=workflowRequestActions(r);return `<tr><td><code>${esc(r.trackingNo||'REQ-'+r.id.toUpperCase())}</code></td><td><b>${esc(r.studentName)}</b><br><small class="muted">${esc(r.studentId)}</small></td><td>${esc(r.customType||r.type)}<br><small>${r.assignedDepartment==='finance'?'مالي':'أكاديمي'}</small></td><td>${esc(r.details)}</td><td>${reqPill(r.status)}<br><small>${esc(r.workflowStage||'مراجعة القسم')}</small></td><td>${esc(r.reply||'—')}</td><td>${actions}</td></tr>`;}).join('');
+    return `<section class="card"><h2><i class="fas fa-inbox" style="color:var(--blue)"></i> الطلبات الإلكترونية ومسار الاعتماد</h2><p class="muted">الطلبات الأكاديمية تمر بمراجعة القسم ثم اعتماد المدير. الطلبات المالية تذهب للمساعد المالي أو المدير.</p>${table(['رقم المتابعة','الطالب','المسار','التفاصيل','الحالة','الرد','الإجراء'],rows)}</section>`;
   }
   if(activeTab==='myrequests'&&role==='student'){
     const rows=(cache.requests||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0))
-      .map(r=>`<tr><td><code>${esc(r.trackingNo||'REQ-'+r.id.toUpperCase())}</code></td><td>${esc(r.customType||r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}</td><td>${esc(r.reply||'—')}</td><td>${r.handledAt?.toDate?r.handledAt.toDate().toLocaleDateString('ar-EG'):'—'}</td></tr>`).join('');
+      .map(r=>`<tr><td><code>${esc(r.trackingNo||'REQ-'+r.id.toUpperCase())}</code></td><td>${esc(r.customType||r.type)}</td><td>${esc(r.details)}</td><td>${reqPill(r.status)}<br><small>${esc(r.workflowStage||'قيد المراجعة')}</small></td><td>${esc(r.reply||'—')}</td><td>${r.handledAt?.toDate?r.handledAt.toDate().toLocaleDateString('ar-EG'):'—'}</td></tr>`).join('');
     return `<section class="card"><h2><i class="fas fa-file-signature" style="color:var(--blue)"></i> تقديم طلب جديد</h2>
       <form id="requestForm"><label>نوع الطلب</label><select name="type" style="margin-bottom:10px;">${REQ_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
       <label>التفاصيل (للتظلم: اسم المادة وسبب التظلم)</label><textarea name="details" rows="3" maxlength="1000" required style="margin-bottom:10px;"></textarea><button>إرسال الطلب</button></form></section>
@@ -1916,24 +1944,46 @@ function extraViews(html){
 }
 async function addSchedule(e){
   e.preventDefault(); const f=e.currentTarget,d=Object.fromEntries(new FormData(f).entries());
-  try{ await addDoc(collection(db,'schedule'),{level:d.level,day:d.day,start:d.start,end:d.end,course:d.course.trim(),hall:d.hall.trim(),instructor:(d.instructor||'').trim(),createdAt:serverTimestamp()});
-    logAction('إضافة محاضرة',d.course); showToast('تمت الإضافة'); await loadData(); renderApp();
+  const status=role==='admin'?'منشور':'بانتظار الاعتماد';
+  try{ await addDoc(collection(db,'schedule'),{level:d.level,day:d.day,start:d.start,end:d.end,course:d.course.trim(),hall:d.hall.trim(),instructor:(d.instructor||'').trim(),status,createdBy:user.email,createdAt:serverTimestamp()});
+    logAction('إضافة محاضرة',`${d.course} — ${status}`); showToast(status==='منشور'?'تمت الإضافة والنشر':'تم إرسال المحاضرة لاعتماد المدير'); await loadData(); renderApp();
   }catch(err){ showToast(authError(err),'error'); }
 }
 async function sendRequest(e){
   e.preventDefault(); const f=e.currentTarget,d=Object.fromEntries(new FormData(f).entries()),s=cache.students[0];
   if(!s) return;
   try{ const requestRef=doc(collection(db,'requests')),trackingNo='REQ-'+requestRef.id.toUpperCase(),customType=d.type==='استفسار مالي'?d.type:'';
-    await setDoc(requestRef,{trackingNo,studentUid:user.uid,studentId:s.studentId,studentName:s.name,type:customType?'أخرى':d.type,customType,details:d.details.trim(),status:'قيد المراجعة',reply:'',createdAt:serverTimestamp()});
+    const assignedDepartment=customType==='استفسار مالي'?'finance':'academic';
+    await setDoc(requestRef,{trackingNo,studentUid:user.uid,studentId:s.studentId,studentName:s.name,type:customType?'أخرى':d.type,customType,details:d.details.trim(),assignedDepartment,workflowStage:'مراجعة القسم',status:'قيد المراجعة',reply:'',createdAt:serverTimestamp()});
     showToast(`تم إرسال الطلب — رقم المتابعة: ${trackingNo}`); await loadData(); renderApp();
   }catch(err){ showToast(authError(err),'error'); }
 }
+function workflowRequestActions(request){
+  if(['تم الحل','جاهز للاستلام','مرفوض'].includes(request.status)) return '—';
+  if(role==='academic'&&['بانتظار اعتماد الإدارة','تم القبول'].includes(request.status)) return '<span class="muted">بانتظار استكمال الإدارة</span>';
+  if(role==='academic'&&request.assignedDepartment==='academic') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','بانتظار اعتماد الإدارة')">إرسال لاعتماد الإدارة</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
+  if(role==='finance'&&request.assignedDepartment==='finance') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','تم الحل')">تم الحل</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
+  if(role==='admin') return `<div class="actions">${request.status!=='بانتظار اعتماد الإدارة'?`<button class="secondary" onclick="setRequestStatus('${request.id}','بانتظار اعتماد الإدارة')">إحالة للاعتماد</button>`:''}<button onclick="setRequestStatus('${request.id}','تم القبول')">قبول</button><button class="secondary" onclick="setRequestStatus('${request.id}','جاهز للاستلام')">جاهز للاستلام</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
+  return '—';
+}
 window.setRequestStatus=async(id,status)=>{
   const r=cache.requests.find(x=>x.id===id); if(!r) return;
+  if(role==='academic'&&r.assignedDepartment!=='academic'||role==='finance'&&r.assignedDepartment!=='finance') return;
+  if(role==='academic'&&status!=='بانتظار اعتماد الإدارة'&&status!=='مرفوض') return;
+  if(role==='finance'&&status!=='تم الحل'&&status!=='مرفوض') return;
+  if(role==='admin'&&status==='تم الحل'&&r.assignedDepartment!=='finance') return;
   const reply=prompt('ملاحظة للطالب (اختياري):',''); if(reply===null) return;
-  try{ await updateDoc(doc(db,'requests',id),{status,reply:reply.trim(),handledBy:user.email,handledAt:serverTimestamp()});
+  const workflowStage=status==='بانتظار اعتماد الإدارة'?'اعتماد المدير':(['تم الحل','جاهز للاستلام','تم القبول','مرفوض'].includes(status)?'مكتمل':'مراجعة القسم');
+  try{ await updateDoc(doc(db,'requests',id),{status,workflowStage,reply:reply.trim(),handledBy:user.email,handledAt:serverTimestamp()});
     logAction('معالجة طلب',`${r.type} - ${r.studentName} - ${status}`); showToast('تم التحديث'); await loadData(); renderApp();
   }catch(err){ showToast(authError(err),'error'); }
+};
+
+window.approveSchedule=async id=>{
+  if(role!=='admin')return;
+  const item=cache.schedule.find(x=>x.id===id);if(!item||item.status==='منشور')return;
+  try{await updateDoc(doc(db,'schedule',id),{status:'منشور',approvedBy:user.email,approvedAt:serverTimestamp()});logAction('اعتماد ونشر محاضرة',item.course);showToast('تم اعتماد المحاضرة ونشرها للطلاب');await loadData();renderApp();}
+  catch(error){showToast(authError(error),'error');}
 };
 
 /* ---------- نتائج بفصول وساعات معتمدة + رفع Excel + كشف درجات ---------- */
@@ -2113,7 +2163,8 @@ window.filterAdminChatStudents=function(value){
   const box=$('#adminChatStudentResults'); if(!box) return;
   const q=String(value||'').trim().toLocaleLowerCase();
   if(!q){box.innerHTML='اكتب اسم الطالب أو رقمه للبحث عن المحادثة.';return;}
-  const matches=cache.students.filter(s=>String(s.name||'').toLocaleLowerCase().includes(q)||String(s.studentId||'').toLocaleLowerCase().includes(q)).slice(0,30);
+  const allowedChats=new Set((cache.chats||[]).map(chat=>chat.id));
+  const matches=cache.students.filter(s=>(role==='admin'||allowedChats.has(s.uid))&&(String(s.name||'').toLocaleLowerCase().includes(q)||String(s.studentId||'').toLocaleLowerCase().includes(q))).slice(0,30);
   if(!matches.length){box.innerHTML='<p class="muted">لا يوجد طالب مطابق.</p>';return;}
   box.innerHTML=matches.map(s=>`<button type="button" class="chat-student-result ${s.uid===selectedChatStudentUid?'active':''}" data-chat-student="${esc(s.uid)}"><strong>${esc(s.name)}</strong><span>${esc(s.studentId||'')}</span></button>`).join('');
   box.querySelectorAll('[data-chat-student]').forEach(button=>button.addEventListener('click',()=>window.changeChatStudent(button.dataset.chatStudent)));
@@ -2380,7 +2431,7 @@ function printAttendanceReport(){
   printReport('تقرير الحضور والغياب',headers,rows);
 }
 const STAFF_PERMISSION_GROUPS={
-  finance:[['payments','المدفوعات'],['accounts','حسابات الدفع'],['logs','سجل النشاط'],['chat','محادثات الطلاب']],
+  finance:[['payments','المدفوعات'],['accounts','حسابات الدفع'],['requests','الطلبات المالية'],['logs','سجل النشاط'],['chat','محادثات الطلاب']],
   academic:[['students','الطلاب'],['results','النتائج'],['exams','الامتحانات'],['library','المكتبة'],['attendance','الحضور'],['schedule','الجدول'],['requests','الطلبات'],['courses','المواد والتسجيل'],['news','الأخبار'],['chat','محادثات الطلاب']]
 };
 function defaultStaffPermissions(staffRole){return (STAFF_PERMISSION_GROUPS[staffRole]||[]).map(([id])=>id);}
@@ -2464,4 +2515,39 @@ async function changeOwnPassword(e){
     alert('تم تغيير كلمة المرور. سجّل الدخول مجددًا باستخدام كلمة المرور الجديدة.');
     await signOut(auth);
   }catch(err){box.innerHTML=msg(authError(err),'error');button.disabled=false;}
+}
+/* ---------- سير العمل والتنبيهات ---------- */
+window.openNotification=async function(id,targetTab){
+  const item=(cache.notifications||[]).find(n=>n.id===id);
+  try{if(item&&!item.read)await updateDoc(doc(db,'notifications',id),{read:true});}
+  catch(error){showToast(authError(error),'error');return;}
+  activeTab=targetTab;localStorage.setItem('activeTab',activeTab);await loadData();renderApp();
+};
+
+window.markAllNotificationsRead=async function(){
+  const unread=(cache.notifications||[]).filter(n=>!n.read);
+  try{
+    for(let i=0;i<unread.length;i+=450){
+      const batch=writeBatch(db);unread.slice(i,i+450).forEach(n=>batch.update(doc(db,'notifications',n.id),{read:true}));await batch.commit();
+    }
+    cache.notifications=cache.notifications.map(n=>({...n,read:true}));renderApp();showToast('تم تعليم التنبيهات كمقروءة');
+  }catch(error){showToast(authError(error),'error');}
+};
+
+async function saveChatAssignment(event){
+  event.preventDefault();
+  if(role!=='admin'||!selectedChatStudentUid)return;
+  const data=Object.fromEntries(new FormData(event.currentTarget).entries());
+  const assignee=cache.staff.find(st=>st.uid===data.assignedTo);
+  if(data.assignedTo&&(!assignee||assignee.role!==data.assignedDepartment)){showToast('اختر مساعدًا تابعًا للقسم المحدد','error');return;}
+  const student=cache.students.find(st=>st.uid===selectedChatStudentUid);
+  try{
+    await setDoc(doc(db,'chats',selectedChatStudentUid),{
+      studentUid:selectedChatStudentUid,studentName:student?.name||'',
+      assignedDepartment:data.assignedDepartment,assignedTo:data.assignedTo||'',
+      assignedName:assignee?.name||assignee?.email||'',assignedBy:user.email,updatedAt:serverTimestamp(),
+    },{merge:true});
+    logAction('توجيه محادثة طالب',`${student?.name||selectedChatStudentUid} — ${data.assignedDepartment} — ${assignee?.name||'غير معيّن'}`);
+    showToast('تم حفظ توجيه المحادثة');await loadData();renderApp();
+  }catch(error){showToast(authError(error),'error');}
 }

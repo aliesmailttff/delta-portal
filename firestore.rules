@@ -12,7 +12,7 @@ service cloud.firestore {
     function isFinance()  { return hasRole(['admin','finance']); }
     function isAcademic() { return hasRole(['admin','academic']); }
     function defaultPermission(role, area) {
-      return (role == 'finance' && area in ['students','payments','accounts','logs','chat'])
+      return (role == 'finance' && area in ['students','payments','accounts','requests','logs','chat'])
         || (role == 'academic' && area in ['students','results','exams','library','attendance','schedule','requests','courses','news','chat']);
     }
     function hasPermission(area) {
@@ -25,6 +25,18 @@ service cloud.firestore {
                 && area in get(userPath(request.auth.uid)).data.permissions))));
     }
     function isStaff()    { return hasRole(['admin','finance','academic']); }
+    function canHandleRequest(data) {
+      return isAdmin() || (hasPermission('requests')
+        && ((get(userPath(request.auth.uid)).data.role == 'finance' && data.get('assignedDepartment', 'academic') == 'finance')
+          || (get(userPath(request.auth.uid)).data.role == 'academic' && data.get('assignedDepartment', 'academic') == 'academic')));
+    }
+    function canUpdateRequest(data) {
+      return isAdmin() || (hasPermission('requests') && data.get('status', '') == 'قيد المراجعة'
+        && ((get(userPath(request.auth.uid)).data.role == 'finance' && data.get('assignedDepartment', '') == 'finance'
+              && request.resource.data.status in ['تم الحل','مرفوض'])
+          || (get(userPath(request.auth.uid)).data.role == 'academic' && data.get('assignedDepartment', '') == 'academic'
+              && request.resource.data.status in ['بانتظار اعتماد الإدارة','مرفوض'])));
+    }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
     function siteIsOpen() {
       return !exists(/databases/$(database)/documents/settings/site_status)
@@ -111,14 +123,47 @@ service cloud.firestore {
     }
 
     match /chats/{studentUid}/messages/{msgId} {
-      allow read: if (isOwner(studentUid) && isPortalStudent()) || hasPermission('chat');
-      allow create: if ((isOwner(studentUid) && isPortalStudent()) || hasPermission('chat'))
+      function canReadAssignedChat() {
+        return isAdmin() || (hasPermission('chat') && (!exists(/databases/$(database)/documents/chats/$(studentUid))
+          || get(/databases/$(database)/documents/chats/$(studentUid)).data.get('assignedTo', '') == request.auth.uid
+          || (get(/databases/$(database)/documents/chats/$(studentUid)).data.get('assignedTo', '') == ''
+            && get(/databases/$(database)/documents/chats/$(studentUid)).data.get('assignedDepartment', 'academic') == get(userPath(request.auth.uid)).data.role)));
+      }
+      allow read: if (isOwner(studentUid) && isPortalStudent()) || canReadAssignedChat();
+      allow create: if ((isOwner(studentUid) && isPortalStudent()) || canReadAssignedChat())
         && request.resource.data.senderUid == request.auth.uid
         && request.resource.data.body is string
         && request.resource.data.body.size() > 0
         && request.resource.data.body.size() <= 1000;
       allow update: if false;
       allow delete: if isAdmin();
+    }
+
+    match /chats/{studentUid} {
+      allow read: if (isOwner(studentUid) && isPortalStudent()) || isAdmin()
+        || (hasPermission('chat') && (resource.data.get('assignedTo', '') == request.auth.uid
+          || (resource.data.get('assignedTo', '') == ''
+            && resource.data.get('assignedDepartment', 'academic') == get(userPath(request.auth.uid)).data.role)));
+      allow create: if (isAdmin() || (isOwner(studentUid) && isPortalStudent()
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.assignedDepartment in ['academic','finance']))
+        || (hasPermission('chat') && request.resource.data.studentUid == studentUid
+          && request.resource.data.assignedDepartment == get(userPath(request.auth.uid)).data.role
+          && request.resource.data.assignedTo == request.auth.uid);
+      allow update: if (isAdmin() && changedKeys().hasOnly(['studentUid','studentName','assignedDepartment','assignedTo','assignedName','assignedBy','updatedAt','lastMessage']))
+        || (isOwner(studentUid) && isPortalStudent() && changedKeys().hasOnly(['lastMessage','updatedAt']))
+        || (hasPermission('chat') && (resource.data.get('assignedTo', '') == request.auth.uid
+          || (resource.data.get('assignedTo', '') == ''
+            && resource.data.get('assignedDepartment', 'academic') == get(userPath(request.auth.uid)).data.role))
+          && changedKeys().hasOnly(['lastMessage','updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isPortalStudent() && resource.data.studentUid == request.auth.uid;
+      allow create, delete: if false;
+      allow update: if isPortalStudent() && resource.data.studentUid == request.auth.uid
+        && changedKeys().hasOnly(['read']) && request.resource.data.read == true;
     }
 
     match /courses/{id} { allow read: if isPortalStudent() || hasPermission('courses'); allow write: if hasPermission('courses'); }
@@ -140,16 +185,27 @@ service cloud.firestore {
         || (isPortalStudent() && resource.data.studentUid == request.auth.uid && get(/databases/$(database)/documents/settings/registration).data.open == true);
     }
 
-    match /schedule/{id} { allow read: if isPortalStudent() || hasPermission('schedule'); allow write: if hasPermission('schedule'); }
+    match /schedule/{id} {
+      allow read: if hasPermission('schedule') || (isPortalStudent() && resource.data.status == 'منشور');
+      allow create: if (isAdmin() && request.resource.data.status == 'منشور')
+        || (hasPermission('schedule') && !isAdmin() && request.resource.data.status == 'بانتظار الاعتماد');
+      allow update: if isAdmin() && changedKeys().hasOnly(['status','approvedBy','approvedAt'])
+        && request.resource.data.status == 'منشور';
+      allow delete: if hasPermission('schedule');
+    }
 
     match /requests/{id} {
-      allow read: if hasPermission('requests') || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
+      allow read: if canHandleRequest(resource.data) || (isPortalStudent() && resource.data.studentUid == request.auth.uid);
       allow create: if isPortalStudent()
         && request.resource.data.studentUid == request.auth.uid
         && request.resource.data.status == 'قيد المراجعة'
+        && request.resource.data.workflowStage == 'مراجعة القسم'
+        && request.resource.data.assignedDepartment in ['academic','finance']
+        && request.resource.data.assignedDepartment == (request.resource.data.customType == 'استفسار مالي' ? 'finance' : 'academic')
         && request.resource.data.type in ['تظلم من نتيجة','شهادة قيد','إفادة التحاق','كشف درجات رسمي','أخرى']
         && request.resource.data.details is string && request.resource.data.details.size() <= 1000;
-      allow update: if hasPermission('requests') && changedKeys().hasOnly(['status','reply','handledBy','handledAt']);
+      allow update: if canUpdateRequest(resource.data)
+        && changedKeys().hasOnly(['status','workflowStage','reply','handledBy','handledAt']);
       allow delete: if isAdmin();
     }
 

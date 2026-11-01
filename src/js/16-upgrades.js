@@ -1,5 +1,5 @@
 const STAFF_PERMISSION_GROUPS={
-  finance:[['payments','المدفوعات'],['accounts','حسابات الدفع'],['logs','سجل النشاط'],['chat','محادثات الطلاب']],
+  finance:[['payments','المدفوعات'],['accounts','حسابات الدفع'],['requests','الطلبات المالية'],['logs','سجل النشاط'],['chat','محادثات الطلاب']],
   academic:[['students','الطلاب'],['results','النتائج'],['exams','الامتحانات'],['library','المكتبة'],['attendance','الحضور'],['schedule','الجدول'],['requests','الطلبات'],['courses','المواد والتسجيل'],['news','الأخبار'],['chat','محادثات الطلاب']]
 };
 function defaultStaffPermissions(staffRole){return (STAFF_PERMISSION_GROUPS[staffRole]||[]).map(([id])=>id);}

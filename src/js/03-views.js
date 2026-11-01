@@ -3,7 +3,11 @@ function renderView(){
   const isStaff = ['admin','finance','academic'].includes(role);
   let html = '';
 
-  if(activeTab==='security'){
+  if(activeTab==='notifications'&&role==='student'){
+    const notices=(cache.notifications||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    html=`<section class="card"><div class="headrow"><div><span class="section-kicker">التحديثات والمتابعة</span><h2><i class="fas fa-bell" style="color:var(--blue)"></i> تنبيهاتي</h2></div><button type="button" class="secondary" onclick="markAllNotificationsRead()">تعليم الكل كمقروء</button></div>${notices.length?`<div class="workflow-notice-list">${notices.map(n=>`<button type="button" class="workflow-notice ${n.read?'':'unread'}" onclick="openNotification('${esc(n.id)}','${esc(n.targetTab||'home')}')"><strong>${esc(n.title||'تنبيه')}</strong><span>${esc(n.message||'')}</span><small>${n.createdAt?.toDate?n.createdAt.toDate().toLocaleString('ar-EG'):'وصل حديثًا'}</small></button>`).join('')}</div>`:'<p class="muted">لا توجد تنبيهات حتى الآن.</p>'}</section>`;
+  }
+  else if(activeTab==='security'){
     html = `<section class="card"><h2><i class="fas fa-shield-halved" style="color:var(--blue)"></i> أمان الحساب</h2><p class="muted">آخر دخول مسجل: ${esc(user?.metadata?.lastSignInTime?new Date(user.metadata.lastSignInTime).toLocaleString('ar-EG'):'غير متاح')}</p><form id="ownPasswordForm" class="fields" style="max-width:640px"><div><label>كلمة المرور الحالية</label><input type="password" name="currentPassword" autocomplete="current-password" required></div><div><label>كلمة المرور الجديدة</label><input type="password" name="newPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><div><label>تأكيد كلمة المرور الجديدة</label><input type="password" name="confirmPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><button type="submit">تغيير كلمة المرور وإنهاء الجلسات الأخرى</button></form><div id="ownPasswordMsg" style="margin-top:10px"></div><p class="muted small">يتطلب التغيير تأكيد كلمة المرور الحالية. بعد نجاحه ستنتهي الجلسات القديمة، وسيُطلب منك تسجيل الدخول مجددًا.</p></section>`;
   }
   else if(activeTab==='dashboard' && isStaff){
@@ -575,6 +579,7 @@ function renderView(){
   else if(activeTab==='chat'){
     if(isStaff){
       const activeStu = cache.students.find(s=>s.uid===selectedChatStudentUid);
+      const chatMeta=cache.chats.find(c=>c.id===selectedChatStudentUid)||{};
       html = `<section class="card">
         <h2><i class="fas fa-comments" style="color:var(--blue);"></i> محادثات الطلاب</h2>
         <div class="fields" style="margin-bottom:15px;">
@@ -582,7 +587,7 @@ function renderView(){
         </div>
         <div id="adminChatStudentResults" class="chat-student-results">اكتب اسم الطالب أو رقمه للبحث عن المحادثة.</div>
         <div class="chatbox-container">
-          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
+          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<form id="chatAssignmentForm" class="chat-assignment-form"><label>القسم <select name="assignedDepartment"><option value="academic" ${chatMeta.assignedDepartment==='academic'?'selected':''}>أكاديمي</option><option value="finance" ${chatMeta.assignedDepartment==='finance'?'selected':''}>مالي</option><option value="admin" ${chatMeta.assignedDepartment==='admin'?'selected':''}>الإدارة</option></select></label><label>المسؤول <select name="assignedTo"><option value="">غير معيّن</option>${cache.staff.filter(st=>['finance','academic'].includes(st.role)).map(st=>`<option value="${esc(st.uid)}" ${chatMeta.assignedTo===st.uid?'selected':''}>${esc(st.name||st.email)} — ${st.role==='finance'?'مالي':'أكاديمي'}</option>`).join('')}</select></label><button type="submit" class="secondary">حفظ التوجيه</button></form>`:''}${activeStu&&role==='admin'?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
           <div id="chatMessagesArea" class="chat-messages-area"></div>
           <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
             <input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
@@ -596,8 +601,8 @@ function renderView(){
         <div class="chatbox-container">
           <div style="background:var(--pale);padding:10px 15px;font-weight:bold;border-bottom:1px solid var(--line);">محادثة رسمية</div>
           <div id="chatMessagesArea" class="chat-messages-area"></div>
-          <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
-            <input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
+          <form id="chatForm" style="display:flex;flex-wrap:wrap;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
+            <select name="department" aria-label="إرسال الرسالة إلى"><option value="academic">الشؤون الأكاديمية</option><option value="finance">الشؤون المالية</option></select><input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
             <button style="background:var(--green);"><i class="fas fa-paper-plane"></i></button>
           </form>
         </div>
