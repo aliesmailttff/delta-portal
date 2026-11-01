@@ -368,6 +368,12 @@ function nav(){
 }
 
 function renderApp(){
+  // renderApp replaces the entire sidebar, so retain its scroll offsets first.
+  const previousSidebar=appRoot.querySelector('.app-sidebar');
+  const previousNav=appRoot.querySelector('.side-nav');
+  const sidebarScrollTop=previousSidebar?.scrollTop||0;
+  const navScrollTop=previousNav?.scrollTop||0;
+  const navScrollLeft=previousNav?.scrollLeft||0;
   const p = profile || {};
   const roleLabel = role==='admin'?'(Super Admin)':role==='finance'?'(مالي)':role==='academic'?'(أكاديمي)':'';
   $('#headerActions').innerHTML = `<button class="secondary" id="logout" style="padding:7px 12px;font-size:.82rem;"><i class="fas fa-sign-out-alt"></i> خروج</button>`;
@@ -386,6 +392,13 @@ function renderApp(){
     <div class="app-page-heading"><div><span class="page-eyebrow">بوابة الخدمات الأكاديمية ${roleLabel}</span><h2>أهلًا بعودتك، ${displayName}</h2><p>كل خدماتك ومتابعاتك في مكان واحد.</p></div><div class="secure-status"><i class="fas fa-shield-alt"></i><span>جلسة آمنة</span></div></div>
     <div id="view"></div>
   </section></div>`;
+  const nextSidebar=appRoot.querySelector('.app-sidebar');
+  const nextNav=appRoot.querySelector('.side-nav');
+  if(nextSidebar) nextSidebar.scrollTop=sidebarScrollTop;
+  if(nextNav){
+    nextNav.scrollTop=navScrollTop;
+    nextNav.scrollLeft=navScrollLeft;
+  }
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
     if(unsubChat){ unsubChat(); unsubChat=null; }
     activeTab = b.dataset.tab;
