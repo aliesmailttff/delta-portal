@@ -92,6 +92,12 @@ if(!isFirebaseConfigured()){
         }
         profile = snap.data();
         role = profile.role;
+        if(window.DELTA_ADMIN_CONSOLE && role!=='admin'){
+          profile=null;role=null;
+          showFatal('لوحة الإدارة المستقلة متاحة لحساب مدير النظام فقط.');
+          await signOut(auth);
+          return;
+        }
         const siteStatusSnap = await getDoc(doc(db,'settings','site_status'));
         cache.siteStatus = siteStatusSnap.exists() ? siteStatusSnap.data() : {maintenanceMode:false};
         if(role==='student' && cache.siteStatus.maintenanceMode){
