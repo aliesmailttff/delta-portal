@@ -12,8 +12,8 @@ service cloud.firestore {
     function isFinance()  { return hasRole(['admin','finance']); }
     function isAcademic() { return hasRole(['admin','academic']); }
     function defaultPermission(role, area) {
-      return (role == 'finance' && area in ['students','payments','accounts','requests','logs','chat'])
-        || (role == 'academic' && area in ['students','results','exams','library','attendance','schedule','requests','courses','news','chat']);
+      return (role == 'finance' && area in ['students','payments','accounts','requests','requests_finance','logs','chat'])
+        || (role == 'academic' && area in ['students','students_create','students_edit','students_delete','results','exams','library','attendance','schedule','requests','requests_academic','courses','news','chat']);
     }
     function hasPermission(area) {
       return signedIn() && exists(userPath(request.auth.uid))
@@ -27,15 +27,13 @@ service cloud.firestore {
     function isStaff()    { return hasRole(['admin','finance','academic']); }
     function canHandleRequest(data) {
       return isAdmin() || (hasPermission('requests')
-        && ((get(userPath(request.auth.uid)).data.role == 'finance' && data.get('assignedDepartment', 'academic') == 'finance')
-          || (get(userPath(request.auth.uid)).data.role == 'academic' && data.get('assignedDepartment', 'academic') == 'academic')));
+        && ((data.get('assignedDepartment', 'academic') == 'finance' && hasPermission('requests_finance'))
+          || (data.get('assignedDepartment', 'academic') == 'academic' && hasPermission('requests_academic'))));
     }
     function canUpdateRequest(data) {
-      return isAdmin() || (hasPermission('requests') && data.get('status', '') == 'قيد المراجعة'
-        && ((get(userPath(request.auth.uid)).data.role == 'finance' && data.get('assignedDepartment', '') == 'finance'
-              && request.resource.data.status in ['تم الحل','مرفوض'])
-          || (get(userPath(request.auth.uid)).data.role == 'academic' && data.get('assignedDepartment', '') == 'academic'
-              && request.resource.data.status in ['بانتظار اعتماد الإدارة','مرفوض'])));
+      return isAdmin() || (canHandleRequest(data) && data.get('status', '') == 'قيد المراجعة'
+        && ((data.get('assignedDepartment', '') == 'finance' && request.resource.data.status in ['تم الحل','مرفوض'])
+          || (data.get('assignedDepartment', '') == 'academic' && request.resource.data.status in ['بانتظار اعتماد الإدارة','مرفوض'])));
     }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
     function siteIsOpen() {
@@ -49,20 +47,21 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create: if (isAdmin() && request.resource.data.role in ['student','finance','academic'])
-                    || (isAcademic() && hasPermission('students') && request.resource.data.role == 'student');
+                    || (hasPermission('students_create') && request.resource.data.role == 'student');
       allow update: if (isAdmin() && resource.data.role != 'admin' && request.resource.data.role != 'admin')
                     // المستخدم يلغي علامة "غيّر كلمة المرور" فقط
                     || (isOwner(uid) && changedKeys().hasOnly(['mustChangePassword'])
                         && request.resource.data.mustChangePassword == false);
       allow delete: if (isAdmin() && resource.data.role != 'admin')
-                    || (isAcademic() && hasPermission('students') && resource.data.role == 'student');
+                    || (hasPermission('students_delete') && resource.data.role == 'student');
     }
 
     match /students/{uid} {
       allow read: if (isOwner(uid) && isPortalStudent()) || hasPermission('students') || hasPermission('payments');
-      allow create, delete: if isAcademic() && hasPermission('students');
+      allow create: if hasPermission('students_create');
+      allow delete: if hasPermission('students_delete');
       // الطالب لا يعدّل ملفه إطلاقاً. المالي يحدّث paidAmount فقط (اعتماد الإيصال)
-      allow update: if (isAcademic() && hasPermission('students')) || (isFinance() && hasPermission('payments') && changedKeys().hasOnly(['paidAmount']));
+      allow update: if hasPermission('students_edit') || (hasPermission('payments') && changedKeys().hasOnly(['paidAmount']));
     }
 
     match /results/{id} {
@@ -84,9 +83,12 @@ service cloud.firestore {
         && request.resource.data.amount <= get(/databases/$(database)/documents/students/$(request.auth.uid)).data.totalFees
         && !(exists(/databases/$(database)/documents/settings/payment_accounts)
              && get(/databases/$(database)/documents/settings/payment_accounts).data.get('maintenanceMode', false) == true);
-      allow update: if isFinance() && hasPermission('payments')
-        && changedKeys().hasOnly(['status','approvedBy','approvedAt','rejectReason']);
-      allow delete: if isAdmin();
+      allow update: if hasPermission('payments')
+        && (changedKeys().hasOnly(['status','approvedBy','approvedAt','rejectReason'])
+          || (hasPermission('payments_edit')
+            && changedKeys().hasOnly(['amount','method','trxId','date'])
+            && request.resource.data.amount is number && request.resource.data.amount > 0));
+      allow delete: if hasPermission('payments') && hasPermission('payments_delete');
     }
 
     match /settings/{docId} {
@@ -136,7 +138,9 @@ service cloud.firestore {
         && request.resource.data.body.size() > 0
         && request.resource.data.body.size() <= 1000;
       allow update: if false;
-      allow delete: if isAdmin();
+      allow delete: if isAdmin()
+        || ((hasPermission('deleteMessages') || hasPermission('deleteChats')) && canReadAssignedChat())
+        || (isOwner(studentUid) && isPortalStudent() && resource.data.senderUid == request.auth.uid);
     }
 
     match /chats/{studentUid} {
@@ -156,7 +160,10 @@ service cloud.firestore {
           || (resource.data.get('assignedTo', '') == ''
             && resource.data.get('assignedDepartment', 'academic') == get(userPath(request.auth.uid)).data.role))
           && changedKeys().hasOnly(['lastMessage','updatedAt']));
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (hasPermission('deleteChats') && hasPermission('chat')
+        && (resource.data.get('assignedTo', '') == request.auth.uid
+          || (resource.data.get('assignedTo', '') == ''
+            && resource.data.get('assignedDepartment', 'academic') == get(userPath(request.auth.uid)).data.role)));
     }
 
     match /notifications/{notificationId} {

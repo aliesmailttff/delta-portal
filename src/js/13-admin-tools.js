@@ -76,12 +76,18 @@ window.openStudentPasswordModal=function(uid){
 window.closeStudentPasswordModal=()=>$('#studentPasswordModal')?.remove();
 
 window.deleteSelectedStudentConversation=async function(){
-  if(role!=='admin'||!selectedChatStudentUid) return;
+  if(!hasModuleAccess('chat')||!hasModuleAccess('deleteChats')||!selectedChatStudentUid) return;
   const student=cache.students.find(s=>s.uid===selectedChatStudentUid); if(!student) return;
   if(!confirm(`حذف سجل المحادثة مع ${student.name} للطرفين؟ لا يمكن التراجع عن الحذف.`)) return;
   try{
     if(unsubChat){unsubChat();unsubChat=null;}
-    await httpsCallable(functions,'deleteStudentConversation')({studentUid:student.uid});
+    const messages=await getDocs(collection(db,'chats',student.uid,'messages'));
+    for(let start=0;start<messages.docs.length;start+=450){
+      const batch=writeBatch(db);
+      messages.docs.slice(start,start+450).forEach(message=>batch.delete(message.ref));
+      await batch.commit();
+    }
+    await deleteDoc(doc(db,'chats',student.uid));
     logAction('حذف محادثة طالب',String(student.studentId));
     selectedChatStudentUid=null;
     showToast('تم حذف المحادثة للطرفين');

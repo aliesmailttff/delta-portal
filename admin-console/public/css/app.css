@@ -66,6 +66,7 @@ th{background:var(--pale);color:var(--blue);font-size:.9rem}
 .chat-bubble.incoming{background:var(--card);align-self:flex-start;border:1px solid var(--line)}
 .chat-bubble.outgoing{background:var(--blue);color:#fff;align-self:flex-end}
 .chat-bubble small{display:block;font-size:.75rem;opacity:.7;margin-top:4px;text-align:left}
+.chat-delete-message{display:block;margin-top:7px;padding:3px 8px;font-size:.72rem;opacity:.86}
 
 #printable-receipt{display:none}
 @media print{

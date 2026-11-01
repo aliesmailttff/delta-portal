@@ -160,6 +160,11 @@ function getValidTabsForRole(r){
     :r==='finance'?['dashboard','payments','accounts','logs','chat','requests','security']
     :r==='academic'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','chat','security']
     :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','notifications','chat'];
+  if(['finance','academic'].includes(r)){
+    const pool=['students','results','exams','library','attendance','schedule','requests','courses','news','payments','accounts','logs','chat'];
+    const permissions=Array.isArray(profile?.permissions)?profile.permissions:defaultStaffPermissions(r);
+    tabs=[...new Set([...tabs,...pool.filter(id=>permissions.includes(id))])];
+  }
   if(r!=='admin'&&Array.isArray(profile?.permissions)) tabs=tabs.filter(id=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   return tabs;
 }
@@ -331,6 +336,11 @@ function getNavItems(){
   ];
   if(role==='admin') items.push(['security','الأمان']);
   if(role==='finance'||role==='academic') items.push(['security','الأمان']);
+  if(role==='finance'||role==='academic'){
+    const labels={students:'الطلاب',results:'النتائج',exams:'الامتحانات',library:'المكتبة',attendance:'الحضور',schedule:'الجدول',requests:'الطلبات',courses:'المواد والتسجيل',news:'الأخبار',payments:'المدفوعات',accounts:'الحسابات',logs:'سجل الأمان',chat:'شؤون الطلاب'};
+    const permissions=Array.isArray(profile?.permissions)?profile.permissions:defaultStaffPermissions(role);
+    Object.entries(labels).forEach(([id,label])=>{if(permissions.includes(id)&&!items.some(item=>item[0]===id))items.push([id,id==='payments'?`المدفوعات${badge}`:id==='requests'?`الطلبات${reqBadge()}`:label]);});
+  }
   if(Array.isArray(profile?.permissions)&&role!=='admin') items=items.filter(([id])=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   if(!items.some(i=>i[0]===activeTab)){
     activeTab = items[0][0];
@@ -451,10 +461,10 @@ function renderView(){
         <section class="card dashboard-chart-card"><div class="section-heading"><div><span class="section-kicker">ملخص مالي</span><h3>توزيع المدفوعات</h3></div><span class="section-icon"><i class="fas fa-chart-pie"></i></span></div><div class="dashboard-chart-wrap"><canvas id="paymentMethodsChart"></canvas></div></section>
         <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${visibleShortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
       </div>
-      <section class="card"><div class="section-heading"><div><span class="section-kicker">التقارير والإدارة</span><h3>وصول سريع للتقارير</h3></div></div><div class="actions">${['admin','academic'].includes(role)&&hasModuleAccess('results')?'<button type="button" class="secondary" data-go="results"><i class="fas fa-chart-bar"></i> النتائج</button>':''}${['admin','academic'].includes(role)&&hasModuleAccess('attendance')?'<button type="button" class="secondary" data-go="attendance"><i class="fas fa-clipboard-check"></i> الحضور والغياب</button>':''}${['admin','finance'].includes(role)&&hasModuleAccess('payments')?'<button type="button" class="secondary" data-go="payments"><i class="fas fa-wallet"></i> تقارير المصروفات</button>':''}${role==='admin'?'<button type="button" class="secondary" data-go="logs"><i class="fas fa-shield-alt"></i> سجل التدقيق</button>':''}</div></section>
-      ${['admin','academic'].includes(role)&&hasModuleAccess('results')?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
+      <section class="card"><div class="section-heading"><div><span class="section-kicker">التقارير والإدارة</span><h3>وصول سريع للتقارير</h3></div></div><div class="actions">${hasModuleAccess('results')?'<button type="button" class="secondary" data-go="results"><i class="fas fa-chart-bar"></i> النتائج</button>':''}${hasModuleAccess('attendance')?'<button type="button" class="secondary" data-go="attendance"><i class="fas fa-clipboard-check"></i> الحضور والغياب</button>':''}${hasModuleAccess('payments')?'<button type="button" class="secondary" data-go="payments"><i class="fas fa-wallet"></i> تقارير المصروفات</button>':''}${hasModuleAccess('logs')?'<button type="button" class="secondary" data-go="logs"><i class="fas fa-shield-alt"></i> سجل التدقيق</button>':''}</div></section>
+      ${hasModuleAccess('results')?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
   }
-  else if(activeTab==='library' && isStaff){
+  else if(activeTab==='library' && isStaff && hasModuleAccess('library')){
     html = `<section class="card">
       <h2><i class="fas fa-file-pdf" style="color:var(--red);"></i> رفع ملف PDF جديد</h2>
       <form id="libForm" class="fields">
@@ -483,7 +493,7 @@ function renderView(){
       </tr>`).join(''))}
     </section>`;
   }
-  else if(activeTab==='attendance' && isStaff){
+  else if(activeTab==='attendance' && isStaff && hasModuleAccess('attendance')){
     const courseChoices=[...new Set([...(cache.courses||[]).map(x=>x.name),...(cache.schedule||[]).map(x=>x.course)].filter(Boolean))];
     const sessionRows=(cache.activeAttendance?.sessions||[]).filter(x=>Number(x.expiresAt||0)<=Date.now()&&x.course)
       .slice().sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0)).map(x=>{
@@ -547,7 +557,7 @@ function renderView(){
       </tr>`).join(''))}
     </section>`;
   }
-  else if(activeTab==='accounts' && (role==='admin'||role==='finance')){
+  else if(activeTab==='accounts' && hasModuleAccess('accounts')){
     const s = cache.settings || {};
     html = `<section class="card">
       <h2>إعدادات الحسابات</h2>
@@ -575,7 +585,7 @@ function renderView(){
       </form><div id="siteMaintenanceMsg"></div>
     </section>`:''}`;
   }
-  else if(activeTab==='logs' && (role==='admin'||role==='finance')){
+  else if(activeTab==='logs' && hasModuleAccess('logs')){
     html = `<section class="card">
         <h2><i class="fas fa-history" style="color:var(--blue);"></i> سجل النشاطات</h2><p class="muted">استخدم البحث أعلى الجدول لتصفية السجل حسب المستخدم أو الإجراء أو التفاصيل.</p>
       ${table(['الوقت','المسؤول','الإجراء','التفاصيل'], cache.logs.map(l=>`<tr>
@@ -586,8 +596,8 @@ function renderView(){
       </tr>`).join(''))}
     </section>`;
   }
-  else if(activeTab==='students' && (role==='admin'||role==='academic')){
-    html = `<section class="card">
+  else if(activeTab==='students' && hasModuleAccess('students')){
+    html = `${hasModuleAccess('students_create')?`<section class="card">
       <h2>إضافة طالب</h2>
       <form id="studentForm" class="fields">
         <div><label>الاسم</label><input name="name" required></div>
@@ -606,7 +616,7 @@ function renderView(){
         <button type="submit" style="grid-column:1/-1;margin-top:10px;">إنشاء الحساب</button>
       </form>
       <div id="studentMsg" style="margin-top:10px;"></div>
-    </section>
+    </section>`:''}
     <section class="card">
       <div class="headrow" style="margin-bottom:15px;">
         <h3>الطلاب</h3>
@@ -616,11 +626,11 @@ function renderView(){
           </button>
         </div>
       </div>
-      <div style="background:var(--pale);padding:12px;border-radius:10px;margin-bottom:15px;">
+      ${hasModuleAccess('students_create')?`<div style="background:var(--pale);padding:12px;border-radius:10px;margin-bottom:15px;">
         <label style="font-weight:bold;color:var(--blue);"><i class="fas fa-file-upload"></i> استيراد الطلاب من Excel:</label>
         <p class="muted" style="margin:6px 0;">يقبل أسماء الأعمدة العربية أو الإنجليزية: الاسم، الرقم الجامعي، البريد، كلمة المرور، الفرقة، القسم، المصروفات، وصورة الطالب (اختياري كرابط مباشر). يمكن ترك البريد فارغًا ليُنشأ من الرقم الجامعي، وكلمة المرور الفارغة تُنشأ تلقائيًا.</p>
         <input type="file" accept=".xlsx,.xls" onchange="importStudentsFromExcel(event)" style="margin-top:5px;background:#fff;padding:6px;">
-      </div>
+      </div>`:''}
       <div class="fields" style="margin-bottom:15px;">
         <div><label>بحث:</label><input type="text" id="studentSearchInput" onkeyup="filterStudentsTable()"></div>
         <div><label>الفرقة:</label>
@@ -634,7 +644,7 @@ function renderView(){
       <div id="studentsTableWrap">${renderStudentsRows(cache.students)}</div>
     </section>`;
   }
-  else if(activeTab==='results' && (role==='admin'||role==='academic')){
+  else if(activeTab==='results' && hasModuleAccess('results')){
     html = `<section class="card">
       <h2>رصد النتائج</h2>
       <form id="resultForm" class="fields">
@@ -662,7 +672,7 @@ function renderView(){
       }).join(''))}
     </section>`;
   }
-  else if(activeTab==='exams' && (role==='admin'||role==='academic')){
+  else if(activeTab==='exams' && hasModuleAccess('exams')){
     html = `<section class="card">
       <h2>إضافة امتحان</h2>
       <form id="examForm" class="fields">
@@ -692,7 +702,7 @@ function renderView(){
       </tr>`).join(''))}
     </section>`;
   }
-  else if(activeTab==='news' && (role==='admin'||role==='academic')){
+  else if(activeTab==='news' && hasModuleAccess('news')){
     html = `<section class="card">
       <h2>نشر خبر</h2>
       <form id="newsForm">
@@ -703,7 +713,7 @@ function renderView(){
       <div id="newsMsg" style="margin-top:10px;"></div>
     </section>` + newsCards(true);
   }
-  else if(activeTab==='payments' && (role==='admin'||role==='finance')){
+  else if(activeTab==='payments' && hasModuleAccess('payments')){
     const filtered = cache.payments.filter(p => {
       if(paymentFilterStatus==='pending') return p.status === 'قيد المراجعة';
       if(paymentFilterStatus==='approved') return p.status === 'مقبول';
@@ -727,6 +737,7 @@ function renderView(){
         const actionBtn = p.status==='قيد المراجعة'
           ? `<button style="background:var(--green);padding:5px 10px;font-size:.8rem;" onclick="approvePayment('${p.id}','${p.studentUid}',${p.amount})">اعتماد</button> <button class="danger" style="padding:5px 10px;font-size:.8rem;" onclick="rejectPayment('${p.id}')">رفض</button>`
           : p.status==='مقبول' ? `<button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="printReceipt('${p.id}')">إيصال</button>` : '—';
+        const recordActions=`${hasModuleAccess('payments_edit')?`<button type="button" class="secondary" onclick="openPaymentEditModal('${p.id}')">تعديل</button>`:''}${hasModuleAccess('payments_delete')&&hasModuleAccess('payments')?` <button type="button" class="danger" onclick="deletePayment('${p.id}')">حذف</button>`:''}`;
         const imgBtn = p.screenshot
           ? `<button class="secondary" style="padding:4px 8px;font-size:.75rem;" onclick="viewScreenshot('${p.id}')">عرض</button>`
           : '—';
@@ -738,7 +749,7 @@ function renderView(){
           <td><code>${esc(p.trxId||'—')}</code></td>
           <td>${imgBtn}</td>
           <td>${statusBadge}</td>
-          <td>${actionBtn}</td>
+          <td>${actionBtn} ${recordActions}</td>
         </tr>`;
       }).join(''))}
     </section>`;
@@ -1006,7 +1017,7 @@ function renderView(){
         </div>
         <div id="adminChatStudentResults" class="chat-student-results">اكتب اسم الطالب أو رقمه للبحث عن المحادثة.</div>
         <div class="chatbox-container">
-          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<form id="chatAssignmentForm" class="chat-assignment-form"><label>القسم <select name="assignedDepartment"><option value="academic" ${chatMeta.assignedDepartment==='academic'?'selected':''}>أكاديمي</option><option value="finance" ${chatMeta.assignedDepartment==='finance'?'selected':''}>مالي</option><option value="admin" ${chatMeta.assignedDepartment==='admin'?'selected':''}>الإدارة</option></select></label><label>المسؤول <select name="assignedTo"><option value="">غير معيّن</option>${cache.staff.filter(st=>['finance','academic'].includes(st.role)).map(st=>`<option value="${esc(st.uid)}" ${chatMeta.assignedTo===st.uid?'selected':''}>${esc(st.name||st.email)} — ${st.role==='finance'?'مالي':'أكاديمي'}</option>`).join('')}</select></label><button type="submit" class="secondary">حفظ التوجيه</button></form>`:''}${activeStu&&role==='admin'?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
+          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<form id="chatAssignmentForm" class="chat-assignment-form"><label>القسم <select name="assignedDepartment"><option value="academic" ${chatMeta.assignedDepartment==='academic'?'selected':''}>أكاديمي</option><option value="finance" ${chatMeta.assignedDepartment==='finance'?'selected':''}>مالي</option><option value="admin" ${chatMeta.assignedDepartment==='admin'?'selected':''}>الإدارة</option></select></label><label>المسؤول <select name="assignedTo"><option value="">غير معيّن</option>${cache.staff.filter(st=>['finance','academic'].includes(st.role)).map(st=>`<option value="${esc(st.uid)}" ${chatMeta.assignedTo===st.uid?'selected':''}>${esc(st.name||st.email)} — ${st.role==='finance'?'مالي':'أكاديمي'}</option>`).join('')}</select></label><button type="submit" class="secondary">حفظ التوجيه</button></form>`:''}${activeStu&&hasModuleAccess('deleteChats')?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
           <div id="chatMessagesArea" class="chat-messages-area"></div>
           <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
             <input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">
@@ -1046,9 +1057,9 @@ function renderStudentsRows(list){
     <td>${money(s.totalFees)}</td>
     <td><div class="actions">
       <button class="secondary" onclick="showStudentCard('${s.uid}')" style="background:#e0f2fe; color:#0369a1;"><i class="fas fa-id-card"></i> كارنيه</button>
-      <button class="secondary" onclick="openEditStudentModal('${s.uid}')"><i class="fas fa-edit"></i></button>
+      ${hasModuleAccess('students_edit')?`<button class="secondary" onclick="openEditStudentModal('${s.uid}')"><i class="fas fa-edit"></i></button>`:''}
       ${role==='admin'?`<button class="secondary" onclick="openStudentPasswordModal('${s.uid}')"><i class="fas fa-key"></i> كلمة المرور</button>`:''}
-      <button class="danger" data-delete-student="${s.uid}"><i class="fas fa-trash"></i></button>
+      ${hasModuleAccess('students_delete')?`<button class="danger" data-delete-student="${s.uid}"><i class="fas fa-trash"></i></button>`:''}
     </div></td>
   </tr>`).join(''));
 }
@@ -1149,6 +1160,7 @@ async function createStudentAccount(d,pw){
   }finally{ await signOut(secAuth).catch(()=>{}); deleteApp(secApp); }
 }
 window.importStudentsFromExcel=function(event){
+  if(!hasModuleAccess('students_create')){showToast('ليس لديك صلاحية إضافة الطلاب','error');return;}
   const file=event.target.files[0]; if(!file) return;
   const normKey=value=>String(value??'').trim().toLowerCase().normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[\s_\-()]+/g,'');
   const reader=new FileReader();
@@ -1315,7 +1327,23 @@ function bindForms(){
     const d = Object.fromEntries(new FormData(e.currentTarget).entries());
     editCtx.fields.forEach(([k,,t]) => { if(t==='number') d[k] = Number(d[k]); });
     try {
-      await updateDoc(doc(db, editCtx.coll, editCtx.id), d);
+      if(editCtx.coll==='payments'){
+        if(!hasModuleAccess('payments_edit'))throw new Error('ليس لديك صلاحية تعديل المدفوعات.');
+        if(!(Number(d.amount)>0))throw new Error('يجب أن يكون مبلغ العملية أكبر من صفر.');
+        await runTransaction(db,async tx=>{
+          const paymentRef=doc(db,'payments',editCtx.id),paymentSnap=await tx.get(paymentRef);
+          if(!paymentSnap.exists())throw new Error('عملية الدفع غير موجودة.');
+          const oldPayment=paymentSnap.data(),nextAmount=Number(d.amount);
+          if(oldPayment.status==='مقبول'){
+            const studentRef=doc(db,'students',oldPayment.studentUid),studentSnap=await tx.get(studentRef);
+            if(!studentSnap.exists())throw new Error('ملف الطالب غير موجود.');
+            const paid=Number(studentSnap.data().paidAmount||0)+nextAmount-Number(oldPayment.amount||0);
+            if(paid<0)throw new Error('التعديل سيجعل رصيد المدفوعات سالبًا.');
+            tx.update(studentRef,{paidAmount:paid});
+          }
+          tx.update(paymentRef,d);
+        });
+      }else await updateDoc(doc(db, editCtx.coll, editCtx.id), d);
       logAction('تعديل بيانات',`${editCtx.coll}:${editCtx.id}`);
       closeGenericEdit();
       showToast('تم التعديل بنجاح');
@@ -1363,6 +1391,32 @@ window.rejectPayment=async id=>{
   try{ await updateDoc(doc(db,'payments',id),{status:'مرفوض',rejectReason:why.trim(),approvedBy:user.email,approvedAt:serverTimestamp()});
     logAction('رفض إيصال',p.receiptNo+' - '+why); showToast('تم الرفض'); await loadData(); renderApp();
   }catch(err){showToast(err.message,'error');}
+};
+
+window.openPaymentEditModal=function(id){
+  if(!hasModuleAccess('payments_edit')){showToast('ليس لديك صلاحية تعديل المدفوعات','error');return;}
+  openEdit('payments',id,[['amount','المبلغ','number'],['method','وسيلة الدفع'],['trxId','الرقم المرجعي'],['date','التاريخ','date']]);
+};
+
+window.deletePayment=async function(id){
+  if(!hasModuleAccess('payments')||!hasModuleAccess('payments_delete')){showToast('ليس لديك صلاحية حذف المدفوعات','error');return;}
+  const payment=cache.payments.find(item=>item.id===id);if(!payment)return;
+  if(!confirm(`حذف عملية ${payment.receiptNo||id} بمبلغ ${money(payment.amount)}؟${payment.status==='مقبول'?' سيتم خصمها من إجمالي المدفوع للطالب.':''}`))return;
+  try{
+    await runTransaction(db,async tx=>{
+      const paymentRef=doc(db,'payments',id),paymentSnap=await tx.get(paymentRef);
+      if(!paymentSnap.exists())throw new Error('عملية الدفع غير موجودة.');
+      const data=paymentSnap.data();
+      if(data.status==='مقبول'){
+        const studentRef=doc(db,'students',data.studentUid),studentSnap=await tx.get(studentRef);
+        if(!studentSnap.exists())throw new Error('ملف الطالب غير موجود؛ لم تُحذف العملية.');
+        const paid=Math.max(0,Number(studentSnap.data().paidAmount||0)-Number(data.amount||0));
+        tx.update(studentRef,{paidAmount:paid});
+      }
+      tx.delete(paymentRef);
+    });
+    logAction('حذف عملية مدفوعات',payment.receiptNo||id);showToast('تم حذف العملية وتحديث رصيد الطالب');await loadData();renderApp();
+  }catch(err){showToast(authError(err),'error');}
 };
 
 window.approvePayment = async function(paymentId, studentUid, amount){
@@ -1648,6 +1702,8 @@ window.printFullFinancialStatement = function(){
 };
 
 async function deleteItem(coll, id){
+  if(coll==='payments'){await deletePayment(id);return;}
+  if(!hasModuleAccess(coll)){showToast('ليس لديك صلاحية الحذف','error');return;}
   if(!confirm('تأكيد الحذف؟')) return;
   await deleteDoc(doc(db, coll, id));
   logAction('حذف', coll+':'+id);
@@ -1656,6 +1712,7 @@ async function deleteItem(coll, id){
 }
 
 async function deleteStudent(uid){
+  if(!hasModuleAccess('students_delete')){showToast('ليس لديك صلاحية حذف الطلاب','error');return;}
   if(!confirm('حذف الطالب؟')) return;
   await deleteDoc(doc(db,'students',uid));
   await deleteDoc(doc(db,'users',uid));
@@ -1810,20 +1867,29 @@ function startChatListener(){
     area.innerHTML = snap.docs.map(d => {
       const m = d.data();
       const isMe = m.senderUid === user.uid;
+      const canDelete = role==='admin'||hasModuleAccess('deleteMessages')||isMe;
       return `<div class="chat-bubble ${isMe?'outgoing':'incoming'}">
         <div style="font-size:.8rem;font-weight:bold;opacity:.8;">${esc(m.senderName)}</div>
         <div>${esc(m.body)}</div>
+        ${canDelete?`<button type="button" class="danger chat-delete-message" onclick="deleteChatMessage('${esc(targetUid)}','${esc(d.id)}')" title="حذف الرسالة">حذف</button>`:''}
       </div>`;
     }).join('') || '<p class="muted" style="text-align:center;margin:auto;">لا توجد رسائل.</p>';
     area.scrollTop = area.scrollHeight;
   }, err => console.error(err));
 }
 
+window.deleteChatMessage=async function(studentUid,messageId){
+  if(!confirm('حذف هذه الرسالة؟ لا يمكن التراجع عن الحذف.'))return;
+  try{await deleteDoc(doc(db,'chats',studentUid,'messages',messageId));logAction('حذف رسالة محادثة',studentUid);showToast('تم حذف الرسالة');}
+  catch(err){showToast(authError(err),'error');}
+};
+
 async function sendChat(e){
   e.preventDefault();
   const form = e.currentTarget;
   const d = Object.fromEntries(new FormData(form).entries());
   const isStaff = ['admin','finance','academic'].includes(role);
+  if(isStaff&&!hasModuleAccess('chat')){showToast('ليس لديك صلاحية المحادثات','error');return;}
   const targetUid = isStaff ? selectedChatStudentUid : user.uid;
   if(!targetUid || !d.body.trim()) return;
   try {
@@ -1839,8 +1905,8 @@ async function sendChat(e){
       body: d.body.trim(),
       createdAt: serverTimestamp()
     });
-    form.reset();
-  } catch(err){ showToast(err.message, 'error'); }
+    form.reset();showToast('تم إرسال الرسالة');
+  } catch(err){ showToast(authError(err), 'error'); }
 }
 
 
@@ -1901,12 +1967,12 @@ async function loadExtra(){
   const staff=['admin','finance','academic'].includes(role);
   const sc=await safe(getDocs(role==='student'?query(collection(db,'schedule'),where('status','==','منشور')):collection(db,'schedule')),none);
   cache.schedule=sc.docs.map(d=>({id:d.id,...d.data()}));
-  const requestQuery=role==='admin'?collection(db,'requests')
-    :role==='finance'?query(collection(db,'requests'),where('assignedDepartment','==','finance'))
-    :role==='academic'?query(collection(db,'requests'),where('assignedDepartment','==','academic'))
-    :query(collection(db,'requests'),where('studentUid','==',user.uid));
-  const rq=await safe(getDocs(requestQuery),none);
-  cache.requests=rq.docs.map(d=>({id:d.id,...d.data()}));
+  let requestQueries=[];
+  if(role==='admin') requestQueries=[collection(db,'requests')];
+  else if(role==='student') requestQueries=[query(collection(db,'requests'),where('studentUid','==',user.uid))];
+  else if(hasModuleAccess('requests')) requestQueries=['academic','finance'].filter(dept=>hasModuleAccess(`requests_${dept}`)).map(dept=>query(collection(db,'requests'),where('assignedDepartment','==',dept)));
+  const requestSnaps=await Promise.all(requestQueries.map(q=>safe(getDocs(q),none)));
+  cache.requests=[...new Map(requestSnaps.flatMap(s=>s.docs.map(d=>[d.id,{id:d.id,...d.data()}]))).values()];
   const cs=await safe(getDocs(collection(db,'courses')),none); cache.courses=cs.docs.map(d=>({id:d.id,...d.data()}));
   const rg=await safe(getDoc(doc(db,'settings','registration')),none); cache.regSettings=rg.exists()?rg.data():{};
   const rr=await safe(getDocs(staff?collection(db,'registrations'):query(collection(db,'registrations'),where('studentUid','==',user.uid))),none); cache.registrations=rr.docs.map(d=>({id:d.id,...d.data()}));
@@ -1914,7 +1980,7 @@ async function loadExtra(){
 function reqBadge(){const n=(cache.requests||[]).filter(r=>r.status==='قيد المراجعة').length;return n?` <span style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:99px;font-size:.75rem;">${n}</span>`:'';}
 function reqPill(t){const c=t==='قيد المراجعة'||t==='قيد التنفيذ'?['#fef3c7','#92400e']:t==='مرفوض'?['#fee2e2','#991b1b']:['#d1fae5','#065f46'];return `<span class="pill" style="background:${c[0]};color:${c[1]};">${esc(t)}</span>`;}
 function extraViews(html){
-  const staff=role==='admin'||role==='academic', st=cache.students[0]||{};
+  const staff=hasModuleAccess('schedule'), st=cache.students[0]||{};
   if(activeTab==='schedule'&&staff){
     const lv=LEVELS.map(l=>`<option>${l}</option>`).join(''),dy=DAYS.map(d=>`<option>${d}</option>`).join('');
     const rows=(cache.schedule||[]).slice().sort((a,b)=>String(a.level).localeCompare(b.level)||DAYS.indexOf(a.day)-DAYS.indexOf(b.day)||String(a.start).localeCompare(String(b.start)))
@@ -1932,7 +1998,7 @@ function extraViews(html){
       return it.length?`<section class="card"><h3>${d}</h3>${table(['الوقت','المادة','القاعة','المحاضر'],it.map(x=>`<tr><td>${esc(x.start)} - ${esc(x.end)}</td><td><b>${esc(x.course)}</b></td><td>${esc(x.hall)}</td><td>${esc(x.instructor||'—')}</td></tr>`).join(''))}</section>`:'';}).join('');
     return `<h2>جدول محاضراتي — ${esc(st.level||'')}</h2>`+(cards||'<section class="card muted">لم يُعلن الجدول بعد.</section>');
   }
-  if(activeTab==='requests'&&['admin','academic','finance'].includes(role)){
+  if(activeTab==='requests'&&['admin','academic','finance'].includes(role)&&hasModuleAccess('requests')){
     const rows=(cache.requests||[]).slice().sort((a,b)=>(a.status==='قيد المراجعة'?0:1)-(b.status==='قيد المراجعة'?0:1))
       .map(r=>{const actions=workflowRequestActions(r);return `<tr><td><code>${esc(r.trackingNo||'REQ-'+r.id.toUpperCase())}</code></td><td><b>${esc(r.studentName)}</b><br><small class="muted">${esc(r.studentId)}</small></td><td>${esc(r.customType||r.type)}<br><small>${r.assignedDepartment==='finance'?'مالي':'أكاديمي'}</small></td><td>${esc(r.details)}</td><td>${reqPill(r.status)}<br><small>${esc(r.workflowStage||'مراجعة القسم')}</small></td><td>${esc(r.reply||'—')}</td><td>${actions}</td></tr>`;}).join('');
     return `<section class="card"><h2><i class="fas fa-inbox" style="color:var(--blue)"></i> الطلبات الإلكترونية ومسار الاعتماد</h2><p class="muted">الطلبات الأكاديمية تمر بمراجعة القسم ثم اعتماد المدير. الطلبات المالية تذهب للمساعد المالي أو المدير.</p>${table(['رقم المتابعة','الطالب','المسار','التفاصيل','الحالة','الرد','الإجراء'],rows)}</section>`;
@@ -1967,18 +2033,18 @@ async function sendRequest(e){
 }
 function workflowRequestActions(request){
   if(['تم الحل','جاهز للاستلام','مرفوض'].includes(request.status)) return '—';
-  if(role==='academic'&&['بانتظار اعتماد الإدارة','تم القبول'].includes(request.status)) return '<span class="muted">بانتظار استكمال الإدارة</span>';
-  if(role==='academic'&&request.assignedDepartment==='academic') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','بانتظار اعتماد الإدارة')">إرسال لاعتماد الإدارة</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
-  if(role==='finance'&&request.assignedDepartment==='finance') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','تم الحل')">تم الحل</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
   if(role==='admin') return `<div class="actions">${request.status!=='بانتظار اعتماد الإدارة'?`<button class="secondary" onclick="setRequestStatus('${request.id}','بانتظار اعتماد الإدارة')">إحالة للاعتماد</button>`:''}<button onclick="setRequestStatus('${request.id}','تم القبول')">قبول</button><button class="secondary" onclick="setRequestStatus('${request.id}','جاهز للاستلام')">جاهز للاستلام</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
+  if(!hasModuleAccess('requests')||!hasModuleAccess(`requests_${request.assignedDepartment}`)) return '—';
+  if(request.assignedDepartment==='academic'&&['بانتظار اعتماد الإدارة','تم القبول'].includes(request.status)) return '<span class="muted">بانتظار استكمال الإدارة</span>';
+  if(request.assignedDepartment==='academic') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','بانتظار اعتماد الإدارة')">إرسال لاعتماد الإدارة</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
+  if(request.assignedDepartment==='finance') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','تم الحل')">تم الحل</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
   return '—';
 }
 window.setRequestStatus=async(id,status)=>{
   const r=cache.requests.find(x=>x.id===id); if(!r) return;
-  if(role==='academic'&&r.assignedDepartment!=='academic'||role==='finance'&&r.assignedDepartment!=='finance') return;
-  if(role==='academic'&&status!=='بانتظار اعتماد الإدارة'&&status!=='مرفوض') return;
-  if(role==='finance'&&status!=='تم الحل'&&status!=='مرفوض') return;
-  if(role==='admin'&&status==='تم الحل'&&r.assignedDepartment!=='finance') return;
+  if(role!=='admin'&&(!hasModuleAccess('requests')||!hasModuleAccess(`requests_${r.assignedDepartment}`))) return;
+  if(role!=='admin'&&r.assignedDepartment==='academic'&&status!=='بانتظار اعتماد الإدارة'&&status!=='مرفوض') return;
+  if(role!=='admin'&&r.assignedDepartment==='finance'&&status!=='تم الحل'&&status!=='مرفوض') return;
   const reply=prompt('ملاحظة للطالب (اختياري):',''); if(reply===null) return;
   const workflowStage=status==='بانتظار اعتماد الإدارة'?'اعتماد المدير':(['تم الحل','جاهز للاستلام','تم القبول','مرفوض'].includes(status)?'مكتمل':'مراجعة القسم');
   try{ await updateDoc(doc(db,'requests',id),{status,workflowStage,reply:reply.trim(),handledBy:user.email,handledAt:serverTimestamp()});
@@ -2223,12 +2289,18 @@ window.openStudentPasswordModal=function(uid){
 window.closeStudentPasswordModal=()=>$('#studentPasswordModal')?.remove();
 
 window.deleteSelectedStudentConversation=async function(){
-  if(role!=='admin'||!selectedChatStudentUid) return;
+  if(!hasModuleAccess('chat')||!hasModuleAccess('deleteChats')||!selectedChatStudentUid) return;
   const student=cache.students.find(s=>s.uid===selectedChatStudentUid); if(!student) return;
   if(!confirm(`حذف سجل المحادثة مع ${student.name} للطرفين؟ لا يمكن التراجع عن الحذف.`)) return;
   try{
     if(unsubChat){unsubChat();unsubChat=null;}
-    await httpsCallable(functions,'deleteStudentConversation')({studentUid:student.uid});
+    const messages=await getDocs(collection(db,'chats',student.uid,'messages'));
+    for(let start=0;start<messages.docs.length;start+=450){
+      const batch=writeBatch(db);
+      messages.docs.slice(start,start+450).forEach(message=>batch.delete(message.ref));
+      await batch.commit();
+    }
+    await deleteDoc(doc(db,'chats',student.uid));
     logAction('حذف محادثة طالب',String(student.studentId));
     selectedChatStudentUid=null;
     showToast('تم حذف المحادثة للطرفين');
@@ -2426,23 +2498,28 @@ function buildAttendanceReport(){
   return {headers,rows};
 }
 function exportAttendanceReport(){
-  if(!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية تصدير التقرير','error');return;}
+  if(!hasModuleAccess('attendance')){showToast('ليس لديك صلاحية تصدير التقرير','error');return;}
   const {headers,rows}=buildAttendanceReport();
   if(!rows.length){showToast('لا توجد جلسات أو طلاب للفلاتر المحددة','error');return;}
   exportXlsx(`attendance-report-${new Date().toISOString().slice(0,10)}.xlsx`,headers,rows,'الحضور والغياب');
 }
 function printAttendanceReport(){
-  if(!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية طباعة التقرير','error');return;}
+  if(!hasModuleAccess('attendance')){showToast('ليس لديك صلاحية طباعة التقرير','error');return;}
   const {headers,rows}=buildAttendanceReport();
   if(!rows.length){showToast('لا توجد جلسات أو طلاب للفلاتر المحددة','error');return;}
   printReport('تقرير الحضور والغياب',headers,rows);
 }
-const STAFF_PERMISSION_GROUPS={
-  finance:[['payments','المدفوعات'],['accounts','حسابات الدفع'],['requests','الطلبات المالية'],['logs','سجل النشاط'],['chat','محادثات الطلاب']],
-  academic:[['students','الطلاب'],['results','النتائج'],['exams','الامتحانات'],['library','المكتبة'],['attendance','الحضور'],['schedule','الجدول'],['requests','الطلبات'],['courses','المواد والتسجيل'],['news','الأخبار'],['chat','محادثات الطلاب']]
-};
-function defaultStaffPermissions(staffRole){return (STAFF_PERMISSION_GROUPS[staffRole]||[]).map(([id])=>id);}
-function hasModuleAccess(module){return role==='admin'||!Array.isArray(profile?.permissions)||profile.permissions.includes(module);}
+const STAFF_PERMISSION_CATALOG=[
+  ['students','عرض ملفات الطلاب'],['students_create','إضافة طلاب'],['students_edit','تعديل ملفات الطلاب'],['students_delete','حذف ملفات الطلاب'],
+  ['results','النتائج'],['exams','الامتحانات'],['library','المكتبة'],
+  ['attendance','الحضور'],['schedule','الجدول'],['requests','الطلبات'],['requests_academic','معالجة الطلبات الأكاديمية'],
+  ['requests_finance','معالجة الطلبات المالية'],['courses','المواد والتسجيل'],['news','الأخبار'],
+  ['payments','عرض واعتماد المدفوعات'],['payments_edit','تعديل بيانات المدفوعات'],['payments_delete','حذف عمليات المدفوعات'],
+  ['accounts','حسابات الدفع'],['logs','سجل النشاط'],['chat','محادثات الطلاب'],['deleteMessages','حذف الرسائل'],['deleteChats','حذف المحادثات']
+];
+const STAFF_PERMISSION_GROUPS={finance:STAFF_PERMISSION_CATALOG,academic:STAFF_PERMISSION_CATALOG};
+function defaultStaffPermissions(staffRole){return staffRole==='finance'?['students','payments','accounts','requests','requests_finance','logs','chat']:['students','students_create','students_edit','students_delete','results','exams','library','attendance','schedule','requests','requests_academic','courses','news','chat'];}
+function hasModuleAccess(module){return role==='admin'||(Array.isArray(profile?.permissions)?profile.permissions.includes(module):defaultStaffPermissions(role).includes(module));}
 
 function exportXlsx(filename,headers,rows,sheetName='التقرير'){
   if(!window.XLSX){showToast('تعذر تحميل مكتبة Excel','error');return;}
@@ -2453,7 +2530,7 @@ function exportXlsx(filename,headers,rows,sheetName='التقرير'){
 }
 function exportResultsExcel(scope='mine'){
   const isMine=scope==='mine',records=isMine?cache.results:cache.results;
-  if(!isMine&&!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية تصدير النتائج','error');return;}
+  if(!isMine&&!hasModuleAccess('results')){showToast('ليس لديك صلاحية تصدير النتائج','error');return;}
   const student=cache.students?.[0]||{};
   const headers=['الرقم الجامعي','اسم الطالب','المادة','السنة','الفصل','الساعات','الدرجة','التقدير'];
   const rows=records.map(r=>{
@@ -2464,7 +2541,7 @@ function exportResultsExcel(scope='mine'){
 }
 function exportFinanceExcel(scope='mine'){
   const isMine=scope==='mine';
-  if(!isMine&&!['admin','finance'].includes(role)){showToast('ليس لديك صلاحية تصدير المصروفات','error');return;}
+  if(!isMine&&!hasModuleAccess('payments')){showToast('ليس لديك صلاحية تصدير المصروفات','error');return;}
   const payments=isMine?cache.payments.filter(p=>p.studentUid===user.uid):cache.payments;
   const headers=['رقم الإيصال','الرقم الجامعي','اسم الطالب','التاريخ','وسيلة الدفع','المبلغ','الرقم المرجعي','الحالة'];
   const rows=payments.map(p=>[p.receiptNo||'',p.studentId||'',p.studentName||'',p.date||'',p.method||'',Number(p.amount)||0,p.trxId||'',p.status||'']);
@@ -2477,13 +2554,13 @@ function printReport(title,headers,rows){
 }
 function printResultsReport(scope='mine'){
   const mine=scope==='mine',student=cache.students?.[0]||{};
-  if(!mine&&!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية طباعة النتائج','error');return;}
+  if(!mine&&!hasModuleAccess('results')){showToast('ليس لديك صلاحية طباعة النتائج','error');return;}
   const headers=['الرقم الجامعي','اسم الطالب','المادة','السنة','الفصل','الساعات','الدرجة','التقدير'];
   const rows=cache.results.map(r=>{const s=mine?student:cache.students.find(x=>x.uid===r.studentUid)||{};return [s.studentId||r.studentId||'',s.name||r.studentName||'',r.course||'',r.year||'',r.semester||'',Number(r.credits)||3,Number(r.score)||0,grade(Number(r.score))];});
   printReport('كشف النتائج',headers,rows);
 }
 function printFinanceReport(scope='mine'){
-  const mine=scope==='mine';if(!mine&&!['admin','finance'].includes(role)){showToast('ليس لديك صلاحية طباعة المصروفات','error');return;}
+  const mine=scope==='mine';if(!mine&&!hasModuleAccess('payments')){showToast('ليس لديك صلاحية طباعة المصروفات','error');return;}
   const rows=(mine?cache.payments.filter(p=>p.studentUid===user.uid):cache.payments).map(p=>[p.receiptNo||'',p.studentId||'',p.studentName||'',p.date||'',p.method||'',money(p.amount),p.trxId||'',p.status||'']);
   printReport('كشف المصروفات والمدفوعات',['رقم الإيصال','الرقم الجامعي','اسم الطالب','التاريخ','وسيلة الدفع','المبلغ','الرقم المرجعي','الحالة'],rows);
 }
@@ -2500,9 +2577,12 @@ window.editStaffPermissions=function(uid){
   const staff=cache.staff.find(x=>x.uid===uid);if(!staff||!STAFF_PERMISSION_GROUPS[staff.role])return;
   const allowed=STAFF_PERMISSION_GROUPS[staff.role],selected=Array.isArray(staff.permissions)?staff.permissions:defaultStaffPermissions(staff.role);
   document.querySelector('#staffPermissionsModal')?.remove();
-  document.body.insertAdjacentHTML('beforeend',`<div id="staffPermissionsModal" class="modal-overlay active" role="dialog" aria-modal="true"><section class="modal-card"><h3>صلاحيات ${esc(staff.name||staff.email)}</h3><p class="muted">حدد الأقسام التي يستطيع هذا المساعد فتحها. لتطبيق المنع على مستوى قاعدة البيانات، يجب نشر قواعد Firestore المحدّثة مع الموقع.</p><form id="staffPermissionsForm">${allowed.map(([id,label])=>`<label class="permission-option"><input type="checkbox" name="permission" value="${id}" ${selected.includes(id)?'checked':''}> ${label}</label>`).join('')}<div class="actions" style="margin-top:16px"><button type="button" class="secondary" onclick="document.querySelector('#staffPermissionsModal')?.remove()">إلغاء</button><button type="submit">حفظ الصلاحيات</button></div></form></section></div>`);
+  document.body.insertAdjacentHTML('beforeend',`<div id="staffPermissionsModal" class="modal-overlay active" role="dialog" aria-modal="true"><section class="modal-card"><h3>صلاحيات ${esc(staff.name||staff.email)}</h3><p class="muted">اختر صلاحيات هذا المساعد. الصلاحيات الحساسة مثل حذف المدفوعات أو المحادثات منفصلة ويمكن منحها أو سحبها هنا.</p><form id="staffPermissionsForm">${allowed.map(([id,label])=>`<label class="permission-option"><input type="checkbox" name="permission" value="${id}" ${selected.includes(id)?'checked':''}> ${label}</label>`).join('')}<div class="actions" style="margin-top:16px"><button type="button" class="secondary" onclick="document.querySelector('#staffPermissionsModal')?.remove()">إلغاء</button><button type="submit">حفظ الصلاحيات</button></div></form></section></div>`);
   $('#staffPermissionsForm').addEventListener('submit',async e=>{
-    e.preventDefault();const permissions=[...e.currentTarget.querySelectorAll('[name=permission]:checked')].map(x=>x.value);
+    e.preventDefault();const selectedPermissions=new Set([...e.currentTarget.querySelectorAll('[name=permission]:checked')].map(x=>x.value));
+    const dependencies={students_create:'students',students_edit:'students',students_delete:'students',payments_edit:'payments',payments_delete:'payments',requests_academic:'requests',requests_finance:'requests',deleteMessages:'chat',deleteChats:'chat'};
+    Object.entries(dependencies).forEach(([permission,base])=>{if(selectedPermissions.has(permission))selectedPermissions.add(base);});
+    const permissions=[...selectedPermissions];
     const button=e.currentTarget.querySelector('button[type=submit]');button.disabled=true;
     try{await updateDoc(doc(db,'users',uid),{permissions});logAction('تعديل صلاحيات مساعد',staff.email);staff.permissions=permissions;$('#staffPermissionsModal')?.remove();showToast('تم تحديث الصلاحيات');if(uid===user.uid){profile.permissions=permissions;const tabs=getValidTabsForRole(role);if(!tabs.includes(activeTab))activeTab='dashboard';renderApp();}}
     catch(err){button.disabled=false;showToast(authError(err),'error');}

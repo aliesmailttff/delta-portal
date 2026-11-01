@@ -148,6 +148,21 @@ async function requireRole(request, roles) {
   return { uid, profile: snap.data() };
 }
 
+async function requirePermission(request, permission) {
+  const uid=request.auth?.uid;
+  if(!uid)throw new HttpsError('unauthenticated','سجّل الدخول أولًا.');
+  const snap=await db.collection('users').doc(uid).get();
+  if(!snap.exists)throw new HttpsError('permission-denied','لا تملك صلاحية هذه العملية.');
+  const profile=snap.data(),role=profile.role;
+  const defaults={
+    finance:['students','payments','accounts','requests','requests_finance','logs','chat'],
+    academic:['students','students_create','students_edit','students_delete','results','exams','library','attendance','schedule','requests','requests_academic','courses','news','chat'],
+  };
+  const permissions=Array.isArray(profile.permissions)?profile.permissions:(defaults[role]||[]);
+  if(role!=='admin'&&!permissions.includes(permission))throw new HttpsError('permission-denied','لا تملك صلاحية هذه العملية.');
+  return {uid,profile};
+}
+
 function requiredString(value, label, max = 160) {
   if (typeof value !== 'string' || !value.trim() || value.length > max) {
     throw new HttpsError('invalid-argument', `قيمة ${label} غير صالحة.`);
@@ -187,7 +202,7 @@ exports.deleteStudentConversation = onCall(async request => {
 });
 
 exports.refreshAttendanceQr = onCall(async request => {
-  await requireRole(request, ['admin', 'academic']);
+  await requirePermission(request, 'attendance');
   const sessionId = requiredString(request.data?.sessionId, 'الجلسة');
   const publicSession = await db.collection('settings').doc('attendance_public').get();
   if (!publicSession.exists || publicSession.data().sessionId !== sessionId) {

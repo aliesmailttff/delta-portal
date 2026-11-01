@@ -40,13 +40,13 @@ function buildAttendanceReport(){
   return {headers,rows};
 }
 function exportAttendanceReport(){
-  if(!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية تصدير التقرير','error');return;}
+  if(!hasModuleAccess('attendance')){showToast('ليس لديك صلاحية تصدير التقرير','error');return;}
   const {headers,rows}=buildAttendanceReport();
   if(!rows.length){showToast('لا توجد جلسات أو طلاب للفلاتر المحددة','error');return;}
   exportXlsx(`attendance-report-${new Date().toISOString().slice(0,10)}.xlsx`,headers,rows,'الحضور والغياب');
 }
 function printAttendanceReport(){
-  if(!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية طباعة التقرير','error');return;}
+  if(!hasModuleAccess('attendance')){showToast('ليس لديك صلاحية طباعة التقرير','error');return;}
   const {headers,rows}=buildAttendanceReport();
   if(!rows.length){showToast('لا توجد جلسات أو طلاب للفلاتر المحددة','error');return;}
   printReport('تقرير الحضور والغياب',headers,rows);

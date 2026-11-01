@@ -24,6 +24,32 @@ window.rejectPayment=async id=>{
   }catch(err){showToast(err.message,'error');}
 };
 
+window.openPaymentEditModal=function(id){
+  if(!hasModuleAccess('payments_edit')){showToast('ليس لديك صلاحية تعديل المدفوعات','error');return;}
+  openEdit('payments',id,[['amount','المبلغ','number'],['method','وسيلة الدفع'],['trxId','الرقم المرجعي'],['date','التاريخ','date']]);
+};
+
+window.deletePayment=async function(id){
+  if(!hasModuleAccess('payments')||!hasModuleAccess('payments_delete')){showToast('ليس لديك صلاحية حذف المدفوعات','error');return;}
+  const payment=cache.payments.find(item=>item.id===id);if(!payment)return;
+  if(!confirm(`حذف عملية ${payment.receiptNo||id} بمبلغ ${money(payment.amount)}؟${payment.status==='مقبول'?' سيتم خصمها من إجمالي المدفوع للطالب.':''}`))return;
+  try{
+    await runTransaction(db,async tx=>{
+      const paymentRef=doc(db,'payments',id),paymentSnap=await tx.get(paymentRef);
+      if(!paymentSnap.exists())throw new Error('عملية الدفع غير موجودة.');
+      const data=paymentSnap.data();
+      if(data.status==='مقبول'){
+        const studentRef=doc(db,'students',data.studentUid),studentSnap=await tx.get(studentRef);
+        if(!studentSnap.exists())throw new Error('ملف الطالب غير موجود؛ لم تُحذف العملية.');
+        const paid=Math.max(0,Number(studentSnap.data().paidAmount||0)-Number(data.amount||0));
+        tx.update(studentRef,{paidAmount:paid});
+      }
+      tx.delete(paymentRef);
+    });
+    logAction('حذف عملية مدفوعات',payment.receiptNo||id);showToast('تم حذف العملية وتحديث رصيد الطالب');await loadData();renderApp();
+  }catch(err){showToast(authError(err),'error');}
+};
+
 window.approvePayment = async function(paymentId, studentUid, amount){
   if(!confirm('اعتماد هذا الإيصال؟')) return;
   try {

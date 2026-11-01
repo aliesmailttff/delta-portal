@@ -165,6 +165,11 @@ function getNavItems(){
   ];
   if(role==='admin') items.push(['security','الأمان']);
   if(role==='finance'||role==='academic') items.push(['security','الأمان']);
+  if(role==='finance'||role==='academic'){
+    const labels={students:'الطلاب',results:'النتائج',exams:'الامتحانات',library:'المكتبة',attendance:'الحضور',schedule:'الجدول',requests:'الطلبات',courses:'المواد والتسجيل',news:'الأخبار',payments:'المدفوعات',accounts:'الحسابات',logs:'سجل الأمان',chat:'شؤون الطلاب'};
+    const permissions=Array.isArray(profile?.permissions)?profile.permissions:defaultStaffPermissions(role);
+    Object.entries(labels).forEach(([id,label])=>{if(permissions.includes(id)&&!items.some(item=>item[0]===id))items.push([id,id==='payments'?`المدفوعات${badge}`:id==='requests'?`الطلبات${reqBadge()}`:label]);});
+  }
   if(Array.isArray(profile?.permissions)&&role!=='admin') items=items.filter(([id])=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   if(!items.some(i=>i[0]===activeTab)){
     activeTab = items[0][0];

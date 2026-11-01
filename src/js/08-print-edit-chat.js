@@ -57,6 +57,8 @@ window.printFullFinancialStatement = function(){
 };
 
 async function deleteItem(coll, id){
+  if(coll==='payments'){await deletePayment(id);return;}
+  if(!hasModuleAccess(coll)){showToast('ليس لديك صلاحية الحذف','error');return;}
   if(!confirm('تأكيد الحذف؟')) return;
   await deleteDoc(doc(db, coll, id));
   logAction('حذف', coll+':'+id);
@@ -65,6 +67,7 @@ async function deleteItem(coll, id){
 }
 
 async function deleteStudent(uid){
+  if(!hasModuleAccess('students_delete')){showToast('ليس لديك صلاحية حذف الطلاب','error');return;}
   if(!confirm('حذف الطالب؟')) return;
   await deleteDoc(doc(db,'students',uid));
   await deleteDoc(doc(db,'users',uid));
@@ -219,20 +222,29 @@ function startChatListener(){
     area.innerHTML = snap.docs.map(d => {
       const m = d.data();
       const isMe = m.senderUid === user.uid;
+      const canDelete = role==='admin'||hasModuleAccess('deleteMessages')||isMe;
       return `<div class="chat-bubble ${isMe?'outgoing':'incoming'}">
         <div style="font-size:.8rem;font-weight:bold;opacity:.8;">${esc(m.senderName)}</div>
         <div>${esc(m.body)}</div>
+        ${canDelete?`<button type="button" class="danger chat-delete-message" onclick="deleteChatMessage('${esc(targetUid)}','${esc(d.id)}')" title="حذف الرسالة">حذف</button>`:''}
       </div>`;
     }).join('') || '<p class="muted" style="text-align:center;margin:auto;">لا توجد رسائل.</p>';
     area.scrollTop = area.scrollHeight;
   }, err => console.error(err));
 }
 
+window.deleteChatMessage=async function(studentUid,messageId){
+  if(!confirm('حذف هذه الرسالة؟ لا يمكن التراجع عن الحذف.'))return;
+  try{await deleteDoc(doc(db,'chats',studentUid,'messages',messageId));logAction('حذف رسالة محادثة',studentUid);showToast('تم حذف الرسالة');}
+  catch(err){showToast(authError(err),'error');}
+};
+
 async function sendChat(e){
   e.preventDefault();
   const form = e.currentTarget;
   const d = Object.fromEntries(new FormData(form).entries());
   const isStaff = ['admin','finance','academic'].includes(role);
+  if(isStaff&&!hasModuleAccess('chat')){showToast('ليس لديك صلاحية المحادثات','error');return;}
   const targetUid = isStaff ? selectedChatStudentUid : user.uid;
   if(!targetUid || !d.body.trim()) return;
   try {
@@ -248,8 +260,8 @@ async function sendChat(e){
       body: d.body.trim(),
       createdAt: serverTimestamp()
     });
-    form.reset();
-  } catch(err){ showToast(err.message, 'error'); }
+    form.reset();showToast('تم إرسال الرسالة');
+  } catch(err){ showToast(authError(err), 'error'); }
 }
 
 

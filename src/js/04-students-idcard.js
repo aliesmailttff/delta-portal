@@ -5,9 +5,9 @@ function renderStudentsRows(list){
     <td>${money(s.totalFees)}</td>
     <td><div class="actions">
       <button class="secondary" onclick="showStudentCard('${s.uid}')" style="background:#e0f2fe; color:#0369a1;"><i class="fas fa-id-card"></i> كارنيه</button>
-      <button class="secondary" onclick="openEditStudentModal('${s.uid}')"><i class="fas fa-edit"></i></button>
+      ${hasModuleAccess('students_edit')?`<button class="secondary" onclick="openEditStudentModal('${s.uid}')"><i class="fas fa-edit"></i></button>`:''}
       ${role==='admin'?`<button class="secondary" onclick="openStudentPasswordModal('${s.uid}')"><i class="fas fa-key"></i> كلمة المرور</button>`:''}
-      <button class="danger" data-delete-student="${s.uid}"><i class="fas fa-trash"></i></button>
+      ${hasModuleAccess('students_delete')?`<button class="danger" data-delete-student="${s.uid}"><i class="fas fa-trash"></i></button>`:''}
     </div></td>
   </tr>`).join(''));
 }
@@ -108,6 +108,7 @@ async function createStudentAccount(d,pw){
   }finally{ await signOut(secAuth).catch(()=>{}); deleteApp(secApp); }
 }
 window.importStudentsFromExcel=function(event){
+  if(!hasModuleAccess('students_create')){showToast('ليس لديك صلاحية إضافة الطلاب','error');return;}
   const file=event.target.files[0]; if(!file) return;
   const normKey=value=>String(value??'').trim().toLowerCase().normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[\s_\-()]+/g,'');
   const reader=new FileReader();

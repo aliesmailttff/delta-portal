@@ -159,6 +159,11 @@ function getValidTabsForRole(r){
     :r==='finance'?['dashboard','payments','accounts','logs','chat','requests','security']
     :r==='academic'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','chat','security']
     :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','notifications','chat'];
+  if(['finance','academic'].includes(r)){
+    const pool=['students','results','exams','library','attendance','schedule','requests','courses','news','payments','accounts','logs','chat'];
+    const permissions=Array.isArray(profile?.permissions)?profile.permissions:defaultStaffPermissions(r);
+    tabs=[...new Set([...tabs,...pool.filter(id=>permissions.includes(id))])];
+  }
   if(r!=='admin'&&Array.isArray(profile?.permissions)) tabs=tabs.filter(id=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   return tabs;
 }

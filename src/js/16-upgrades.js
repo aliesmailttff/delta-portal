@@ -1,9 +1,14 @@
-const STAFF_PERMISSION_GROUPS={
-  finance:[['payments','المدفوعات'],['accounts','حسابات الدفع'],['requests','الطلبات المالية'],['logs','سجل النشاط'],['chat','محادثات الطلاب']],
-  academic:[['students','الطلاب'],['results','النتائج'],['exams','الامتحانات'],['library','المكتبة'],['attendance','الحضور'],['schedule','الجدول'],['requests','الطلبات'],['courses','المواد والتسجيل'],['news','الأخبار'],['chat','محادثات الطلاب']]
-};
-function defaultStaffPermissions(staffRole){return (STAFF_PERMISSION_GROUPS[staffRole]||[]).map(([id])=>id);}
-function hasModuleAccess(module){return role==='admin'||!Array.isArray(profile?.permissions)||profile.permissions.includes(module);}
+const STAFF_PERMISSION_CATALOG=[
+  ['students','عرض ملفات الطلاب'],['students_create','إضافة طلاب'],['students_edit','تعديل ملفات الطلاب'],['students_delete','حذف ملفات الطلاب'],
+  ['results','النتائج'],['exams','الامتحانات'],['library','المكتبة'],
+  ['attendance','الحضور'],['schedule','الجدول'],['requests','الطلبات'],['requests_academic','معالجة الطلبات الأكاديمية'],
+  ['requests_finance','معالجة الطلبات المالية'],['courses','المواد والتسجيل'],['news','الأخبار'],
+  ['payments','عرض واعتماد المدفوعات'],['payments_edit','تعديل بيانات المدفوعات'],['payments_delete','حذف عمليات المدفوعات'],
+  ['accounts','حسابات الدفع'],['logs','سجل النشاط'],['chat','محادثات الطلاب'],['deleteMessages','حذف الرسائل'],['deleteChats','حذف المحادثات']
+];
+const STAFF_PERMISSION_GROUPS={finance:STAFF_PERMISSION_CATALOG,academic:STAFF_PERMISSION_CATALOG};
+function defaultStaffPermissions(staffRole){return staffRole==='finance'?['students','payments','accounts','requests','requests_finance','logs','chat']:['students','students_create','students_edit','students_delete','results','exams','library','attendance','schedule','requests','requests_academic','courses','news','chat'];}
+function hasModuleAccess(module){return role==='admin'||(Array.isArray(profile?.permissions)?profile.permissions.includes(module):defaultStaffPermissions(role).includes(module));}
 
 function exportXlsx(filename,headers,rows,sheetName='التقرير'){
   if(!window.XLSX){showToast('تعذر تحميل مكتبة Excel','error');return;}
@@ -14,7 +19,7 @@ function exportXlsx(filename,headers,rows,sheetName='التقرير'){
 }
 function exportResultsExcel(scope='mine'){
   const isMine=scope==='mine',records=isMine?cache.results:cache.results;
-  if(!isMine&&!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية تصدير النتائج','error');return;}
+  if(!isMine&&!hasModuleAccess('results')){showToast('ليس لديك صلاحية تصدير النتائج','error');return;}
   const student=cache.students?.[0]||{};
   const headers=['الرقم الجامعي','اسم الطالب','المادة','السنة','الفصل','الساعات','الدرجة','التقدير'];
   const rows=records.map(r=>{
@@ -25,7 +30,7 @@ function exportResultsExcel(scope='mine'){
 }
 function exportFinanceExcel(scope='mine'){
   const isMine=scope==='mine';
-  if(!isMine&&!['admin','finance'].includes(role)){showToast('ليس لديك صلاحية تصدير المصروفات','error');return;}
+  if(!isMine&&!hasModuleAccess('payments')){showToast('ليس لديك صلاحية تصدير المصروفات','error');return;}
   const payments=isMine?cache.payments.filter(p=>p.studentUid===user.uid):cache.payments;
   const headers=['رقم الإيصال','الرقم الجامعي','اسم الطالب','التاريخ','وسيلة الدفع','المبلغ','الرقم المرجعي','الحالة'];
   const rows=payments.map(p=>[p.receiptNo||'',p.studentId||'',p.studentName||'',p.date||'',p.method||'',Number(p.amount)||0,p.trxId||'',p.status||'']);
@@ -38,13 +43,13 @@ function printReport(title,headers,rows){
 }
 function printResultsReport(scope='mine'){
   const mine=scope==='mine',student=cache.students?.[0]||{};
-  if(!mine&&!['admin','academic'].includes(role)){showToast('ليس لديك صلاحية طباعة النتائج','error');return;}
+  if(!mine&&!hasModuleAccess('results')){showToast('ليس لديك صلاحية طباعة النتائج','error');return;}
   const headers=['الرقم الجامعي','اسم الطالب','المادة','السنة','الفصل','الساعات','الدرجة','التقدير'];
   const rows=cache.results.map(r=>{const s=mine?student:cache.students.find(x=>x.uid===r.studentUid)||{};return [s.studentId||r.studentId||'',s.name||r.studentName||'',r.course||'',r.year||'',r.semester||'',Number(r.credits)||3,Number(r.score)||0,grade(Number(r.score))];});
   printReport('كشف النتائج',headers,rows);
 }
 function printFinanceReport(scope='mine'){
-  const mine=scope==='mine';if(!mine&&!['admin','finance'].includes(role)){showToast('ليس لديك صلاحية طباعة المصروفات','error');return;}
+  const mine=scope==='mine';if(!mine&&!hasModuleAccess('payments')){showToast('ليس لديك صلاحية طباعة المصروفات','error');return;}
   const rows=(mine?cache.payments.filter(p=>p.studentUid===user.uid):cache.payments).map(p=>[p.receiptNo||'',p.studentId||'',p.studentName||'',p.date||'',p.method||'',money(p.amount),p.trxId||'',p.status||'']);
   printReport('كشف المصروفات والمدفوعات',['رقم الإيصال','الرقم الجامعي','اسم الطالب','التاريخ','وسيلة الدفع','المبلغ','الرقم المرجعي','الحالة'],rows);
 }
@@ -61,9 +66,12 @@ window.editStaffPermissions=function(uid){
   const staff=cache.staff.find(x=>x.uid===uid);if(!staff||!STAFF_PERMISSION_GROUPS[staff.role])return;
   const allowed=STAFF_PERMISSION_GROUPS[staff.role],selected=Array.isArray(staff.permissions)?staff.permissions:defaultStaffPermissions(staff.role);
   document.querySelector('#staffPermissionsModal')?.remove();
-  document.body.insertAdjacentHTML('beforeend',`<div id="staffPermissionsModal" class="modal-overlay active" role="dialog" aria-modal="true"><section class="modal-card"><h3>صلاحيات ${esc(staff.name||staff.email)}</h3><p class="muted">حدد الأقسام التي يستطيع هذا المساعد فتحها. لتطبيق المنع على مستوى قاعدة البيانات، يجب نشر قواعد Firestore المحدّثة مع الموقع.</p><form id="staffPermissionsForm">${allowed.map(([id,label])=>`<label class="permission-option"><input type="checkbox" name="permission" value="${id}" ${selected.includes(id)?'checked':''}> ${label}</label>`).join('')}<div class="actions" style="margin-top:16px"><button type="button" class="secondary" onclick="document.querySelector('#staffPermissionsModal')?.remove()">إلغاء</button><button type="submit">حفظ الصلاحيات</button></div></form></section></div>`);
+  document.body.insertAdjacentHTML('beforeend',`<div id="staffPermissionsModal" class="modal-overlay active" role="dialog" aria-modal="true"><section class="modal-card"><h3>صلاحيات ${esc(staff.name||staff.email)}</h3><p class="muted">اختر صلاحيات هذا المساعد. الصلاحيات الحساسة مثل حذف المدفوعات أو المحادثات منفصلة ويمكن منحها أو سحبها هنا.</p><form id="staffPermissionsForm">${allowed.map(([id,label])=>`<label class="permission-option"><input type="checkbox" name="permission" value="${id}" ${selected.includes(id)?'checked':''}> ${label}</label>`).join('')}<div class="actions" style="margin-top:16px"><button type="button" class="secondary" onclick="document.querySelector('#staffPermissionsModal')?.remove()">إلغاء</button><button type="submit">حفظ الصلاحيات</button></div></form></section></div>`);
   $('#staffPermissionsForm').addEventListener('submit',async e=>{
-    e.preventDefault();const permissions=[...e.currentTarget.querySelectorAll('[name=permission]:checked')].map(x=>x.value);
+    e.preventDefault();const selectedPermissions=new Set([...e.currentTarget.querySelectorAll('[name=permission]:checked')].map(x=>x.value));
+    const dependencies={students_create:'students',students_edit:'students',students_delete:'students',payments_edit:'payments',payments_delete:'payments',requests_academic:'requests',requests_finance:'requests',deleteMessages:'chat',deleteChats:'chat'};
+    Object.entries(dependencies).forEach(([permission,base])=>{if(selectedPermissions.has(permission))selectedPermissions.add(base);});
+    const permissions=[...selectedPermissions];
     const button=e.currentTarget.querySelector('button[type=submit]');button.disabled=true;
     try{await updateDoc(doc(db,'users',uid),{permissions});logAction('تعديل صلاحيات مساعد',staff.email);staff.permissions=permissions;$('#staffPermissionsModal')?.remove();showToast('تم تحديث الصلاحيات');if(uid===user.uid){profile.permissions=permissions;const tabs=getValidTabsForRole(role);if(!tabs.includes(activeTab))activeTab='dashboard';renderApp();}}
     catch(err){button.disabled=false;showToast(authError(err),'error');}

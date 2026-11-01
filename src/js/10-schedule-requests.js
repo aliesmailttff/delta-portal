@@ -6,12 +6,12 @@ async function loadExtra(){
   const staff=['admin','finance','academic'].includes(role);
   const sc=await safe(getDocs(role==='student'?query(collection(db,'schedule'),where('status','==','منشور')):collection(db,'schedule')),none);
   cache.schedule=sc.docs.map(d=>({id:d.id,...d.data()}));
-  const requestQuery=role==='admin'?collection(db,'requests')
-    :role==='finance'?query(collection(db,'requests'),where('assignedDepartment','==','finance'))
-    :role==='academic'?query(collection(db,'requests'),where('assignedDepartment','==','academic'))
-    :query(collection(db,'requests'),where('studentUid','==',user.uid));
-  const rq=await safe(getDocs(requestQuery),none);
-  cache.requests=rq.docs.map(d=>({id:d.id,...d.data()}));
+  let requestQueries=[];
+  if(role==='admin') requestQueries=[collection(db,'requests')];
+  else if(role==='student') requestQueries=[query(collection(db,'requests'),where('studentUid','==',user.uid))];
+  else if(hasModuleAccess('requests')) requestQueries=['academic','finance'].filter(dept=>hasModuleAccess(`requests_${dept}`)).map(dept=>query(collection(db,'requests'),where('assignedDepartment','==',dept)));
+  const requestSnaps=await Promise.all(requestQueries.map(q=>safe(getDocs(q),none)));
+  cache.requests=[...new Map(requestSnaps.flatMap(s=>s.docs.map(d=>[d.id,{id:d.id,...d.data()}]))).values()];
   const cs=await safe(getDocs(collection(db,'courses')),none); cache.courses=cs.docs.map(d=>({id:d.id,...d.data()}));
   const rg=await safe(getDoc(doc(db,'settings','registration')),none); cache.regSettings=rg.exists()?rg.data():{};
   const rr=await safe(getDocs(staff?collection(db,'registrations'):query(collection(db,'registrations'),where('studentUid','==',user.uid))),none); cache.registrations=rr.docs.map(d=>({id:d.id,...d.data()}));
@@ -19,7 +19,7 @@ async function loadExtra(){
 function reqBadge(){const n=(cache.requests||[]).filter(r=>r.status==='قيد المراجعة').length;return n?` <span style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:99px;font-size:.75rem;">${n}</span>`:'';}
 function reqPill(t){const c=t==='قيد المراجعة'||t==='قيد التنفيذ'?['#fef3c7','#92400e']:t==='مرفوض'?['#fee2e2','#991b1b']:['#d1fae5','#065f46'];return `<span class="pill" style="background:${c[0]};color:${c[1]};">${esc(t)}</span>`;}
 function extraViews(html){
-  const staff=role==='admin'||role==='academic', st=cache.students[0]||{};
+  const staff=hasModuleAccess('schedule'), st=cache.students[0]||{};
   if(activeTab==='schedule'&&staff){
     const lv=LEVELS.map(l=>`<option>${l}</option>`).join(''),dy=DAYS.map(d=>`<option>${d}</option>`).join('');
     const rows=(cache.schedule||[]).slice().sort((a,b)=>String(a.level).localeCompare(b.level)||DAYS.indexOf(a.day)-DAYS.indexOf(b.day)||String(a.start).localeCompare(String(b.start)))
@@ -37,7 +37,7 @@ function extraViews(html){
       return it.length?`<section class="card"><h3>${d}</h3>${table(['الوقت','المادة','القاعة','المحاضر'],it.map(x=>`<tr><td>${esc(x.start)} - ${esc(x.end)}</td><td><b>${esc(x.course)}</b></td><td>${esc(x.hall)}</td><td>${esc(x.instructor||'—')}</td></tr>`).join(''))}</section>`:'';}).join('');
     return `<h2>جدول محاضراتي — ${esc(st.level||'')}</h2>`+(cards||'<section class="card muted">لم يُعلن الجدول بعد.</section>');
   }
-  if(activeTab==='requests'&&['admin','academic','finance'].includes(role)){
+  if(activeTab==='requests'&&['admin','academic','finance'].includes(role)&&hasModuleAccess('requests')){
     const rows=(cache.requests||[]).slice().sort((a,b)=>(a.status==='قيد المراجعة'?0:1)-(b.status==='قيد المراجعة'?0:1))
       .map(r=>{const actions=workflowRequestActions(r);return `<tr><td><code>${esc(r.trackingNo||'REQ-'+r.id.toUpperCase())}</code></td><td><b>${esc(r.studentName)}</b><br><small class="muted">${esc(r.studentId)}</small></td><td>${esc(r.customType||r.type)}<br><small>${r.assignedDepartment==='finance'?'مالي':'أكاديمي'}</small></td><td>${esc(r.details)}</td><td>${reqPill(r.status)}<br><small>${esc(r.workflowStage||'مراجعة القسم')}</small></td><td>${esc(r.reply||'—')}</td><td>${actions}</td></tr>`;}).join('');
     return `<section class="card"><h2><i class="fas fa-inbox" style="color:var(--blue)"></i> الطلبات الإلكترونية ومسار الاعتماد</h2><p class="muted">الطلبات الأكاديمية تمر بمراجعة القسم ثم اعتماد المدير. الطلبات المالية تذهب للمساعد المالي أو المدير.</p>${table(['رقم المتابعة','الطالب','المسار','التفاصيل','الحالة','الرد','الإجراء'],rows)}</section>`;
@@ -72,18 +72,18 @@ async function sendRequest(e){
 }
 function workflowRequestActions(request){
   if(['تم الحل','جاهز للاستلام','مرفوض'].includes(request.status)) return '—';
-  if(role==='academic'&&['بانتظار اعتماد الإدارة','تم القبول'].includes(request.status)) return '<span class="muted">بانتظار استكمال الإدارة</span>';
-  if(role==='academic'&&request.assignedDepartment==='academic') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','بانتظار اعتماد الإدارة')">إرسال لاعتماد الإدارة</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
-  if(role==='finance'&&request.assignedDepartment==='finance') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','تم الحل')">تم الحل</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
   if(role==='admin') return `<div class="actions">${request.status!=='بانتظار اعتماد الإدارة'?`<button class="secondary" onclick="setRequestStatus('${request.id}','بانتظار اعتماد الإدارة')">إحالة للاعتماد</button>`:''}<button onclick="setRequestStatus('${request.id}','تم القبول')">قبول</button><button class="secondary" onclick="setRequestStatus('${request.id}','جاهز للاستلام')">جاهز للاستلام</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
+  if(!hasModuleAccess('requests')||!hasModuleAccess(`requests_${request.assignedDepartment}`)) return '—';
+  if(request.assignedDepartment==='academic'&&['بانتظار اعتماد الإدارة','تم القبول'].includes(request.status)) return '<span class="muted">بانتظار استكمال الإدارة</span>';
+  if(request.assignedDepartment==='academic') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','بانتظار اعتماد الإدارة')">إرسال لاعتماد الإدارة</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
+  if(request.assignedDepartment==='finance') return `<div class="actions"><button onclick="setRequestStatus('${request.id}','تم الحل')">تم الحل</button><button class="danger" onclick="setRequestStatus('${request.id}','مرفوض')">رفض</button></div>`;
   return '—';
 }
 window.setRequestStatus=async(id,status)=>{
   const r=cache.requests.find(x=>x.id===id); if(!r) return;
-  if(role==='academic'&&r.assignedDepartment!=='academic'||role==='finance'&&r.assignedDepartment!=='finance') return;
-  if(role==='academic'&&status!=='بانتظار اعتماد الإدارة'&&status!=='مرفوض') return;
-  if(role==='finance'&&status!=='تم الحل'&&status!=='مرفوض') return;
-  if(role==='admin'&&status==='تم الحل'&&r.assignedDepartment!=='finance') return;
+  if(role!=='admin'&&(!hasModuleAccess('requests')||!hasModuleAccess(`requests_${r.assignedDepartment}`))) return;
+  if(role!=='admin'&&r.assignedDepartment==='academic'&&status!=='بانتظار اعتماد الإدارة'&&status!=='مرفوض') return;
+  if(role!=='admin'&&r.assignedDepartment==='finance'&&status!=='تم الحل'&&status!=='مرفوض') return;
   const reply=prompt('ملاحظة للطالب (اختياري):',''); if(reply===null) return;
   const workflowStage=status==='بانتظار اعتماد الإدارة'?'اعتماد المدير':(['تم الحل','جاهز للاستلام','تم القبول','مرفوض'].includes(status)?'مكتمل':'مراجعة القسم');
   try{ await updateDoc(doc(db,'requests',id),{status,workflowStage,reply:reply.trim(),handledBy:user.email,handledAt:serverTimestamp()});

@@ -32,10 +32,10 @@ function renderView(){
         <section class="card dashboard-chart-card"><div class="section-heading"><div><span class="section-kicker">ملخص مالي</span><h3>توزيع المدفوعات</h3></div><span class="section-icon"><i class="fas fa-chart-pie"></i></span></div><div class="dashboard-chart-wrap"><canvas id="paymentMethodsChart"></canvas></div></section>
         <section class="card dashboard-shortcuts"><div class="section-heading"><div><span class="section-kicker">وصول سريع</span><h3>اختصارات العمل</h3></div></div><div class="shortcut-list">${visibleShortcuts.map(([id,label,icon])=>`<button type="button" class="shortcut-link" data-go="${id}"><span class="shortcut-icon"><i class="fas ${icon}"></i></span><span>${label}</span><i class="fas fa-chevron-left shortcut-arrow"></i></button>`).join('')}</div></section>
       </div>
-      <section class="card"><div class="section-heading"><div><span class="section-kicker">التقارير والإدارة</span><h3>وصول سريع للتقارير</h3></div></div><div class="actions">${['admin','academic'].includes(role)&&hasModuleAccess('results')?'<button type="button" class="secondary" data-go="results"><i class="fas fa-chart-bar"></i> النتائج</button>':''}${['admin','academic'].includes(role)&&hasModuleAccess('attendance')?'<button type="button" class="secondary" data-go="attendance"><i class="fas fa-clipboard-check"></i> الحضور والغياب</button>':''}${['admin','finance'].includes(role)&&hasModuleAccess('payments')?'<button type="button" class="secondary" data-go="payments"><i class="fas fa-wallet"></i> تقارير المصروفات</button>':''}${role==='admin'?'<button type="button" class="secondary" data-go="logs"><i class="fas fa-shield-alt"></i> سجل التدقيق</button>':''}</div></section>
-      ${['admin','academic'].includes(role)&&hasModuleAccess('results')?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
+      <section class="card"><div class="section-heading"><div><span class="section-kicker">التقارير والإدارة</span><h3>وصول سريع للتقارير</h3></div></div><div class="actions">${hasModuleAccess('results')?'<button type="button" class="secondary" data-go="results"><i class="fas fa-chart-bar"></i> النتائج</button>':''}${hasModuleAccess('attendance')?'<button type="button" class="secondary" data-go="attendance"><i class="fas fa-clipboard-check"></i> الحضور والغياب</button>':''}${hasModuleAccess('payments')?'<button type="button" class="secondary" data-go="payments"><i class="fas fa-wallet"></i> تقارير المصروفات</button>':''}${hasModuleAccess('logs')?'<button type="button" class="secondary" data-go="logs"><i class="fas fa-shield-alt"></i> سجل التدقيق</button>':''}</div></section>
+      ${hasModuleAccess('results')?`<section class="card dashboard-results-search"><h3><i class="fas fa-magnifying-glass"></i> البحث عن نتيجة طالب</h3><label for="dashboardResultsSearch">ابحث بالاسم أو الرقم الجامعي</label><input id="dashboardResultsSearch" type="search" autocomplete="off" placeholder="اكتب الاسم أو الرقم الجامعي" oninput="searchAdminResults(this.value)"><div id="dashboardResultsSearchResults" class="muted" style="margin-top:12px;">اكتب اسم الطالب أو رقمه لعرض نتائجه.</div></section>`:''}`;
   }
-  else if(activeTab==='library' && isStaff){
+  else if(activeTab==='library' && isStaff && hasModuleAccess('library')){
     html = `<section class="card">
       <h2><i class="fas fa-file-pdf" style="color:var(--red);"></i> رفع ملف PDF جديد</h2>
       <form id="libForm" class="fields">
@@ -64,7 +64,7 @@ function renderView(){
       </tr>`).join(''))}
     </section>`;
   }
-  else if(activeTab==='attendance' && isStaff){
+  else if(activeTab==='attendance' && isStaff && hasModuleAccess('attendance')){
     const courseChoices=[...new Set([...(cache.courses||[]).map(x=>x.name),...(cache.schedule||[]).map(x=>x.course)].filter(Boolean))];
     const sessionRows=(cache.activeAttendance?.sessions||[]).filter(x=>Number(x.expiresAt||0)<=Date.now()&&x.course)
       .slice().sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0)).map(x=>{
@@ -128,7 +128,7 @@ function renderView(){
       </tr>`).join(''))}
     </section>`;
   }
-  else if(activeTab==='accounts' && (role==='admin'||role==='finance')){
+  else if(activeTab==='accounts' && hasModuleAccess('accounts')){
     const s = cache.settings || {};
     html = `<section class="card">
       <h2>إعدادات الحسابات</h2>
@@ -156,7 +156,7 @@ function renderView(){
       </form><div id="siteMaintenanceMsg"></div>
     </section>`:''}`;
   }
-  else if(activeTab==='logs' && (role==='admin'||role==='finance')){
+  else if(activeTab==='logs' && hasModuleAccess('logs')){
     html = `<section class="card">
         <h2><i class="fas fa-history" style="color:var(--blue);"></i> سجل النشاطات</h2><p class="muted">استخدم البحث أعلى الجدول لتصفية السجل حسب المستخدم أو الإجراء أو التفاصيل.</p>
       ${table(['الوقت','المسؤول','الإجراء','التفاصيل'], cache.logs.map(l=>`<tr>
@@ -167,8 +167,8 @@ function renderView(){
       </tr>`).join(''))}
     </section>`;
   }
-  else if(activeTab==='students' && (role==='admin'||role==='academic')){
-    html = `<section class="card">
+  else if(activeTab==='students' && hasModuleAccess('students')){
+    html = `${hasModuleAccess('students_create')?`<section class="card">
       <h2>إضافة طالب</h2>
       <form id="studentForm" class="fields">
         <div><label>الاسم</label><input name="name" required></div>
@@ -187,7 +187,7 @@ function renderView(){
         <button type="submit" style="grid-column:1/-1;margin-top:10px;">إنشاء الحساب</button>
       </form>
       <div id="studentMsg" style="margin-top:10px;"></div>
-    </section>
+    </section>`:''}
     <section class="card">
       <div class="headrow" style="margin-bottom:15px;">
         <h3>الطلاب</h3>
@@ -197,11 +197,11 @@ function renderView(){
           </button>
         </div>
       </div>
-      <div style="background:var(--pale);padding:12px;border-radius:10px;margin-bottom:15px;">
+      ${hasModuleAccess('students_create')?`<div style="background:var(--pale);padding:12px;border-radius:10px;margin-bottom:15px;">
         <label style="font-weight:bold;color:var(--blue);"><i class="fas fa-file-upload"></i> استيراد الطلاب من Excel:</label>
         <p class="muted" style="margin:6px 0;">يقبل أسماء الأعمدة العربية أو الإنجليزية: الاسم، الرقم الجامعي، البريد، كلمة المرور، الفرقة، القسم، المصروفات، وصورة الطالب (اختياري كرابط مباشر). يمكن ترك البريد فارغًا ليُنشأ من الرقم الجامعي، وكلمة المرور الفارغة تُنشأ تلقائيًا.</p>
         <input type="file" accept=".xlsx,.xls" onchange="importStudentsFromExcel(event)" style="margin-top:5px;background:#fff;padding:6px;">
-      </div>
+      </div>`:''}
       <div class="fields" style="margin-bottom:15px;">
         <div><label>بحث:</label><input type="text" id="studentSearchInput" onkeyup="filterStudentsTable()"></div>
         <div><label>الفرقة:</label>
@@ -215,7 +215,7 @@ function renderView(){
       <div id="studentsTableWrap">${renderStudentsRows(cache.students)}</div>
     </section>`;
   }
-  else if(activeTab==='results' && (role==='admin'||role==='academic')){
+  else if(activeTab==='results' && hasModuleAccess('results')){
     html = `<section class="card">
       <h2>رصد النتائج</h2>
       <form id="resultForm" class="fields">
@@ -243,7 +243,7 @@ function renderView(){
       }).join(''))}
     </section>`;
   }
-  else if(activeTab==='exams' && (role==='admin'||role==='academic')){
+  else if(activeTab==='exams' && hasModuleAccess('exams')){
     html = `<section class="card">
       <h2>إضافة امتحان</h2>
       <form id="examForm" class="fields">
@@ -273,7 +273,7 @@ function renderView(){
       </tr>`).join(''))}
     </section>`;
   }
-  else if(activeTab==='news' && (role==='admin'||role==='academic')){
+  else if(activeTab==='news' && hasModuleAccess('news')){
     html = `<section class="card">
       <h2>نشر خبر</h2>
       <form id="newsForm">
@@ -284,7 +284,7 @@ function renderView(){
       <div id="newsMsg" style="margin-top:10px;"></div>
     </section>` + newsCards(true);
   }
-  else if(activeTab==='payments' && (role==='admin'||role==='finance')){
+  else if(activeTab==='payments' && hasModuleAccess('payments')){
     const filtered = cache.payments.filter(p => {
       if(paymentFilterStatus==='pending') return p.status === 'قيد المراجعة';
       if(paymentFilterStatus==='approved') return p.status === 'مقبول';
@@ -308,6 +308,7 @@ function renderView(){
         const actionBtn = p.status==='قيد المراجعة'
           ? `<button style="background:var(--green);padding:5px 10px;font-size:.8rem;" onclick="approvePayment('${p.id}','${p.studentUid}',${p.amount})">اعتماد</button> <button class="danger" style="padding:5px 10px;font-size:.8rem;" onclick="rejectPayment('${p.id}')">رفض</button>`
           : p.status==='مقبول' ? `<button class="secondary" style="padding:5px 10px;font-size:.8rem;" onclick="printReceipt('${p.id}')">إيصال</button>` : '—';
+        const recordActions=`${hasModuleAccess('payments_edit')?`<button type="button" class="secondary" onclick="openPaymentEditModal('${p.id}')">تعديل</button>`:''}${hasModuleAccess('payments_delete')&&hasModuleAccess('payments')?` <button type="button" class="danger" onclick="deletePayment('${p.id}')">حذف</button>`:''}`;
         const imgBtn = p.screenshot
           ? `<button class="secondary" style="padding:4px 8px;font-size:.75rem;" onclick="viewScreenshot('${p.id}')">عرض</button>`
           : '—';
@@ -319,7 +320,7 @@ function renderView(){
           <td><code>${esc(p.trxId||'—')}</code></td>
           <td>${imgBtn}</td>
           <td>${statusBadge}</td>
-          <td>${actionBtn}</td>
+          <td>${actionBtn} ${recordActions}</td>
         </tr>`;
       }).join(''))}
     </section>`;
@@ -587,7 +588,7 @@ function renderView(){
         </div>
         <div id="adminChatStudentResults" class="chat-student-results">اكتب اسم الطالب أو رقمه للبحث عن المحادثة.</div>
         <div class="chatbox-container">
-          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<form id="chatAssignmentForm" class="chat-assignment-form"><label>القسم <select name="assignedDepartment"><option value="academic" ${chatMeta.assignedDepartment==='academic'?'selected':''}>أكاديمي</option><option value="finance" ${chatMeta.assignedDepartment==='finance'?'selected':''}>مالي</option><option value="admin" ${chatMeta.assignedDepartment==='admin'?'selected':''}>الإدارة</option></select></label><label>المسؤول <select name="assignedTo"><option value="">غير معيّن</option>${cache.staff.filter(st=>['finance','academic'].includes(st.role)).map(st=>`<option value="${esc(st.uid)}" ${chatMeta.assignedTo===st.uid?'selected':''}>${esc(st.name||st.email)} — ${st.role==='finance'?'مالي':'أكاديمي'}</option>`).join('')}</select></label><button type="submit" class="secondary">حفظ التوجيه</button></form>`:''}${activeStu&&role==='admin'?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
+          <div class="chat-conversation-heading"><strong>${esc(activeStu?.name||'اختر طالبًا لعرض المحادثة')}</strong>${activeStu?`<span>${esc(activeStu.studentId||'')}</span>`:''}${activeStu&&role==='admin'?`<form id="chatAssignmentForm" class="chat-assignment-form"><label>القسم <select name="assignedDepartment"><option value="academic" ${chatMeta.assignedDepartment==='academic'?'selected':''}>أكاديمي</option><option value="finance" ${chatMeta.assignedDepartment==='finance'?'selected':''}>مالي</option><option value="admin" ${chatMeta.assignedDepartment==='admin'?'selected':''}>الإدارة</option></select></label><label>المسؤول <select name="assignedTo"><option value="">غير معيّن</option>${cache.staff.filter(st=>['finance','academic'].includes(st.role)).map(st=>`<option value="${esc(st.uid)}" ${chatMeta.assignedTo===st.uid?'selected':''}>${esc(st.name||st.email)} — ${st.role==='finance'?'مالي':'أكاديمي'}</option>`).join('')}</select></label><button type="submit" class="secondary">حفظ التوجيه</button></form>`:''}${activeStu&&hasModuleAccess('deleteChats')?`<button type="button" class="danger" onclick="deleteSelectedStudentConversation()"><i class="fas fa-trash"></i> حذف المحادثة للطرفين</button>`:''}</div>
           <div id="chatMessagesArea" class="chat-messages-area"></div>
           <form id="chatForm" style="display:flex;padding:10px;background:var(--card);border-top:1px solid var(--line);gap:10px;">
             <input name="body" required placeholder="اكتب رسالتك..." style="flex:1;margin:0;">

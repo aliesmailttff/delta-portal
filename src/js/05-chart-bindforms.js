@@ -66,7 +66,23 @@ function bindForms(){
     const d = Object.fromEntries(new FormData(e.currentTarget).entries());
     editCtx.fields.forEach(([k,,t]) => { if(t==='number') d[k] = Number(d[k]); });
     try {
-      await updateDoc(doc(db, editCtx.coll, editCtx.id), d);
+      if(editCtx.coll==='payments'){
+        if(!hasModuleAccess('payments_edit'))throw new Error('ليس لديك صلاحية تعديل المدفوعات.');
+        if(!(Number(d.amount)>0))throw new Error('يجب أن يكون مبلغ العملية أكبر من صفر.');
+        await runTransaction(db,async tx=>{
+          const paymentRef=doc(db,'payments',editCtx.id),paymentSnap=await tx.get(paymentRef);
+          if(!paymentSnap.exists())throw new Error('عملية الدفع غير موجودة.');
+          const oldPayment=paymentSnap.data(),nextAmount=Number(d.amount);
+          if(oldPayment.status==='مقبول'){
+            const studentRef=doc(db,'students',oldPayment.studentUid),studentSnap=await tx.get(studentRef);
+            if(!studentSnap.exists())throw new Error('ملف الطالب غير موجود.');
+            const paid=Number(studentSnap.data().paidAmount||0)+nextAmount-Number(oldPayment.amount||0);
+            if(paid<0)throw new Error('التعديل سيجعل رصيد المدفوعات سالبًا.');
+            tx.update(studentRef,{paidAmount:paid});
+          }
+          tx.update(paymentRef,d);
+        });
+      }else await updateDoc(doc(db, editCtx.coll, editCtx.id), d);
       logAction('تعديل بيانات',`${editCtx.coll}:${editCtx.id}`);
       closeGenericEdit();
       showToast('تم التعديل بنجاح');
