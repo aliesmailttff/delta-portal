@@ -71,6 +71,7 @@ window.editStaffPermissions=function(uid){
 };
 
 async function changeOwnPassword(e){
+  if(!['admin','finance','academic'].includes(role)){showToast('تغيير كلمة المرور من الحساب متاح للمسؤولين فقط.','error');return;}
   e.preventDefault();const form=e.currentTarget,d=Object.fromEntries(new FormData(form).entries()),box=$('#ownPasswordMsg'),button=form.querySelector('button[type=submit]');
   if(d.newPassword!==d.confirmPassword){box.innerHTML=msg('كلمتا المرور الجديدتان غير متطابقتين.','error');return;}
   if(d.newPassword.length<8){box.innerHTML=msg('استخدم كلمة مرور من 8 أحرف على الأقل.','error');return;}

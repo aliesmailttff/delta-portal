@@ -44,7 +44,7 @@ function bindForms(){
   $('#staffForm')?.addEventListener('submit', createStaff);
   $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);
   $('#attForm')?.addEventListener('submit', saveAttendanceSession);
-  $('#ownPasswordForm')?.addEventListener('submit', changeOwnPassword);
+  if(['admin','finance','academic'].includes(role)) $('#ownPasswordForm')?.addEventListener('submit', changeOwnPassword);
   $('#attendanceThresholdForm')?.addEventListener('submit', saveAttendanceThreshold);
   $('#attendanceExportBtn')?.addEventListener('click', exportAttendanceReport);
   $('#studentAttForm')?.addEventListener('submit', verifyStudentAttendance);

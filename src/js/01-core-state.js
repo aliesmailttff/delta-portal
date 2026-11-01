@@ -1,6 +1,6 @@
 import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
-         createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword,
+         createUserWithEmailAndPassword, updatePassword,
          EmailAuthProvider, reauthenticateWithCredential }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc,
@@ -152,7 +152,7 @@ function getValidTabsForRole(r){
   let tabs=r==='admin'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','payments','accounts','staff','logs','chat','security']
     :r==='finance'?['dashboard','payments','accounts','logs','chat','requests','security']
     :r==='academic'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','chat','security']
-    :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','notifications','chat','security'];
+    :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','notifications','chat'];
   if(r!=='admin'&&Array.isArray(profile?.permissions)) tabs=tabs.filter(id=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   return tabs;
 }

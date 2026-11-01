@@ -1,7 +1,7 @@
 // ملف مُولَّد من src/js بواسطة build.mjs — لا تعدّله يدوياً
 import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
-         createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword,
+         createUserWithEmailAndPassword, updatePassword,
          EmailAuthProvider, reauthenticateWithCredential }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc,
@@ -153,7 +153,7 @@ function getValidTabsForRole(r){
   let tabs=r==='admin'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','payments','accounts','staff','logs','chat','security']
     :r==='finance'?['dashboard','payments','accounts','logs','chat','requests','security']
     :r==='academic'?['dashboard','students','results','exams','library','attendance','schedule','requests','courses','news','chat','security']
-    :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','notifications','chat','security'];
+    :['home','gpasimulator','mylibrary','myattendance','myresults','myexams','myschedule','myregistration','myrequests','mynews','notifications','chat'];
   if(r!=='admin'&&Array.isArray(profile?.permissions)) tabs=tabs.filter(id=>['dashboard','security'].includes(id)||profile.permissions.includes(id));
   return tabs;
 }
@@ -172,9 +172,6 @@ function renderLogin(){
       <input id="password" type="password" required autocomplete="current-password">
       <div id="loginError" style="margin-top:10px;"></div>
       <button type="submit" style="width:100%;margin-top:14px;">دخول آمن</button>
-      <div style="text-align:center;margin-top:12px;">
-        <a href="#" onclick="forgotPassword();return false;" style="font-size:.85rem;color:var(--blue);text-decoration:underline;">نسيت كلمة المرور؟</a>
-      </div>
     </form>
   </section>`;
 
@@ -212,15 +209,6 @@ window.exitMaintenanceToLogin = async function(){
   } catch(err) {
     showToast(authError(err),'error');
   }
-};
-
-window.forgotPassword = async function(){
-  const email = prompt('أدخل بريدك الإلكتروني:');
-  if(!email) return;
-  try {
-    await sendPasswordResetEmail(auth, email.trim());
-    showToast('تم إرسال رابط الاستعادة إلى بريدك.');
-  } catch(err){ showToast(authError(err),'error'); }
 };
 
 function authError(e){
@@ -333,7 +321,7 @@ function getNavItems(){
     ['home','الرئيسية'],['gpasimulator','محاكي GPA'],
     ['mylibrary','المكتبة PDF'],['myattendance','سجل الحضور'],
     ['myresults','نتيجتي'],['myexams','الامتحانات'],
-    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['notifications',`التنبيهات${(cache.notifications||[]).filter(n=>!n.read).length?` <span class="nav-badge">${(cache.notifications||[]).filter(n=>!n.read).length}</span>`:''}`],['chat','التواصل'],['security','الأمان']
+    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['notifications',`التنبيهات${(cache.notifications||[]).filter(n=>!n.read).length?` <span class="nav-badge">${(cache.notifications||[]).filter(n=>!n.read).length}</span>`:''}`],['chat','التواصل']
   ];
   if(role==='admin') items.push(['security','الأمان']);
   if(role==='finance'||role==='academic') items.push(['security','الأمان']);
@@ -432,7 +420,7 @@ function renderView(){
     const notices=(cache.notifications||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
     html=`<section class="card"><div class="headrow"><div><span class="section-kicker">التحديثات والمتابعة</span><h2><i class="fas fa-bell" style="color:var(--blue)"></i> تنبيهاتي</h2></div><button type="button" class="secondary" onclick="markAllNotificationsRead()">تعليم الكل كمقروء</button></div>${notices.length?`<div class="workflow-notice-list">${notices.map(n=>`<button type="button" class="workflow-notice ${n.read?'':'unread'}" onclick="openNotification('${esc(n.id)}','${esc(n.targetTab||'home')}')"><strong>${esc(n.title||'تنبيه')}</strong><span>${esc(n.message||'')}</span><small>${n.createdAt?.toDate?n.createdAt.toDate().toLocaleString('ar-EG'):'وصل حديثًا'}</small></button>`).join('')}</div>`:'<p class="muted">لا توجد تنبيهات حتى الآن.</p>'}</section>`;
   }
-  else if(activeTab==='security'){
+  else if(activeTab==='security'&&['admin','finance','academic'].includes(role)){
     html = `<section class="card"><h2><i class="fas fa-shield-halved" style="color:var(--blue)"></i> أمان الحساب</h2><p class="muted">آخر دخول مسجل: ${esc(user?.metadata?.lastSignInTime?new Date(user.metadata.lastSignInTime).toLocaleString('ar-EG'):'غير متاح')}</p><form id="ownPasswordForm" class="fields" style="max-width:640px"><div><label>كلمة المرور الحالية</label><input type="password" name="currentPassword" autocomplete="current-password" required></div><div><label>كلمة المرور الجديدة</label><input type="password" name="newPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><div><label>تأكيد كلمة المرور الجديدة</label><input type="password" name="confirmPassword" minlength="8" maxlength="128" autocomplete="new-password" required></div><button type="submit">تغيير كلمة المرور وإنهاء الجلسات الأخرى</button></form><div id="ownPasswordMsg" style="margin-top:10px"></div><p class="muted small">يتطلب التغيير تأكيد كلمة المرور الحالية. بعد نجاحه ستنتهي الجلسات القديمة، وسيُطلب منك تسجيل الدخول مجددًا.</p></section>`;
   }
   else if(activeTab==='dashboard' && isStaff){
@@ -1299,7 +1287,7 @@ function bindForms(){
   $('#staffForm')?.addEventListener('submit', createStaff);
   $('#libForm')?.addEventListener('submit', saveLibraryPdfFile);
   $('#attForm')?.addEventListener('submit', saveAttendanceSession);
-  $('#ownPasswordForm')?.addEventListener('submit', changeOwnPassword);
+  if(['admin','finance','academic'].includes(role)) $('#ownPasswordForm')?.addEventListener('submit', changeOwnPassword);
   $('#attendanceThresholdForm')?.addEventListener('submit', saveAttendanceThreshold);
   $('#attendanceExportBtn')?.addEventListener('click', exportAttendanceReport);
   $('#studentAttForm')?.addEventListener('submit', verifyStudentAttendance);
@@ -2516,6 +2504,7 @@ window.editStaffPermissions=function(uid){
 };
 
 async function changeOwnPassword(e){
+  if(!['admin','finance','academic'].includes(role)){showToast('تغيير كلمة المرور من الحساب متاح للمسؤولين فقط.','error');return;}
   e.preventDefault();const form=e.currentTarget,d=Object.fromEntries(new FormData(form).entries()),box=$('#ownPasswordMsg'),button=form.querySelector('button[type=submit]');
   if(d.newPassword!==d.confirmPassword){box.innerHTML=msg('كلمتا المرور الجديدتان غير متطابقتين.','error');return;}
   if(d.newPassword.length<8){box.innerHTML=msg('استخدم كلمة مرور من 8 أحرف على الأقل.','error');return;}

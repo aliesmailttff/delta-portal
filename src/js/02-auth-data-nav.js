@@ -12,9 +12,6 @@ function renderLogin(){
       <input id="password" type="password" required autocomplete="current-password">
       <div id="loginError" style="margin-top:10px;"></div>
       <button type="submit" style="width:100%;margin-top:14px;">دخول آمن</button>
-      <div style="text-align:center;margin-top:12px;">
-        <a href="#" onclick="forgotPassword();return false;" style="font-size:.85rem;color:var(--blue);text-decoration:underline;">نسيت كلمة المرور؟</a>
-      </div>
     </form>
   </section>`;
 
@@ -52,15 +49,6 @@ window.exitMaintenanceToLogin = async function(){
   } catch(err) {
     showToast(authError(err),'error');
   }
-};
-
-window.forgotPassword = async function(){
-  const email = prompt('أدخل بريدك الإلكتروني:');
-  if(!email) return;
-  try {
-    await sendPasswordResetEmail(auth, email.trim());
-    showToast('تم إرسال رابط الاستعادة إلى بريدك.');
-  } catch(err){ showToast(authError(err),'error'); }
 };
 
 function authError(e){
@@ -173,7 +161,7 @@ function getNavItems(){
     ['home','الرئيسية'],['gpasimulator','محاكي GPA'],
     ['mylibrary','المكتبة PDF'],['myattendance','سجل الحضور'],
     ['myresults','نتيجتي'],['myexams','الامتحانات'],
-    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['notifications',`التنبيهات${(cache.notifications||[]).filter(n=>!n.read).length?` <span class="nav-badge">${(cache.notifications||[]).filter(n=>!n.read).length}</span>`:''}`],['chat','التواصل'],['security','الأمان']
+    ['myschedule','جدولي'],['myregistration','تسجيل المواد'],['myrequests','طلباتي'],['mynews','الأخبار'],['notifications',`التنبيهات${(cache.notifications||[]).filter(n=>!n.read).length?` <span class="nav-badge">${(cache.notifications||[]).filter(n=>!n.read).length}</span>`:''}`],['chat','التواصل']
   ];
   if(role==='admin') items.push(['security','الأمان']);
   if(role==='finance'||role==='academic') items.push(['security','الأمان']);
