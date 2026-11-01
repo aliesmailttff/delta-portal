@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getCountFromServer, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import { firebaseConfig } from '../firebase-config.js';
+import { firebaseConfig } from './firebase-config.js';
 
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=s=>document.querySelector(s);
 let statusData={maintenanceMode:false,message:''},installPrompt=null,loginNotice='';
@@ -15,4 +15,4 @@ $('#logout').addEventListener('click',()=>signOut(auth));$('#refresh').addEventL
 $('#maintenanceForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button');btn.disabled=true;$('#saveMessage').textContent='جارٍ الحفظ…';try{statusData={...statusData,maintenanceMode:$('#maintenanceMode').checked,message:$('#message').value.trim().slice(0,240),updatedAt:serverTimestamp()};await setDoc(doc(db,'settings','site_status'),statusData);paintStatus();$('#saveMessage').textContent='تم حفظ حالة الموقع.';}catch(err){$('#saveMessage').textContent=err.code==='permission-denied'?'ليس لديك صلاحية تغيير حالة الموقع.':'تعذر الحفظ؛ تحقق من الاتصال وحاول مجددًا.';}finally{btn.disabled=false;}});
 $('#links').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(!b)return;localStorage.setItem('activeTab',b.dataset.tab);location.href='../index.html';});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('#install').hidden=false;});$('#install').addEventListener('click',async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;$('#install').hidden=true;});
-if('serviceWorker'in navigator)navigator.serviceWorker.register('../sw.js').catch(()=>{});onAuthStateChanged(auth,user=>user?enterConsole(user):login());
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});onAuthStateChanged(auth,user=>user?enterConsole(user):login());

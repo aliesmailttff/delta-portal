@@ -7,34 +7,26 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "hosting": {
-    "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "headers": [
-      {
-        "source": "/sw.js",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache"
-          }
-        ]
-      },
-      {
-        "source": "**/*.@(html|json|js|css)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache"
-          }
-        ]
-      }
-    ]
-  },
+  "hosting": [
+    {
+      "target": "portal",
+      "public": "public",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "headers": [
+        {"source": "/sw.js", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
+        {"source": "**/*.@(html|json|js|css)", "headers": [{"key": "Cache-Control", "value": "no-cache"}]}
+      ]
+    },
+    {
+      "target": "admin",
+      "public": "admin-console/public",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "headers": [
+        {"source": "/sw.js", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
+        {"source": "**/*.@(html|json|js|css)", "headers": [{"key": "Cache-Control", "value": "no-cache"}]}
+      ]
+    }
+  ],
   "emulators": {
     "firestore": {
       "port": 8080

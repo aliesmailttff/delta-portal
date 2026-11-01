@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "delta-student-portal"
+  },
+  "targets": {
+    "delta-student-portal": {
+      "hosting": {
+        "portal": ["delta-student-portal"],
+        "admin": ["delta-student-portal-admin"]
+      }
+    }
+  }
+}
