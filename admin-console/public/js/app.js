@@ -360,13 +360,15 @@ function nav(){
   const roleLabel=role==='admin'?'مدير النظام':role==='finance'?'الشؤون المالية':role==='academic'?'الشؤون الأكاديمية':'طالب';
   const displayName=p.name||user.email;
   const initial=String(displayName||'د').trim().charAt(0)||'د';
+  const collapsed=localStorage.getItem('sidebarCollapsed')==='true'&&window.matchMedia('(min-width: 821px)').matches;
   return `<aside class="app-sidebar" aria-label="القائمة الرئيسية">
     <div class="sidebar-brand">
       <div class="sidebar-logo"><i class="fas fa-graduation-cap"></i></div>
       <div><strong>دلتا</strong><span>بوابة الخدمات</span></div>
+      <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="${collapsed?'توسيع':'طي'} القائمة الجانبية" title="${collapsed?'توسيع':'طي'} القائمة الجانبية" aria-expanded="${!collapsed}"><i class="fas ${collapsed?'fa-angles-left':'fa-angles-right'}" aria-hidden="true"></i></button>
     </div>
     <div class="sidebar-caption">التنقل الرئيسي</div>
-    <nav class="tabs side-nav">${items.map(([id,label])=>`<button type="button" class="${activeTab===id?'active':''}" data-tab="${id}"><i class="fas ${navIcon(id)}" aria-hidden="true"></i><span class="nav-item-label">${label}</span></button>`).join('')}</nav>
+    <nav class="tabs side-nav" aria-label="أقسام البوابة">${items.map(([id,label])=>{const accessibleLabel=label.replace(/<[^>]*>/g,'').trim();return `<button type="button" class="${activeTab===id?'active':''}" data-tab="${id}" aria-label="${esc(accessibleLabel)}" title="${esc(accessibleLabel)}" ${activeTab===id?'aria-current="page"':''}><i class="fas ${navIcon(id)}" aria-hidden="true"></i><span class="nav-item-label">${label}</span></button>`}).join('')}</nav>
     <div class="sidebar-account"><div class="sidebar-avatar">${esc(initial)}</div><div class="sidebar-account-copy"><strong>${esc(displayName)}</strong><span>${roleLabel}</span></div></div>
   </aside>`;
 }
@@ -392,9 +394,10 @@ function renderApp(){
   if(tBtn) tBtn.textContent = document.body.dataset.theme === 'dark' ? 'فاتح' : 'داكن';
 
   const displayName=esc(p.name||user.email);
-  appRoot.innerHTML = `<div class="app-layout">${nav()}<section class="app-main">
+  const sidebarCollapsed=localStorage.getItem('sidebarCollapsed')==='true'&&window.matchMedia('(min-width: 821px)').matches;
+  appRoot.innerHTML = `<div class="app-layout${sidebarCollapsed?' sidebar-collapsed':''}">${nav()}<section class="app-main">
     <div class="app-page-heading"><div><span class="page-eyebrow">بوابة الخدمات الأكاديمية ${roleLabel}</span><h2>أهلًا بعودتك، ${displayName}</h2><p>كل خدماتك ومتابعاتك في مكان واحد.</p></div><div class="secure-status"><i class="fas fa-shield-alt"></i><span>جلسة آمنة</span></div></div>
-    <div id="view"></div>
+    <div id="view" tabindex="-1" role="region" aria-label="محتوى البوابة"></div>
   </section></div>`;
   const nextSidebar=appRoot.querySelector('.app-sidebar');
   const nextNav=appRoot.querySelector('.side-nav');
@@ -403,6 +406,16 @@ function renderApp(){
     nextNav.scrollTop=navScrollTop;
     nextNav.scrollLeft=navScrollLeft;
   }
+  const sidebarToggle=appRoot.querySelector('#sidebarToggle');
+  if(sidebarToggle)sidebarToggle.onclick=()=>{
+    const layout=appRoot.querySelector('.app-layout'),collapsed=!layout.classList.contains('sidebar-collapsed');
+    layout.classList.toggle('sidebar-collapsed',collapsed);
+    localStorage.setItem('sidebarCollapsed',String(collapsed));
+    sidebarToggle.setAttribute('aria-expanded',String(!collapsed));
+    sidebarToggle.setAttribute('aria-label',collapsed?'توسيع القائمة الجانبية':'طي القائمة الجانبية');
+    sidebarToggle.title=collapsed?'توسيع القائمة الجانبية':'طي القائمة الجانبية';
+    sidebarToggle.innerHTML=`<i class="fas ${collapsed?'fa-angles-left':'fa-angles-right'}" aria-hidden="true"></i>`;
+  };
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
     if(unsubChat){ unsubChat(); unsubChat=null; }
     activeTab = b.dataset.tab;
